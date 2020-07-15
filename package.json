@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.10.4"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "@cycle/core": "^7.0.0",
+    "rambda": "^5.9.0",
+    "snabbdom": "^1.0.1",
+    "xstream": "^11.12.0"
+  }
+}
