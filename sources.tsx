@@ -3,7 +3,7 @@ import { Sources } from "./types";
 let globalSources: { current: Sources | null } = { current: null };
 export function provideSources<T>(sources: Sources, func: () => T) {
   let previous = globalSources.current;
-  globalSources.current = { ...globalSources.current, ...sources };
+  globalSources.current = { ...previous, ...sources };
   const returnValue = func();
   globalSources.current = previous;
   return returnValue;

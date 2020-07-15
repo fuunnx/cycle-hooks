@@ -1,12 +1,15 @@
 {
   "devDependencies": {
-    "@babel/preset-typescript": "^7.10.4"
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
+    "jest": "^26.1.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest --watch"
   },
   "dependencies": {
     "@cycle/core": "^7.0.0",
+    "@types/jest": "^26.0.4",
     "rambda": "^5.9.0",
     "snabbdom": "^1.0.1",
     "xstream": "^11.12.0"
