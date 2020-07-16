@@ -7,7 +7,7 @@ import xs, {
   MergeSignature,
   CombineSignature,
 } from "xstream";
-import { useSources, provideSources } from "./sources";
+import { useSources, provideSources, safeUseSources } from "./sources";
 import { registerSinks, gatherSinks } from "./sinks";
 import { map } from "rambda";
 
@@ -96,21 +96,17 @@ export default class HooksStream<T> extends Stream<T> {
   ) {
     return wrapMemory(xs.combine(...streams));
   } as CombineSignature;
-
-  compose<U>(operator: (stream: Stream<T>) => U): U {
-    return wrap(super.compose(operator));
-  }
 }
 
 function _wrap<T>(
   stream$: Stream<T> | MemoryStream<T>,
-  isMemoryStream = false
+  isMemoryStream = false,
+  sources = safeUseSources()
 ) {
-  const sources = useSources();
   let sub: Subscription;
 
   const method = isMemoryStream ? "createWithMemory" : "create";
-  return (xs[method] as any)({
+  const res$ = (xs[method] as any)({
     start(listener) {
       sub = stream$.subscribe({
         error(e) {
@@ -131,7 +127,22 @@ function _wrap<T>(
     stop() {
       sub?.unsubscribe();
     },
-  }) as unknown;
+  });
+
+  return new Proxy(res$, {
+    get(res$, key) {
+      const delegate = Reflect.get(res$, key).bind(res$);
+      if (typeof delegate !== "function") {
+        return delegate;
+      }
+      if (["subscribe"].includes(key as any)) {
+        return delegate;
+      }
+      return function () {
+        return wrap(delegate(...arguments));
+      };
+    },
+  });
 }
 
 function wrap<T>(stream: Stream<T>) {

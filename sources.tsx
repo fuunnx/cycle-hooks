@@ -10,6 +10,10 @@ export function provideSources<T>(sources: Sources, func: () => T) {
 }
 
 export function useSources<T extends Sources>() {
-  if (!globalSources.current) throw new Error("nop");
+  const soures = safeUseSources();
+  if (!soures) throw new Error("Using useSources from outside");
+  return soures as T;
+}
+export function safeUseSources<T extends Sources>() {
   return globalSources.current as T;
 }

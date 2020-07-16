@@ -1,5 +1,5 @@
 import xs from "./xstream";
-import { provideSources, useSources } from "./sources";
+import { provideSources, useSources, safeUseSources } from "./sources";
 import xstream, { Stream } from "xstream";
 
 test("provides sources 1 level deep", () => {
@@ -65,7 +65,7 @@ function testMethod(methodName: string, getStream: () => Stream<any>) {
     const sources = { a: xs.empty() };
     const App = () => {
       return {
-        a: getStream().map(() => useSources()),
+        a: getStream().map(() => safeUseSources()),
       };
     };
     const sinks = provideSources(sources, () => App());
@@ -73,7 +73,7 @@ function testMethod(methodName: string, getStream: () => Stream<any>) {
     var sub = sinks.a.subscribe({
       next(innerSources) {
         expect(innerSources).toEqual(sources);
-        sub?.unsubscribe();
+        setTimeout(() => sub?.unsubscribe());
         done();
       },
       error(e) {
@@ -108,7 +108,7 @@ const methodsTests: ToTest = {
       stop() {},
     }),
 
-  // throw: () => xs.throw("error").replaceError(() => testStream()),
+  throw: () => xs.throw("error").replaceError(() => testStream()),
   from: () => xs.from(testStream()),
   of: () => xs.of(""),
   fromArray: () => xs.fromArray(["a", "b"]),
@@ -121,7 +121,7 @@ const methodsTests: ToTest = {
 };
 
 function testStream() {
-  return xstream.fromPromise(Promise.resolve());
+  return xs.fromPromise(Promise.resolve(null));
 }
 
 Object.entries(methodsTests).forEach(([name, value]) => {
