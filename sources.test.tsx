@@ -28,7 +28,7 @@ test("provides sources 2 levels deep", () => {
   };
   const Component = () => {
     let innerSources = useSources();
-    expect(innerSources).toEqual({ ...sources1, ...sources2 });
+    expect(innerSources).toEqual(sources2);
     return {};
   };
 
