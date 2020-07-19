@@ -15,7 +15,6 @@
     "cyclejs-utils": "^4.0.2",
     "rambda": "^5.9.0",
     "snabbdom": "^1.0.1",
-    "xstream": "^11.12.0",
-    "zone.js": "^0.10.3"
+    "xstream": "^11.12.0"
   }
 }

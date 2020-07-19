@@ -1,7 +1,6 @@
 import { Stream, InternalProducer, NO } from "xstream";
 import { provideSources, safeUseSources } from "../sources";
-import { map } from "rambda";
-import { safeUseRegisterer, withSinksRegisterer } from "../sinks";
+import { useCurrentZone, withZone } from "../context";
 
 Object.defineProperty(Stream.prototype, "_prod", {
   set<T>(producer_: InternalProducer<T> | typeof NO) {
@@ -10,20 +9,16 @@ Object.defineProperty(Stream.prototype, "_prod", {
       return;
     }
     const producer = producer_ as InternalProducer<T>;
-    const sources = safeUseSources();
-    if (!sources) {
+    const zone = useCurrentZone();
+    if (!zone.parent) {
       this.__prod = producer;
       return;
     }
     const prod: InternalProducer<T> = {
       _start(listener) {
-        if (!sources) {
-          producer._start(listener);
-          return;
-        }
         producer._start({
           _n(v: T) {
-            provideSources(sources, () => {
+            withZone(zone, () => {
               listener._n(v);
             });
           },

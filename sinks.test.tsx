@@ -1,3 +1,5 @@
+import "zone.js";
+
 import xs from "xstream";
 import { sinksGatherer, registerSinks } from "./sinks";
 import { mockTimeSource, MockTimeSource } from "@cycle/time";
