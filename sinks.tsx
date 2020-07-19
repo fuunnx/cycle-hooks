@@ -4,12 +4,11 @@ import { Sinks } from "./types";
 import xs, { Stream } from "xstream";
 import { mapObj } from "./helpers";
 import { replicateMany } from "@cycle/run/lib/cjs/internals";
+import { ContextKey, withContext, useContext, safeUseContext } from "./context";
 
-export type Registerer<S extends Sinks> = (sinks: S) => void;
+export type Registerer = (sinks: Sinks) => void;
+export const registererKey: ContextKey<Registerer> = Symbol("registerer");
 
-let globalSinks = {
-  register: null,
-};
 export function sinksGatherer(keys: string[]) {
   function initSinksProxy(): { [key: string]: Stream<unknown> } {
     return Object.fromEntries(keys.map((key) => [key, xs.create()]));
@@ -27,25 +26,19 @@ export function sinksGatherer(keys: string[]) {
   };
 }
 
-export function safeUseRegisterer<S extends Sinks>() {
-  return globalSinks.register as Registerer<S> | null;
-}
-export function useRegisterer<S extends Sinks>() {
-  const registerer = safeUseRegisterer();
-  if (!registerer) throw new Error("nop");
-  return registerer as Registerer<S>;
+export function useRegisterer() {
+  return useContext(registererKey);
 }
 
-export function withSinksRegisterer<T, S extends Sinks>(
-  registerer: Registerer<S>,
+export function safeUseRegisterer() {
+  return safeUseContext(registererKey);
+}
+
+export function withSinksRegisterer<T>(
+  registerer: Registerer,
   func: () => T
-) {
-  let previous = globalSinks.register;
-  globalSinks.register = registerer;
-  const returnValue = func();
-  globalSinks.register = previous;
-
-  return returnValue;
+): T {
+  return withContext(registererKey, registerer, func);
 }
 
 export function registerSinks(sinks: Sinks) {

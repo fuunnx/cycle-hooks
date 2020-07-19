@@ -1,20 +1,17 @@
 import "./patches/xstream";
 import { Sources } from "./types";
+import { ContextKey, withContext, useContext, safeUseContext } from "./context";
 
-let globalSources: { current: Sources | null } = { current: null };
+export const sourcesKey: ContextKey<Sources> = Symbol("sources");
+
 export function provideSources<T>(sources: Sources, func: () => T) {
-  let previous = globalSources.current;
-  globalSources.current = sources;
-  const returnValue = func();
-  globalSources.current = previous;
-  return returnValue;
+  return withContext(sourcesKey, sources, func);
 }
 
-export function useSources<T extends Sources>() {
-  const soures = safeUseSources();
-  if (!soures) throw new Error("Using useSources from outside");
-  return soures as T;
+export function useSources() {
+  return useContext(sourcesKey);
 }
-export function safeUseSources<T extends Sources>() {
-  return globalSources.current as T;
+
+export function safeUseSources() {
+  return safeUseContext(sourcesKey);
 }

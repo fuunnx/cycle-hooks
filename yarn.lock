@@ -1091,6 +1091,12 @@
   dependencies:
     "@types/yargs-parser" "*"
 
+"@types/zone.js@^0.5.12":
+  version "0.5.12"
+  resolved "https://registry.yarnpkg.com/@types/zone.js/-/zone.js-0.5.12.tgz#4101613a49defbef64fefdb3b809699fe08f68bc"
+  dependencies:
+    zone.js "*"
+
 abab@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.3.tgz#623e2075e02eb2d3f2475e49f99c91846467907a"
@@ -3977,3 +3983,7 @@ yargs@^15.3.1:
     which-module "^2.0.0"
     y18n "^4.0.0"
     yargs-parser "^18.1.2"
+
+zone.js@*, zone.js@^0.10.3:
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/zone.js/-/zone.js-0.10.3.tgz#3e5e4da03c607c9dcd92e37dd35687a14a140c16"
