@@ -1,3 +1,4 @@
+import "./patches/xstream";
 import { Sources } from "./types";
 
 let globalSources: { current: Sources | null } = { current: null };

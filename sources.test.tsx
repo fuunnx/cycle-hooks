@@ -1,6 +1,5 @@
-import xs from "./xstream";
 import { provideSources, useSources, safeUseSources } from "./sources";
-import xstream, { Stream } from "xstream";
+import xs, { Stream } from "xstream";
 
 test("provides sources 1 level deep", () => {
   const sources = { a: xs.empty() };
@@ -113,7 +112,7 @@ const methodsTests: ToTest = {
   of: () => xs.of(""),
   fromArray: () => xs.fromArray(["a", "b"]),
   fromPromise: () => xs.fromPromise(Promise.resolve("")),
-  fromObservable: () => xs.fromObservable(xstream.of("")),
+  fromObservable: () => xs.fromObservable(xs.of("")),
   periodic: () => xs.periodic(10).take(1),
   merge: () => xs.merge(testStream(), testStream()),
   combine: () => xs.combine(testStream(), testStream()),

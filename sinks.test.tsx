@@ -1,4 +1,4 @@
-import xs from "./xstream";
+import xs from "xstream";
 import { sinksGatherer, registerSinks } from "./sinks";
 import { mockTimeSource, MockTimeSource } from "@cycle/time";
 import { Sinks } from "./types";
@@ -18,13 +18,13 @@ function assertSinksEqual(
 test("gather sinks 1 level deep", (done) => {
   const gatherSinks = sinksGatherer(["a", "b"]);
   const Time = mockTimeSource();
-  const sinks = { a: Time.diagram("-x"), b: Time.diagram("-x") };
+  const makeSinks = () => ({ a: Time.diagram("-x"), b: Time.diagram("-x") });
   function App() {
-    registerSinks(sinks);
+    registerSinks(makeSinks());
     return {};
   }
   const [gathered] = gatherSinks(() => App());
-  assertSinksEqual(Time, gathered, sinks);
+  assertSinksEqual(Time, gathered, makeSinks());
 
   Time.run(done);
 });
@@ -32,20 +32,20 @@ test("gather sinks 1 level deep", (done) => {
 test("gather sinks 2 levels deep", (done) => {
   const gatherSinks = sinksGatherer(["a", "b"]);
   const Time = mockTimeSource();
-  const sinksA = { a: Time.diagram("-x"), b: Time.diagram("-x") };
-  const sinksB = { a: Time.diagram("--x-x"), b: Time.diagram("-x") };
+  const sinksA = () => ({ a: Time.diagram("-x"), b: Time.diagram("-x") });
+  const sinksB = () => ({ a: Time.diagram("--x-x"), b: Time.diagram("-x") });
   function App() {
-    registerSinks(sinksA);
+    registerSinks(sinksA());
     Component();
     return {};
   }
   function Component() {
-    registerSinks(sinksB);
+    registerSinks(sinksB());
     return {};
   }
 
   const [gathered] = gatherSinks(() => App());
-  assertSinksEqual(Time, gathered, mergeSinks([sinksA, sinksB]));
+  assertSinksEqual(Time, gathered, mergeSinks([sinksA(), sinksB()]));
 
   Time.run(done);
 });
@@ -53,7 +53,7 @@ test("gather sinks 2 levels deep", (done) => {
 test("gather sinks inside streams", (done) => {
   const gatherSinks = sinksGatherer(["a", "b"]);
   const Time = mockTimeSource();
-  const sinks = { a: Time.diagram("-a"), b: Time.diagram("-b") };
+  const sinks = () => ({ a: Time.diagram("-a"), b: Time.diagram("-b") });
   const c$ = Time.diagram("-x")
     .map(() => Component())
     .map((x) => x.d)
@@ -64,13 +64,16 @@ test("gather sinks inside streams", (done) => {
     };
   }
   function Component() {
-    registerSinks(sinks);
-    return { d: xs.of("y") };
+    registerSinks(sinks());
+    return { d: Time.diagram("x") };
   }
 
   const [gathered, appSinks] = gatherSinks(() => App());
   appSinks.c.subscribe({});
-  assertSinksEqual(Time, mergeSinks([appSinks, gathered]), { ...sinks, c: c$ });
+  assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
+    ...sinks(),
+    c: c$,
+  });
 
   Time.run(done);
 });
