@@ -1,4 +1,4 @@
-import xs from "./xstream";
+import xs from "xstream";
 import { Stream, Listener } from "xstream";
 
 export type Subject<T> = {
