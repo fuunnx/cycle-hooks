@@ -17,33 +17,22 @@ export function sinksGatherer(keys: string[]) {
   return function gatherSinks<T>(exec: () => T): [Sinks, T] {
     let sinksProxy = initSinksProxy();
     let subscriptions = [];
-    const returnValue = withSinksRegisterer((sinks: Sinks) => {
-      console.log("registering", Object.keys(sinks));
-      subscriptions.push(replicateMany(sinks, sinksProxy));
-    }, exec);
+    const returnValue = withContext(
+      registererKey,
+      (sinks: Sinks) => {
+        // console.log("registering", Object.keys(sinks));
+        subscriptions.push(replicateMany(sinks, sinksProxy));
+      },
+      exec
+    );
 
     return [sinksProxy, returnValue];
   };
 }
 
-export function useRegisterer() {
-  return useContext(registererKey);
-}
-
-export function safeUseRegisterer() {
-  return safeUseContext(registererKey);
-}
-
-export function withSinksRegisterer<T>(
-  registerer: Registerer,
-  func: () => T
-): T {
-  return withContext(registererKey, registerer, func);
-}
-
 export function registerSinks(sinks: Sinks) {
   const stop$ = useUnmount();
-  return useRegisterer()(
+  return useContext(registererKey)(
     mapObj((sink$: Stream<unknown>) => sink$.endWhen(stop$), sinks)
   );
 }

@@ -2,7 +2,6 @@
   "devDependencies": {
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
-    "@types/zone.js": "^0.5.12",
     "jest": "^26.1.0"
   },
   "scripts": {

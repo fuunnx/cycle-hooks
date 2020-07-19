@@ -1,5 +1,3 @@
-import "zone.js";
-
 import xs from "xstream";
 import { sinksGatherer, registerSinks } from "./sinks";
 import { mockTimeSource, MockTimeSource } from "@cycle/time";
@@ -53,28 +51,23 @@ test("gather sinks 2 levels deep", (done) => {
 });
 
 test("gather sinks inside streams", (done) => {
-  const gatherSinks = sinksGatherer(["a", "b"]);
+  const gatherSinks = sinksGatherer(["d"]);
   const Time = mockTimeSource();
-  const sinks = () => ({ a: Time.diagram("-a"), b: Time.diagram("-b") });
-  const c$ = Time.diagram("-x")
-    .map(() => Component())
-    .map((x) => x.d)
-    .flatten();
+  const sinks = () => ({ d: Time.diagram("dddd") });
+  const c$ = () => Time.diagram("--x--");
   function App() {
     return {
-      c: c$,
+      c: c$().map(() => {
+        registerSinks(sinks());
+        return "y";
+      }),
     };
-  }
-  function Component() {
-    registerSinks(sinks());
-    return { d: Time.diagram("x") };
   }
 
   const [gathered, appSinks] = gatherSinks(() => App());
-  appSinks.c.subscribe({});
   assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
     ...sinks(),
-    c: c$,
+    c: c$().mapTo("y"),
   });
 
   Time.run(done);

@@ -16,10 +16,12 @@ export function useCurrentZone() {
 export function withZone<T>(zone: Zone, exec: () => T): T {
   let zoneBefore = currentZone;
   currentZone = zone;
+  // console.log("->", zone, exec.toString());
   try {
     return exec();
   } finally {
     currentZone = zoneBefore;
+    // console.log("<-", zone);
   }
 }
 
@@ -45,7 +47,7 @@ export function safeUseContext<T>(name: ContextKey<T>): T | undefined {
 export function useContext<T>(name: ContextKey<T>): T {
   const value = resolveContext(name);
   if (value === NOT_FOUND) {
-    throw new Error(`Unknown key ${name} in context`);
+    throw new Error(`Unknown key ${name.toString()} in context`);
   }
   return value as T;
 }
@@ -53,7 +55,7 @@ export function useContext<T>(name: ContextKey<T>): T {
 const NOT_FOUND = {} as const;
 export function resolveContext<T>(name: ContextKey<T>): T | typeof NOT_FOUND {
   let current = useCurrentZone();
-  while (current) {
+  while (current && current.parent) {
     const ctx = current.content;
     if (ctx?.has(name)) {
       return ctx.get(name);
