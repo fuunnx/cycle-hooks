@@ -41,7 +41,7 @@ export function createElement<T extends { [k: string]: unknown }>(
   }
 
   const stop$ = xs.create()
-  registerSinks(map(sink$ => sink$.endWhen(stop$), sinks))
+  registerSinks(map((sink$: Stream<unknown>) => sink$.endWhen(stop$), sinks))
   const component = {
     onDestroy() {
       components.get(tagOrFunction)
