@@ -77,28 +77,83 @@ test("stop gathered sinks on next", (done) => {
   const gatherSinks = sinksGatherer(["b"]);
   const Time = mockTimeSource();
 
-  const events = () => Time.diagram("--a---b---c", { a: "a", b: "b", c: "c" });
+  const events = () => Time.diagram("---a-----b-----c");
   const repeatEvent = (char: string) => {
-    return Time.diagram("-" + char.repeat(1));
+    return Time.diagram("-" + String(char).repeat(1));
   };
   function App() {
     return {
-      a: events().map(Component),
+      a: events().map((char) => {
+        registerSinks({
+          b: repeatEvent(char),
+        });
+        return char;
+      }),
     };
-  }
-  function Component(char: string) {
-    registerSinks({
-      b: repeatEvent(char),
-    });
-    return xs.empty();
   }
 
   const [gathered, appSinks] = gatherSinks(() => App());
   assertSinksEqual(Time, gathered, {
-    b: events()
-      .map((x) => repeatEvent(x))
-      .flatten(),
+    b: events().map(repeatEvent).flatten(),
+  });
+  assertSinksEqual(Time, appSinks, {
+    a: events(),
   });
 
   Time.run(done);
+});
+
+test("stop gathered sinks on next (2)", (done) => {
+  const gatherSinks = sinksGatherer(["b"]);
+
+  const events = () => xs.periodic(100).take(10);
+  const repeatEvent = (char: string) => {
+    return xs.periodic(20).mapTo(char).take(2);
+  };
+  function App() {
+    return {
+      a: events().map((char) => {
+        registerSinks({
+          b: repeatEvent(char),
+        });
+        return char;
+      }),
+    };
+  }
+
+  const [gathered, appSinks] = gatherSinks(() => App());
+
+  const actual = [];
+  const expected = [];
+  let completed = 0;
+  gathered.b.take(10).addListener({
+    next(val) {
+      actual.push(val);
+    },
+    complete() {
+      completed += 1;
+      if (completed >= 2) {
+        expect(actual).toEqual(expected);
+        done();
+      }
+    },
+  });
+  events()
+    .map(repeatEvent)
+    .flatten()
+    .take(10)
+    .addListener({
+      next(val) {
+        expected.push(val);
+      },
+      complete() {
+        completed += 1;
+        if (completed >= 2) {
+          expect(actual).toEqual(expected);
+          done();
+        }
+      },
+    });
+
+  appSinks.a.addListener({});
 });
