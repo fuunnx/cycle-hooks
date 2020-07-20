@@ -19,7 +19,7 @@ export type Ref = {
 }
 
 
-const refSymbol: ContextKey<Ref> = Symbol('ref')
+export const refSymbol: ContextKey<Ref> = Symbol('ref')
 
 export function withRef<T>(ref: Ref, exec: () => T): T {
   return withContext(refSymbol, ref, () => {
@@ -66,7 +66,7 @@ type Tasks<T> = {
   unMount(): void
 }
 
-function Ref(): Ref {
+export function Ref(): Ref {
   const keyed = new Map()
   let keysToFlush = new Set()
   let didRun = false
@@ -113,17 +113,6 @@ function Ref(): Ref {
     },
     properties: {},
     isNew: true,
-  }
-}
-
-export function withHooks<So extends Sources, Si extends Sinks>(App: (() => Si)): (sources: So) => Si {
-  return function AppWithHooks(sources: So) {
-    const injections = [
-      [sourcesKey, sources],
-      [refSymbol, Ref()],
-      [registerSinks, function() {}], // TODO
-    ]
-    return withZone(forkZone(useCurrentZone(), injections as any), App)
   }
 }
 
