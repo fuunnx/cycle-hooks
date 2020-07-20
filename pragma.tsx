@@ -1,8 +1,7 @@
 import { h } from "snabbdom";
-import xs, { MemoryStream, Stream } from "xstream";
-import { gatherSinks, registerSinks } from "./sinks";
-import { provideSources, sourcesKey, useSources } from "./sources";
-import { map } from "rambda";
+import { MemoryStream, Stream } from "xstream";
+import { registerSinks } from "./sinks";
+import { sourcesKey } from "./sources";
 import { ContextKey, forkZone, useContext, useCurrentZone, withContext, withZone } from "./context";
 import { Sinks, Sources } from "./types";
 
@@ -23,7 +22,13 @@ export type Ref = {
 const refSymbol: ContextKey<Ref> = Symbol('ref')
 
 export function withRef<T>(ref: Ref, exec: () => T): T {
-  return withContext(refSymbol, ref, exec)
+  return withContext(refSymbol, ref, () => {
+    try {
+      return exec()
+    } finally {
+      ref.commit()
+    }
+  })
 }
 export function useRef(): Ref {
   return useContext(refSymbol)
@@ -64,10 +69,12 @@ type Tasks<T> = {
 function Ref(): Ref {
   const keyed = new Map()
   let keysToFlush = new Set()
+  let didRun = false
   const components: Map<Component<unknown>, Tasks<Ref>> = new Map()
 
   return {
     fetchChild(component, key) {
+      didRun = true
       if(key) {
         if(!keyed.has(key)) {
           keyed.set(key, Ref())
@@ -84,17 +91,19 @@ function Ref(): Ref {
       return child
     },
     commit() {
-      keysToFlush.forEach((key) => {
-        keyed.get(key).unMount()
-        keyed.delete(key)
-      })
-      keysToFlush = new Set(keyed.keys())
-
-      components.forEach(tasks => {
-        tasks.commit()
-      })
-
+      if(didRun) {
+        keysToFlush.forEach((key) => {
+          keyed.get(key).unMount()
+          keyed.delete(key)
+        })
+        keysToFlush = new Set(keyed.keys())
+  
+        components.forEach(tasks => {
+          tasks.commit()
+        })
+      }
       this.isNew = false
+      didRun = false
     },
     unMount() {
       components.forEach(tasks => {
