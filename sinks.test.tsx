@@ -72,3 +72,33 @@ test("gather sinks inside streams", (done) => {
 
   Time.run(done);
 });
+
+test("stop gathered sinks on next", (done) => {
+  const gatherSinks = sinksGatherer(["b"]);
+  const Time = mockTimeSource();
+
+  const events = () => Time.diagram("--a---b---c", { a: "a", b: "b", c: "c" });
+  const repeatEvent = (char: string) => {
+    return Time.diagram("-" + char.repeat(1));
+  };
+  function App() {
+    return {
+      a: events().map(Component),
+    };
+  }
+  function Component(char: string) {
+    registerSinks({
+      b: repeatEvent(char),
+    });
+    return xs.empty();
+  }
+
+  const [gathered, appSinks] = gatherSinks(() => App());
+  assertSinksEqual(Time, gathered, {
+    b: events()
+      .map((x) => repeatEvent(x))
+      .flatten(),
+  });
+
+  Time.run(done);
+});
