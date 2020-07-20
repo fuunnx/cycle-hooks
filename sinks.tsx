@@ -16,15 +16,18 @@ export function sinksGatherer(keys: string[]) {
 
   return function gatherSinks<T>(exec: () => T): [Sinks, T] {
     let sinksProxy = initSinksProxy();
-    let subscriptions = [];
+    let subscriptions: (() => void)[] = [];
     const returnValue = withContext(
       registererKey,
       (sinks: Sinks) => {
-        // console.log("registering", Object.keys(sinks));
         subscriptions.push(replicateMany(sinks, sinksProxy));
       },
       exec
     );
+
+    // useUnmount(() => {
+    //   subscriptions.forEach((x) => x());
+    // });
 
     return [sinksProxy, returnValue];
   };
@@ -37,6 +40,6 @@ export function registerSinks(sinks: Sinks) {
   );
 }
 
-function useUnmount() {
+function useUnmount(onUnmount?: () => void) {
   return xs.never();
 }

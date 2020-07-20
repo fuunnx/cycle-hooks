@@ -79,7 +79,7 @@ test("stop gathered sinks on next", (done) => {
 
   const events = () => Time.diagram("---a-----b-----c");
   const repeatEvent = (char: string) => {
-    return Time.diagram("-" + String(char).repeat(1));
+    return Time.diagram("-" + String(char).repeat(10));
   };
   function App() {
     return {
@@ -108,7 +108,7 @@ test("stop gathered sinks on next (2)", (done) => {
 
   const events = () => xs.periodic(100).take(10);
   const repeatEvent = (char: string) => {
-    return xs.periodic(20).mapTo(char).take(2);
+    return xs.periodic(20).mapTo(char).take(20);
   };
   function App() {
     return {
@@ -156,4 +156,29 @@ test("stop gathered sinks on next (2)", (done) => {
     });
 
   appSinks.a.addListener({});
+});
+
+test("gather sinks inside streams, multiple times", (done) => {
+  const gatherSinks = sinksGatherer(["d"]);
+  const Time = mockTimeSource();
+  const sinksA = () => Time.diagram("-d-d");
+  const sinksB = () => Time.diagram("--e-e");
+  const c$ = () => Time.diagram("--x--");
+  function App() {
+    return {
+      c: c$().map(() => {
+        registerSinks({ d: sinksA() });
+        registerSinks({ d: sinksB() });
+        return "y";
+      }),
+    };
+  }
+
+  const [gathered, appSinks] = gatherSinks(() => App());
+  assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
+    d: xs.merge(sinksA(), sinksB()),
+    c: c$().mapTo("y"),
+  });
+
+  Time.run(done);
 });
