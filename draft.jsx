@@ -134,7 +134,7 @@ function gatherSinks(func) {
   let previous = globalSinks.register;
   let sinks = {};
   globalSinks.register = function registerSinks(registered) {
-    sinks = mergeSinks(sinks, registered);
+    sinks = mergeSinks<[any, ...any[]])>([sinks, registered]);
   };
   const returnValue = func();
   globalSinks.register = previous;

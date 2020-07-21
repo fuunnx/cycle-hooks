@@ -3,14 +3,14 @@ import { refSymbol, Ref } from "./pragma";
 import { forkZone, useCurrentZone, withZone } from "./context";
 import { Sinks, Sources } from "./types";
 import { sinksGatherer } from "./sinks";
-import { mergeSinks } from "cyclejs-utils";
+import { mergeSinks } from "./helpers";
 import { MemoryStream } from "xstream";
 
-export function withHooks<So extends Sources, Si extends Sinks>(
-  App: () => Si | MemoryStream<any>,
+export function withHooks(
+  App: () => Sinks | MemoryStream<any>,
   sinksNames: string[]
-): (sources: So) => Si {
-  return function AppWithHooks(sources: So): Si {
+): (sources: Sources) => Sinks {
+  return function AppWithHooks(sources: Sources): Sinks {
     const [gathered, sinks] = sinksGatherer(sinksNames)(() => {
       const injections = [
         [sourcesKey, sources],
@@ -19,10 +19,10 @@ export function withHooks<So extends Sources, Si extends Sinks>(
       return withZone(forkZone(useCurrentZone(), injections as any), App);
     });
 
-    if (sinks.DOM) {
+    if ("DOM" in sinks) {
       return mergeSinks([gathered, sinks]);
     }
 
-    return mergeSinks([gathered, { DOM: sinks }]);
+    return mergeSinks([gathered, { DOM: sinks } as Sinks]);
   };
 }
