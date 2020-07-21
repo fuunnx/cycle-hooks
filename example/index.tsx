@@ -16,14 +16,12 @@ function App() {
     .flatten()
     .mapTo((x) => x + 1);
 
-  const [resetIntent$, triggerReset] = makeSubject<null>();
-  const reset$ = resetIntent$.mapTo(() => 0);
+  useEffect(increment$.map((fn) => () => setCount(fn)));
+
   const [count$, setCount] = useState(0);
 
-  useEffect(xs.merge(reset$, increment$).map((fn) => () => setCount(fn)));
-
   return {
-    DOM: count$.debug("").map((count) => (
+    DOM: count$.map((count) => (
       <div>
         <button
           on={{
@@ -43,7 +41,7 @@ function App() {
         <button
           type="button"
           on={{
-            click: triggerReset,
+            click: () => setCount(0),
           }}
         >
           Reset
