@@ -2,10 +2,10 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2016",
+    "lib": ["dom", "es2020"],
     "jsx": "react",
     "jsxFactory": "h",
-    "sourceMap": true,
-    "typeRoots": ["definitions.d.ts"]
+    "sourceMap": true
   },
   "exclude": ["node_modules", "**/node_modules/*"]
 }

@@ -1,25 +1,63 @@
 import xs from "xstream";
-import { run } from "@cycle/core";
-import { makeDOMDriver } from "@cycle/dom";
+import { run } from "@cycle/run";
+import { makeDOMDriver, button } from "@cycle/dom";
+import modules from "@cycle/dom/lib/es6/modules";
 import { withHooks } from "../withHooks";
-// import { withHooks, makeEffectsDriver } from "..";
-// import { useState } from "../useState";
+import { makeEffectsDriver, makeSubject } from "..";
+import { useState } from "../useState";
 import { createElement as h } from "../pragma";
+import { eventListenersModule } from "snabbdom/build/package/modules/eventlisteners";
+import { useEffect } from "../effectsDriver";
 
 function App() {
-  const count$ = xs.of(1);
-  // const [count$, setCount] = useState(0);
+  const [isDown$, setIsDown] = useState(false);
+  const increment$ = isDown$
+    .map((down) => (down ? xs.periodic(500).startWith(null) : xs.empty()))
+    .flatten()
+    .mapTo((x) => x + 1);
+
+  const [resetIntent$, triggerReset] = makeSubject<null>();
+  const reset$ = resetIntent$.mapTo(() => 0);
+  const [count$, setCount] = useState(0);
+
+  useEffect(xs.merge(reset$, increment$).map((fn) => () => setCount(fn)));
+
   return {
-    DOM: count$.map((count) => (
-      <button onClick={() => setCount((val) => val + 1)}>{count}</button>
+    DOM: count$.debug("").map((count) => (
+      <div>
+        <button
+          on={{
+            mousedown: () => {
+              setIsDown(true);
+            },
+            mouseup: () => {
+              setIsDown(false);
+            },
+            mouseleave: () => {
+              setIsDown(false);
+            },
+          }}
+        >
+          {count}
+        </button>
+        <button
+          type="button"
+          on={{
+            click: triggerReset,
+          }}
+        >
+          Reset
+        </button>
+      </div>
     )),
   };
 }
 
 const drivers = {
-  /*effects: makeEffectsDriver(),*/ DOM: makeDOMDriver("#app"),
+  effects: makeEffectsDriver(),
+  DOM: makeDOMDriver("#app", {
+    modules: [...modules, eventListenersModule],
+  }),
 };
-run(App, drivers);
-// run(withHooks(App, Object.keys(drivers)), drivers);
 
-function setCount(x: any) {}
+run(withHooks(App, Object.keys(drivers)), drivers);

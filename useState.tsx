@@ -5,6 +5,7 @@ type Reducer<T> = (x: T) => T;
 export function useState<T>(initial: T) {
   const [reducer$, runReducer] = makeSubject<Reducer<T>>();
   const state$ = reducer$.fold((acc, red) => red(acc), initial);
+
   return [
     state$,
     function setState(val: Reducer<T> | T | Partial<T>) {

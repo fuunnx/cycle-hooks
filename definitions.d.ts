@@ -1,6 +1,10 @@
+import { VNode, VNodeData } from "snabbdom/build/package/vnode";
+
 declare namespace JSX {
+  interface Element extends VNode {}
+
   interface IntrinsicElements {
-    [elemName: string]: any;
+    [elemName: string]: VNodeData;
   }
 
   interface ElementChildrenAttribute {

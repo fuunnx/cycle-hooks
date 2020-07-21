@@ -1,6 +1,7 @@
 import { h } from "@cycle/dom";
 import { MemoryStream } from "xstream";
 import { ContextKey, useContext, withContext } from "./context";
+import { JSX } from "./definitions";
 
 export type Component<T> =
   | ((props: T) => JSX.Element)
@@ -121,15 +122,13 @@ export function createElement<T extends { [k: string]: unknown }>(
         props: T
       ) => MemoryStream<JSX.Element> | { DOM: MemoryStream<JSX.Element> }),
   props?: T,
-  children?:
-    | string
-    | null
-    | number
-    | JSX.Element
-    | (string | null | number | JSX.Element)[]
+  ...children: (string | null | number | JSX.Element)[]
 ) {
   if (typeof tagOrFunction === "string") {
-    return h(tagOrFunction, props, children);
+    if (props) {
+      return h(tagOrFunction, props, children);
+    }
+    return h(tagOrFunction, children);
   }
 
   const parent = useRef();
@@ -152,7 +151,7 @@ function isObservable<T>(x: T) {
 
 function initInstance<T>(component: Component<T>, props?: T) {
   const sinks = component(props);
-  const DOM = isObservable(sinks) ? sinks : sinks.DOM;
+  const DOM = isObservable(sinks) ? sinks : (sinks as any).DOM;
 
   return {
     DOM: DOM as MemoryStream<any>,

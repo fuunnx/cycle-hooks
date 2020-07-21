@@ -1,7 +1,6 @@
 import { provideSources, useSources, safeUseSources } from "./sources";
 import xs, { Stream } from "xstream";
 import { mockTimeSource } from "@cycle/time";
-import { useCurrentZone } from "./context";
 
 test("provides sources 1 level deep", () => {
   const sources = { a: xs.empty() };
