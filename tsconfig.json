@@ -4,7 +4,8 @@
     "target": "es2016",
     "jsx": "react",
     "jsxFactory": "h",
-    "sourceMap": true
+    "sourceMap": true,
+    "typeRoots": ["definitions.d.ts"]
   },
   "exclude": ["node_modules", "**/node_modules/*"]
 }

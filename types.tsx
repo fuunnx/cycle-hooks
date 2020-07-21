@@ -10,13 +10,3 @@ export type Sinks = {
 export type MainFn = {
   (sources?: Sources): Sinks;
 };
-
-declare namespace JSX {
-  interface IntrinsicElements {
-    [elemName: string]: any;
-  }
-
-  interface ElementChildrenAttribute {
-    children: {}; // specify children name to use
-  }
-}
