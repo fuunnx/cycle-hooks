@@ -107,7 +107,7 @@ test("stop gathered sinks on next (2)", (done) => {
   const gatherSinks = sinksGatherer(["b"]);
 
   const events = () => xs.periodic(100).take(10);
-  const repeatEvent = (char: string) => {
+  const repeatEvent = (char: string | number) => {
     return xs.periodic(20).mapTo(char).take(20);
   };
   function App() {
