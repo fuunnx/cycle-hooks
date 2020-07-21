@@ -1,0 +1,1 @@
+- [ ] File an issue about mergeSinks causing a maximum call stack error in typescript, if no type arguments provided
