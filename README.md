@@ -16,6 +16,10 @@ npm install cycle-hooks --save
 
 ## Setup your App :
 
+1. Add effectsDriver to your drivers
+2. Add eventListenersModule to the DOMDriver
+3. Wrap your toplevel component with `withHooks(App, Object.keys(drivers))`
+
 ```js
 import { run } from "@cycle/run";
 import { makeDOMDriver } from "@cycle/dom";
@@ -34,6 +38,8 @@ const drivers = {
 
 run(withHooks(App, Object.keys(drivers)), drivers);
 ```
+
+### Write your first component
 
 ### Using JSX
 
