@@ -13,12 +13,12 @@ function App() {
   return (
     <div>
       <h1>Examples</h1>
-      <Increment />
+      <Incrementer />
     </div>
   );
 }
 
-function Increment() {
+function Incrementer() {
   const [count$, setCount] = useState(0);
   const [isDown$, setIsDown] = useState(false);
   const increment$ = isDown$
@@ -31,25 +31,14 @@ function Increment() {
     <div>
       <button
         on={{
-          mousedown: () => {
-            setIsDown(true);
-          },
-          mouseup: () => {
-            setIsDown(false);
-          },
-          mouseleave: () => {
-            setIsDown(false);
-          },
+          mousedown: () => setIsDown(true),
+          mouseup: () => setIsDown(false),
+          mouseleave: () => setIsDown(false),
         }}
       >
         {count$}
       </button>
-      <button
-        type="button"
-        on={{
-          click: () => setCount(0),
-        }}
-      >
+      <button type="button" on={{ click: () => setCount(0) }}>
         Reset
       </button>
     </div>
