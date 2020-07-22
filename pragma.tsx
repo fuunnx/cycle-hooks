@@ -1,7 +1,6 @@
 import { h } from "@cycle/dom";
-import { MemoryStream } from "xstream";
+import xs, { MemoryStream } from "xstream";
 import { ContextKey, useContext, withContext } from "./context";
-import { JSX } from "./definitions";
 
 export type Component<T> =
   | ((props: T) => JSX.Element)
@@ -12,7 +11,7 @@ export type Component<T> =
 export type Ref = {
   commit: () => void;
   unMount: () => void;
-  fetchChild<T>(Component: Component<T>, key: string | undefined): Ref;
+  fetchChild<T>(Component: Component<T>, key?: string): Ref;
   properties: { [k: string]: any };
   isNew: boolean;
 };
@@ -126,13 +125,13 @@ export function createElement<T extends { [k: string]: unknown }>(
 ) {
   if (typeof tagOrFunction === "string") {
     if (props) {
-      return h(tagOrFunction, props, children);
+      return liftIfObservable((c) => h(tagOrFunction, props, c));
     }
-    return h(tagOrFunction, children);
+    return liftIfObservable((c) => h(tagOrFunction, c));
   }
 
   const parent = useRef();
-  const ref = parent.fetchChild(tagOrFunction, (props as any).key);
+  const ref = parent.fetchChild(tagOrFunction, (props as any)?.key);
   if (ref.isNew) {
     ref.properties.instance = withRef(ref, () =>
       initInstance(tagOrFunction, props)
@@ -142,11 +141,19 @@ export function createElement<T extends { [k: string]: unknown }>(
   }
   ref.commit();
 
+  console.log(ref.properties.instance.DOM);
   return ref.properties.instance.DOM;
-}
 
-function isObservable<T>(x: T) {
-  return true;
+  function liftIfObservable(
+    func: (children: JSX.Element[]) => JSX.Element
+  ): JSX.Element | MemoryStream<JSX.Element> {
+    if (children.some(isObservable)) {
+      return xs
+        .combine(...children.map((x) => (isObservable(x) ? x : xs.of(x))))
+        .map(func);
+    }
+    return func(children as any[]);
+  }
 }
 
 function initInstance<T>(component: Component<T>, props?: T) {
@@ -160,4 +167,19 @@ function initInstance<T>(component: Component<T>, props?: T) {
     },
     unMount() {},
   };
+}
+
+import { VNode, VNodeData } from "snabbdom/build/package/vnode";
+import { isObservable } from "./helpers";
+
+declare namespace JSX {
+  interface Element extends VNode {}
+
+  interface IntrinsicElements {
+    [elemName: string]: VNodeData;
+  }
+
+  interface ElementChildrenAttribute {
+    children: {}; // specify children name to use
+  }
 }
