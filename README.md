@@ -16,27 +16,37 @@ npm install cycle-hooks --save
 
 ## Setup your App :
 
-1. Add effectsDriver to your drivers
-2. Add eventListenersModule to the DOMDriver
+1. Add eventListenersModule to the DOMDriver
+2. Add effectsDriver to your drivers
 3. Wrap your toplevel component with `withHooks(App, Object.keys(drivers))`
+4. `run` it or use it like a regular Cycle application
 
 ```js
-import { run } from "@cycle/run";
+// 1
 import { makeDOMDriver } from "@cycle/dom";
 import modules from "@cycle/dom/lib/es6/modules";
 import { eventListenersModule } from "snabbdom/build/package/modules/eventlisteners";
+// 2 and 3
 import { makeEffectsDriver, withHooks } from "cycle-hooks";
 
+// 4
+import { run } from "@cycle/run";
 import { App } from "./App.js";
 
 const drivers = {
-  effects: makeEffectsDriver(),
+  // 1
   DOM: makeDOMDriver("#app", {
     modules: [...modules, eventListenersModule],
   }),
+  // 2
+  effects: makeEffectsDriver(),
 };
 
-run(withHooks(App, Object.keys(drivers)), drivers);
+// 3
+const RunnableApp = withHooks(App, Object.keys(drivers));
+
+// 4
+run(RunnableApp, drivers);
 ```
 
 ### Write your first component
