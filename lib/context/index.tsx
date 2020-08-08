@@ -58,11 +58,18 @@ export function useContext<T>(name: ContextKey<T>): T {
 
 const NOT_FOUND = {} as const;
 export function resolveContext<T>(name: ContextKey<T>): T | typeof NOT_FOUND {
-  let current = useCurrentZone();
-  while (current && current.parent) {
+  let origin = useCurrentZone();
+  if (origin.content.has(name)) {
+    return origin.content.get(name);
+  }
+
+  let current = origin.parent;
+  while (current) {
     const ctx = current.content;
-    if (ctx?.has(name)) {
-      return ctx.get(name);
+    if (ctx.has(name)) {
+      const value = ctx.get(name);
+      origin.content.set(name, value);
+      return value;
     }
     current = current.parent;
   }
