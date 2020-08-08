@@ -13,11 +13,11 @@ export function useCurrentZone() {
   return currentZone;
 }
 
-export function forkZone(zone: Zone, properties: ([ContextKey, any])[]) {
+export function forkZone(zone: Zone, properties: [ContextKey, any][]) {
   return {
     parent: zone,
     content: new Map(properties),
-  }
+  };
 }
 
 export function withZone<T>(zone: Zone, exec: () => T): T {
@@ -37,10 +37,7 @@ export function withContext<T, U>(
   value: T,
   exec: () => U
 ): U {
-  return withZone(
-    forkZone(useCurrentZone(), [[name, value]]),
-    exec
-  );
+  return withZone(forkZone(useCurrentZone(), [[name, value]]), exec);
 }
 
 export function safeUseContext<T>(name: ContextKey<T>): T | undefined {
