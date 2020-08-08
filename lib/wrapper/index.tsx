@@ -1,9 +1,9 @@
-import { sourcesKey } from "./sources";
-import { refSymbol, Ref } from "./pragma";
-import { forkZone, useCurrentZone, withZone } from "./context";
-import { Sinks, Sources } from "./types";
-import { sinksGatherer } from "./sinks";
-import { mergeSinks, isObservable } from "./helpers";
+import { sourcesKey } from "../context/sources";
+import { refSymbol, Ref } from "../pragma";
+import { forkZone, useCurrentZone, withZone } from "../context";
+import { Sinks, Sources } from "../types";
+import { sinksGatherer } from "../context/sinks";
+import { mergeSinks, isObservable } from "../helpers";
 import xs, { MemoryStream } from "xstream";
 
 export function withHooks(

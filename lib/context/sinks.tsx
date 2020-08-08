@@ -1,10 +1,10 @@
-import "./patches/xstream";
+import "../patches/xstream";
 
-import { Sinks } from "./types";
+import { Sinks } from "../types";
 import xs, { Stream } from "xstream";
-import { mapObj } from "./helpers";
+import { mapObj } from "../helpers";
 import { replicateMany } from "@cycle/run/lib/cjs/internals";
-import { ContextKey, withContext, useContext, safeUseContext } from "./context";
+import { ContextKey, withContext, useContext } from ".";
 
 export type Registerer = (sinks: Sinks) => void;
 export const registererKey: ContextKey<Registerer> = Symbol("registerer");

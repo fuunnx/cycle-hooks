@@ -1,6 +1,7 @@
+// WIP
 import { h } from "@cycle/dom";
 import xs, { MemoryStream } from "xstream";
-import { ContextKey, useContext, withContext } from "./context";
+import { ContextKey, useContext, withContext } from "../context";
 
 export type Component<T> =
   | ((props: T) => JSX.Element)
@@ -170,7 +171,7 @@ function initInstance<T>(component: Component<T>, props?: T) {
 }
 
 import { VNode, VNodeData } from "snabbdom/build/package/vnode";
-import { isObservable } from "./helpers";
+import { isObservable } from "../helpers";
 
 declare namespace JSX {
   interface Element extends VNode {}

@@ -1,6 +1,5 @@
 import { Stream } from "xstream";
 
-export { Stream } from "xstream";
 export type Sources = {};
 
 export type Sinks = {

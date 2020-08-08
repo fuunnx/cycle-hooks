@@ -1,13 +1,11 @@
-import xs, { Stream, InternalProducer, NO } from "xstream";
+import { Stream, InternalProducer, NO } from "xstream";
 import {
   useCurrentZone,
   withZone,
-  useContext,
   withContext,
   safeUseContext,
 } from "../context";
-import { registererKey } from "../sinks";
-import { mapObj } from "../helpers";
+import { registererKey } from "../context/sinks";
 import { Sinks } from "../types";
 
 Object.defineProperty(Stream.prototype, "_prod", {

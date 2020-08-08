@@ -1,4 +1,4 @@
-import { Sinks } from "./types";
+import { Sinks } from "../types";
 import { Stream } from "xstream";
 import { mergeSinks as mergeSinks_ } from "cyclejs-utils";
 import $$observable from "symbol-observable";

@@ -1,6 +1,7 @@
-import "./patches/xstream";
-import { Sources } from "./types";
-import { ContextKey, withContext, useContext, safeUseContext } from "./context";
+import "../patches/xstream";
+
+import { Sources } from "../types";
+import { ContextKey, withContext, useContext, safeUseContext } from ".";
 
 export const sourcesKey: ContextKey<Sources> = Symbol("sources");
 

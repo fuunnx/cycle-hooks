@@ -1,9 +1,7 @@
-import { Stream } from "./types";
-import { useSources } from "./sources";
+import { Stream } from "xstream";
+import { useSources } from "../context/sources";
 import xs, { Listener, MemoryStream } from "xstream";
-import { registerSinks } from "./sinks";
-
-type Effect = [Symbol, unknown];
+import { Effect, EffectsSources } from "./types";
 
 let listener: Listener<Effect> | null = null;
 const effect$ = xs.create<Effect>({
@@ -14,11 +12,10 @@ const effect$ = xs.create<Effect>({
     listener = null;
   },
 });
+
 function triggerEffect(symbol: Symbol, value: unknown) {
   listener?.next([symbol, value]);
 }
-
-type EffectsSources = Stream<Effect>;
 
 export function makeSubject<T>(): [Stream<T>, (value: T) => void] {
   const symbol = Symbol();
@@ -52,10 +49,4 @@ export function makeEffectsDriver(bus$ = effect$) {
 
     return bus$;
   };
-}
-
-export function useEffect(effect$: Stream<() => void>) {
-  return registerSinks({
-    effects: effect$,
-  });
 }

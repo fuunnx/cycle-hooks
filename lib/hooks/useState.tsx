@@ -1,6 +1,6 @@
-import { makeSubject } from "./effectsDriver";
+import { makeSubject } from "../driver";
 
-type Reducer<T> = (x: T) => T;
+export type Reducer<T> = (x: T) => T;
 
 export function useState<T>(initial: T) {
   const [reducer$, runReducer] = makeSubject<Reducer<T>>();
