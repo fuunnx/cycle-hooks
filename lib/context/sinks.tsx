@@ -7,7 +7,7 @@ import { replicateMany } from "@cycle/run/lib/cjs/internals";
 import { ContextKey, withContext, useContext } from ".";
 
 export type Registerer = (sinks: Sinks) => void;
-export const registererKey: ContextKey<Registerer> = Symbol("registerer");
+export const gathererKey: ContextKey<Registerer> = Symbol("registerer");
 
 export function sinksGatherer(keys: string[]) {
   function initSinksProxy(): { [key: string]: Stream<unknown> } {
@@ -18,7 +18,7 @@ export function sinksGatherer(keys: string[]) {
     let sinksProxy = initSinksProxy();
     let subscriptions: (() => void)[] = [];
     const returnValue = withContext(
-      registererKey,
+      gathererKey,
       (sinks: Sinks) => {
         subscriptions.push(replicateMany(sinks, sinksProxy));
       },
@@ -35,7 +35,7 @@ export function sinksGatherer(keys: string[]) {
 
 export function registerSinks(sinks: Sinks) {
   const stop$ = useUnmount();
-  return useContext(registererKey)(
+  return useContext(gathererKey)(
     mapObj((sink$: Stream<unknown>) => sink$.endWhen(stop$), sinks)
   );
 }
