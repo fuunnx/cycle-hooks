@@ -1,14 +1,21 @@
+import xs, { Stream } from "xstream";
 import { IndexedTracker, makeUsageTrackerIndexed } from "./trackUsageIndexed";
 import { ContextKey, withContext, useContext } from "..";
+import { useSources } from "../context/sources";
+import { mapObj, isObservable } from "../helpers";
+import { Sinks } from "../types";
 
 export type Ref = {
-  data: any;
+  data: { instance: null | Sinks };
   tracker: IndexedTracker<Function, Ref>;
 };
 
-export function Ref(constructorFn: Function = () => ({})): Ref {
-  return {
-    data: constructorFn(),
+export function Ref(constructorFn?: Function): Ref {
+  const destroy$ = xs.create();
+  const ref = {
+    data: {
+      instance: {},
+    },
     tracker: makeUsageTrackerIndexed<Function, Ref>({
       create(func) {
         return Ref(func);
@@ -19,9 +26,21 @@ export function Ref(constructorFn: Function = () => ({})): Ref {
       },
       destroy(ref) {
         ref.tracker.destroy();
+        destroy$.shamefullySendNext(null);
       },
     }),
   };
+
+  if (constructorFn) {
+    ref.data.instance = withRef(ref, () => {
+      const result = constructorFn(useSources());
+      const sinks = isObservable(result) ? { DOM: result } : result;
+
+      return mapObj((sink$: Stream<any>) => sink$.endWhen(destroy$), sinks);
+    });
+  }
+
+  return ref;
 }
 
 export const refSymbol: ContextKey<Ref> = Symbol("ref");

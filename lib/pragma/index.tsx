@@ -31,7 +31,7 @@ export function createElement<T extends { [k: string]: unknown }>(
   const parent = useRef();
   const ref = parent.tracker.track(tagOrFunction);
 
-  return ref.data.DOM;
+  return ref.data.instance.DOM;
 
   function liftIfObservable(
     func: (children: JSX.Element[]) => JSX.Element
