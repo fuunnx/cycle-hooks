@@ -1,5 +1,5 @@
 import { sourcesKey } from "../context/sources";
-import { refSymbol, Ref } from "../pragma";
+import { refSymbol, Ref } from "../pragma/ref";
 import { forkZone, useCurrentZone, withZone } from "../context";
 import { Sinks, Sources } from "../types";
 import { sinksGatherer } from "../context/sinks";
