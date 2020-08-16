@@ -1,30 +1,37 @@
 import xs from "xstream";
 import { run } from "@cycle/run";
-import { makeDOMDriver, button } from "@cycle/dom";
+import { makeDOMDriver } from "@cycle/dom";
 import modules from "@cycle/dom/lib/es6/modules";
 import { withHooks } from "../lib/wrapper";
 import { makeEffectsDriver } from "../lib/driver";
 import { useState } from "../lib/hooks/useState";
-import { createElement as h } from "../lib/pragma";
+import { createElement as h, Fragment } from "../lib/pragma";
 import { eventListenersModule } from "snabbdom/build/package/modules/eventlisteners";
 import { useEffect } from "../lib/hooks/useEffect";
-import { autorun } from "../lib/autorun";
+import { withState } from "@cycle/state";
+import { useGlobalState } from "../lib/hooks/useGlobalState";
+import { onUnmount } from "../lib/context/unmount";
 
 function App() {
-  const [visible$, setVisible] = useState(false);
-  return autorun((v) => (
+  const [visible$, setVisible] = useState(true);
+
+  onUnmount(() => console.log("goodbye App"));
+
+  return (
     <div>
       <h1>Examples</h1>
       <button
         on={{
-          click: () => setVisible((x) => !x),
+          click: () => setVisible(true),
         }}
       >
         Afficher ?
       </button>
-      {v(visible$) ? <Incrementer /> : null}
+      {visible$.map((visible) =>
+        visible ? [<Incrementer />, <Input />] : null
+      )}
     </div>
-  ));
+  );
 }
 
 function Incrementer() {
@@ -40,6 +47,9 @@ function Incrementer() {
       return () => setCount(fn);
     })
   );
+
+  onUnmount(() => console.log("goodbye Incrementer"));
+
   return (
     <div>
       <button
@@ -58,6 +68,26 @@ function Incrementer() {
   );
 }
 
+function Input() {
+  const [state$, setState] = useGlobalState({});
+
+  console.log("run Input");
+  useEffect(xs.of(() => console.log("hello Input")));
+  onUnmount(() => console.log("goodbye Input"));
+
+  return (
+    <input
+      type="text"
+      value={state$.map((x) => x.value).startWith("")}
+      on={{
+        input(e) {
+          setState({ value: e.target.value });
+        },
+      }}
+    />
+  );
+}
+
 const drivers = {
   effects: makeEffectsDriver(),
   DOM: makeDOMDriver("#app", {
@@ -65,4 +95,15 @@ const drivers = {
   }),
 };
 
-run(withHooks(App, Object.keys(drivers)), drivers);
+run(
+  withState((sources) => {
+    const sinks = withHooks(App, Object.keys(drivers))(sources);
+    sinks.state.addListener({
+      error(e) {
+        console.log(e);
+      },
+    });
+    return { ...sinks, state: sinks.state };
+  }),
+  drivers
+);

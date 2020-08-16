@@ -1,6 +1,8 @@
 import { Stream } from "xstream";
 
-export type Sources = {};
+export type Sources = {
+  [key: string]: any;
+};
 
 export type Sinks = {
   [key: string]: Stream<unknown>;

@@ -5,6 +5,7 @@
     "lib": ["dom", "es2020"],
     "jsx": "react",
     "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
     "sourceMap": true
   },
   "exclude": ["node_modules", "**/node_modules/*"]

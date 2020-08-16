@@ -2,6 +2,7 @@ import { Stream, InternalProducer, NO } from "xstream";
 import { useCurrentZone, withZone, safeUseContext, forkZone } from "../context";
 import { gathererKey } from "../context/sinks";
 import { Sinks } from "../types";
+import { withUnmount } from "../context/unmount";
 
 // it's just a way to hook into the Stream constructor call
 Object.defineProperty(Stream.prototype, "_prod", {
@@ -20,14 +21,13 @@ function patch(stream: Stream<any>): void {
     return;
   }
 
-  let localSinks: Sinks = {};
+  let unmount = () => {};
   const gatherer = safeUseContext(gathererKey);
   if (gatherer) {
     zone = forkZone(zone, [
       [
         gathererKey,
         (sinks: Sinks) => {
-          localSinks = sinks;
           gatherer(sinks);
         },
       ],
@@ -39,20 +39,23 @@ function patch(stream: Stream<any>): void {
   let _e = stream._e.bind(stream);
 
   Object.assign(stream, {
-    _e() {
-      Object.values(localSinks).forEach((x) => x._c());
-      localSinks = {};
-      withZone(zone, () => _e());
+    _e(e) {
+      unmount();
+      withZone(zone, () => {
+        [unmount] = withUnmount(() => _e(e));
+      });
     },
     _c() {
-      Object.values(localSinks).forEach((x) => x._c());
-      localSinks = {};
-      withZone(zone, () => _c());
+      unmount();
+      withZone(zone, () => {
+        [unmount] = withUnmount(() => _c());
+      });
     },
     _n(v: any) {
-      Object.values(localSinks).forEach((x) => x._c());
-      localSinks = {};
-      withZone(zone, () => _n(v));
+      unmount();
+      withZone(zone, () => {
+        [unmount] = withUnmount(() => _n(v));
+      });
     },
   });
 }

@@ -2,9 +2,10 @@ import "../patches/xstream";
 
 import { Sinks } from "../types";
 import xs, { Stream } from "xstream";
-import { mapObj } from "../helpers";
 import { replicateMany } from "@cycle/run/lib/cjs/internals";
 import { ContextKey, withContext, useContext } from ".";
+import { onUnmount } from "./unmount";
+import { mapObj } from "../helpers";
 
 export type Registerer = (sinks: Sinks) => void;
 export const gathererKey: ContextKey<Registerer> = Symbol("registerer");
@@ -17,29 +18,25 @@ export function sinksGatherer(keys: string[]) {
   return function gatherSinks<T>(exec: () => T): [Sinks, T] {
     let sinksProxy = initSinksProxy();
     let subscriptions: (() => void)[] = [];
+
     const returnValue = withContext(
       gathererKey,
       (sinks: Sinks) => {
-        subscriptions.push(replicateMany(sinks, sinksProxy));
+        const unmount$ = onUnmount();
+        subscriptions.push(
+          replicateMany(
+            mapObj((x$: Stream<any>) => x$.endWhen(unmount$), sinks),
+            sinksProxy
+          )
+        );
       },
       exec
     );
-
-    // useUnmount(() => {
-    //   subscriptions.forEach((x) => x());
-    // });
 
     return [sinksProxy, returnValue];
   };
 }
 
 export function registerSinks(sinks: Sinks) {
-  const stop$ = useUnmount();
-  return useContext(gathererKey)(
-    mapObj((sink$: Stream<unknown>) => sink$.endWhen(stop$), sinks)
-  );
-}
-
-function useUnmount(onUnmount?: () => void) {
-  return xs.never();
+  return useContext(gathererKey)(sinks);
 }

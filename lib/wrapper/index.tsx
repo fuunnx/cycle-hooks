@@ -4,13 +4,18 @@ import { forkZone, useCurrentZone, withZone } from "../context";
 import { Sinks, Sources } from "../types";
 import { sinksGatherer } from "../context/sinks";
 import { mergeSinks, isObservable } from "../helpers";
-import xs, { MemoryStream } from "xstream";
+import xs, { MemoryStream, Stream } from "xstream";
+import { Reducer } from "@cycle/state";
+
+type AppSinks = Sinks & {
+  state: Stream<Reducer<unknown>>;
+};
 
 export function withHooks(
   App: () => Sinks | MemoryStream<any>,
   sinksNames: string[]
-): (sources: Sources) => Sinks {
-  return function AppWithHooks(sources: Sources): Sinks {
+): (sources: Sources) => AppSinks {
+  return function AppWithHooks(sources: Sources): AppSinks {
     const [gathered, sinks] = sinksGatherer(sinksNames)(() => {
       const injections = [
         [sourcesKey, sources],
@@ -27,10 +32,14 @@ export function withHooks(
         : mergeSinks([gathered, { DOM: sinks } as Sinks]);
 
     return {
+      state: xs.empty(),
       ...finalSinks,
-      DOM: finalSinks.DOM.map((x) =>
-        isObservable(x) ? x : xs.of(x)
-      ).flatten(),
+      DOM: (isObservable(finalSinks.DOM)
+        ? finalSinks.DOM
+        : xs.of(finalSinks.DOM)
+      )
+        .map((x) => (isObservable(x) ? x : xs.of(x)))
+        .flatten(),
     };
   };
 }

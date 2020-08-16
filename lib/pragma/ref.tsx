@@ -34,7 +34,10 @@ export function Ref(constructorFn?: Function): Ref {
   if (constructorFn) {
     ref.data.instance = withRef(ref, () => {
       const result = constructorFn(useSources());
-      const sinks = isObservable(result) ? { DOM: result } : result;
+      // prettier-ignore
+      const sinks = isObservable(result) ? { DOM: result } 
+        : (isObservable(result) as any).DOM ? result
+        : { DOM: xs.of(result) };
 
       return mapObj((sink$: Stream<any>) => sink$.endWhen(destroy$), sinks);
     });

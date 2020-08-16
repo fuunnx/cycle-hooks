@@ -772,7 +772,7 @@
     quicktask "1.1.0"
     xstream "10.x || 11.x"
 
-"@cycle/state@^1.0.0":
+"@cycle/state@^1.0.0", "@cycle/state@^1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@cycle/state/-/state-1.4.0.tgz#7180d436fddbbda512b7be81aa54c2558ccdb0f3"
   dependencies:
@@ -5801,9 +5801,9 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
-typescript@^3.9.7:
-  version "3.9.7"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.7.tgz#98d600a5ebdc38f40cb277522f12dc800e9e25fa"
+typescript@^4.0.0-beta:
+  version "4.0.0-beta"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.0.0-beta.tgz#a6a65e430562131de69496a3ef5484346bc0cdd2"
 
 unicode-canonical-property-names-ecmascript@^1.0.4:
   version "1.0.4"
