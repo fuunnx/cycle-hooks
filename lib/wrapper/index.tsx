@@ -24,8 +24,6 @@ export function withHooks(
       return withZone(forkZone(useCurrentZone(), injections as any), App);
     });
 
-    // TODO check if DOM is an observable, or else lift it as one
-
     const finalSinks =
       "DOM" in sinks
         ? mergeSinks([gathered, sinks])
@@ -34,12 +32,11 @@ export function withHooks(
     return {
       state: xs.empty(),
       ...finalSinks,
-      DOM: (isObservable(finalSinks.DOM)
-        ? finalSinks.DOM
-        : xs.of(finalSinks.DOM)
-      )
-        .map((x) => (isObservable(x) ? x : xs.of(x)))
-        .flatten(),
+      DOM: streamify(finalSinks.DOM).map(streamify).flatten(),
     };
   };
+}
+
+function streamify<T>(x: T | Stream<T>): Stream<T> {
+  return isObservable(x) ? x : xs.of(x);
 }
