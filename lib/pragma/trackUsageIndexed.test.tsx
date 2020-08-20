@@ -54,7 +54,6 @@ test("trackUsageIndexed : multiple lifecycles", () => {
   const actual = tracker.instances;
   expect(serialize(actual)).toEqual({
     1: [1],
-    2: [],
   });
 });
 

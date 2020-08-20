@@ -3,9 +3,10 @@ import { refSymbol, Ref } from "../pragma/ref";
 import { forkZone, useCurrentZone, withZone } from "../context";
 import { Sinks, Sources } from "../types";
 import { sinksGatherer } from "../context/sinks";
-import { mergeSinks, isObservable } from "../helpers";
+import { mergeSinks, streamify } from "../helpers";
 import xs, { MemoryStream, Stream } from "xstream";
 import { Reducer } from "@cycle/state";
+import { trackChildren } from "../pragma";
 
 type AppSinks = Sinks & {
   state: Stream<Reducer<unknown>>;
@@ -32,11 +33,7 @@ export function withHooks(
     return {
       state: xs.empty(),
       ...finalSinks,
-      DOM: streamify(finalSinks.DOM).map(streamify).flatten(),
+      DOM: trackChildren(finalSinks.DOM as any),
     };
   };
-}
-
-function streamify<T>(x: T | Stream<T>): Stream<T> {
-  return isObservable(x) ? x : xs.of(x);
 }

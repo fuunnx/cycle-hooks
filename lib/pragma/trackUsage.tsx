@@ -16,14 +16,23 @@ export function makeUsageTracker<T, Inst>(
 ): Tracker<T, Inst> {
   let unused: Map<T, Inst> = new Map();
   let instances: Map<T, Inst> = new Map();
+  let isOpen = false;
 
   return {
     open() {
+      if (isOpen) throw new Error("tracker is already open");
+
       unused = instances;
       instances = new Map();
+
+      isOpen = true;
     },
 
     track(type: T) {
+      if (!isOpen) {
+        throw new Error("tracker is closed " + type);
+      }
+
       if (!unused.has(type) && !instances.has(type)) {
         instances.set(type, lifecycle.create(type));
       }
@@ -41,8 +50,12 @@ export function makeUsageTracker<T, Inst>(
     },
 
     close() {
+      if (!isOpen) throw new Error("tracker is already close");
+
       unused.forEach((x) => lifecycle.destroy(x));
       unused = new Map();
+
+      isOpen = false;
     },
 
     destroy() {
@@ -51,6 +64,8 @@ export function makeUsageTracker<T, Inst>(
 
       instances.forEach((x) => lifecycle.destroy(x));
       instances = new Map();
+
+      isOpen = false;
     },
 
     get instances() {

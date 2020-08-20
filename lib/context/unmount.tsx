@@ -1,21 +1,41 @@
-import { withContext, useContext, ContextKey, safeUseContext } from ".";
+import {
+  withContext,
+  useContext,
+  ContextKey,
+  safeUseContext,
+  forkZone,
+  useCurrentZone,
+  withContexts,
+} from ".";
 import xs from "xstream";
 
 type RegisterUnmountCallback = (callback: () => void) => void;
 
 const unMountKey: ContextKey<RegisterUnmountCallback> = Symbol("unmount");
+const unMountKeyComp: ContextKey<RegisterUnmountCallback> = Symbol("unmount");
+const unMountKeyStream: ContextKey<RegisterUnmountCallback> = Symbol("unmount");
 
-export function withUnmount<T>(exec: () => T) {
+export function withUnmount<T>(
+  exec: () => T,
+  type: "component" | "stream" = "stream"
+) {
   let callbacks = [];
-  const returnValue = withContext(
-    unMountKey,
-    (callback) => {
-      callbacks.push(callback);
-    },
+  function addListener(callback) {
+    callbacks.push(callback);
+  }
+
+  const key: ContextKey<RegisterUnmountCallback> =
+    type === "stream" ? unMountKeyStream : unMountKeyComp;
+
+  const returnValue = withContexts(
+    [
+      [unMountKey, addListener],
+      [key, addListener],
+    ],
     exec
   );
 
-  onUnmount(triggerUnmount);
+  safeUseContext(key)?.(triggerUnmount);
 
   return [triggerUnmount, returnValue] as const;
 
@@ -26,9 +46,14 @@ export function withUnmount<T>(exec: () => T) {
 
 export function onUnmount(callback: () => void = () => {}) {
   const unmount$ = xs.create();
+  let unmounted = false;
   safeUseContext(unMountKey)?.(() => {
+    if (unmounted) return;
+
     callback();
     unmount$.shamefullySendNext(null);
+
+    unmounted = true;
   });
   return unmount$;
 }

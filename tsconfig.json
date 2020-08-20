@@ -4,9 +4,10 @@
     "target": "es2016",
     "lib": ["dom", "es2020"],
     "jsx": "react",
-    "jsxFactory": "h",
+    "jsxFactory": "createElement",
     "jsxFragmentFactory": "Fragment",
-    "sourceMap": true
+    "sourceMap": true,
+    "esModuleInterop": true
   },
   "exclude": ["node_modules", "**/node_modules/*"]
 }

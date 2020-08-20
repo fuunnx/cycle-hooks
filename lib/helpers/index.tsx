@@ -1,5 +1,5 @@
 import { Sinks } from "../types";
-import { Stream } from "xstream";
+import xs, { Stream } from "xstream";
 import { mergeSinks as mergeSinks_ } from "cyclejs-utils";
 import $$observable from "symbol-observable";
 
@@ -36,4 +36,8 @@ export function isObservable(value: any): value is Stream<any> {
   }
 
   return false;
+}
+
+export function streamify<T>(x: T | Stream<T>): Stream<T> {
+  return isObservable(x) ? x : xs.of(x);
 }

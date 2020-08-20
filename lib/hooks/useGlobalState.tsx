@@ -11,9 +11,7 @@ export function useGlobalState<T>(initial: T) {
 
   registerSinks({
     effects: xs.of(() => console.log("coucou")),
-    state: reducer$
-      .debug("reducer")
-      .startWith((x) => (x === undefined ? initial : x)),
+    state: reducer$.startWith((x) => (x === undefined ? initial : x)),
   });
 
   return [

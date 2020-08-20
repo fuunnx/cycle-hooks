@@ -5,7 +5,7 @@ import modules from "@cycle/dom/lib/es6/modules";
 import { withHooks } from "../lib/wrapper";
 import { makeEffectsDriver } from "../lib/driver";
 import { useState } from "../lib/hooks/useState";
-import { createElement as h, Fragment } from "../lib/pragma";
+import { createElement } from "../lib/pragma";
 import { eventListenersModule } from "snabbdom/build/package/modules/eventlisteners";
 import { useEffect } from "../lib/hooks/useEffect";
 import { withState } from "@cycle/state";
@@ -22,7 +22,7 @@ function App() {
       <h1>Examples</h1>
       <button
         on={{
-          click: () => setVisible(true),
+          click: () => setVisible((x) => true),
         }}
       >
         Afficher ?
@@ -48,6 +48,8 @@ function Incrementer() {
     })
   );
 
+  console.log("run Incrementer");
+  useEffect(xs.of(() => console.log("hello Incrementer")));
   onUnmount(() => console.log("goodbye Incrementer"));
 
   return (

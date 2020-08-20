@@ -23,13 +23,19 @@ export function forkZone(zone: Zone, properties: [ContextKey, any][]) {
 export function withZone<T>(zone: Zone, exec: () => T): T {
   let zoneBefore = currentZone;
   currentZone = zone;
-  // console.log("->", zone, exec.toString());
+
   try {
     return exec();
   } finally {
     currentZone = zoneBefore;
-    // console.log("<-", zone);
   }
+}
+
+export function withContexts<T>(
+  properties: [ContextKey, any][],
+  exec: () => T
+): T {
+  return withZone(forkZone(useCurrentZone(), properties), exec);
 }
 
 export function withContext<T, U>(

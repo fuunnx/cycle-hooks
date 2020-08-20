@@ -15,7 +15,7 @@ export function makeUsageTrackerIndexed<T, Inst>(
   const tracker = makeUsageTracker<T, Tracker<number, Inst>>({
     create(type: T) {
       indexes.set(type, 0);
-      return makeUsageTracker<number, Inst>({
+      const innerTracker = makeUsageTracker<number, Inst>({
         create() {
           return lifecycle.create(type);
         },
@@ -26,6 +26,8 @@ export function makeUsageTrackerIndexed<T, Inst>(
           return lifecycle.destroy(inst);
         },
       });
+      innerTracker.open();
+      return innerTracker;
     },
     use(instance, type) {
       const index = indexes.get(type);
@@ -41,20 +43,24 @@ export function makeUsageTrackerIndexed<T, Inst>(
   return {
     ...tracker,
     open() {
-      for (const [key, instance] of tracker.instances.entries()) {
+      for (const key of tracker.instances.keys()) {
+        const instance = tracker.instances.get(key);
         indexes.set(key, 0);
         instance.open();
       }
+      tracker.open();
     },
     close() {
       for (const instance of tracker.instances.values()) {
         instance.close();
       }
+      tracker.close();
     },
     destroy() {
       for (const instance of tracker.instances.values()) {
         instance.destroy();
       }
+      tracker.destroy();
       indexes = new Map();
     },
     track(type) {

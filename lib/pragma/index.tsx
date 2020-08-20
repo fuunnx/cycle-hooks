@@ -1,10 +1,9 @@
 // WIP
-import { h } from "@cycle/dom";
-import xs, { MemoryStream } from "xstream";
-import { isObservable } from "../helpers";
+import { h, VNode } from "@cycle/dom";
+import xs, { MemoryStream, Stream } from "xstream";
+import { isObservable, streamify } from "../helpers";
 import { JSX } from "../../definitions";
-import { useRef } from "./ref";
-import { values } from "rambda";
+import { Ref, safeUseRef } from "./ref";
 
 export type Component<T> = (
   props: T
@@ -21,7 +20,6 @@ export function createElement<T extends { [k: string]: unknown }>(
   if (typeof tagOrFunction === "string") {
     if (props) {
       if (Object.values(props).some(isObservable)) {
-        console.log(props);
         return xs
           .combine(
             ...Object.entries(props).map(([k, v]) =>
@@ -38,20 +36,62 @@ export function createElement<T extends { [k: string]: unknown }>(
     return liftIfObservable(children, (c) => h(tagOrFunction, c));
   }
 
-  try {
-    const parent = useRef();
-    const ref = parent.tracker.track(tagOrFunction);
-    console.log(ref);
-    return ref.data.instance.DOM;
-  } catch (e) {
-    console.error(e);
+  return {
+    _isComponent: true,
+    type: tagOrFunction,
+    props,
+    children,
+  };
+}
+
+export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
+  const ref = safeUseRef() || Ref();
+
+  return streamify(stream)
+    .map((vtree) => {
+      ref.tracker.open();
+      const res = walk(vtree);
+      ref.tracker.close();
+      return res;
+    })
+    .map(streamify)
+    .flatten()
+    .remember();
+
+  function walk(vnode: VNode) {
+    if (!vnode) {
+      return xs.of(vnode);
+    }
+    if ((vnode as any)._isComponent) {
+      return ref.tracker.track((vnode as any).type).data.instance.DOM as any;
+    }
+    if (vnode.children) {
+      return xs
+        .combine(...vnode.children.map(walk).map(streamify))
+        .map((children) => {
+          return {
+            ...vnode,
+            children,
+          };
+        });
+    }
+    return xs.of(vnode);
   }
+}
+
+function mount<T>(component: Component<T>, props: T) {
+  const sinks = component(props);
+
+  if ("DOM" in sinks) {
+    return sinks.DOM;
+  }
+
+  return sinks;
 }
 
 export function Fragment(
   ...children: (string | null | number | JSX.Element)[]
 ) {
-  console.log(children);
   return liftIfObservable(children, (x) => x);
 }
 
