@@ -6,18 +6,18 @@ import { useSources } from "../context/sources";
 export type Reducer<T> = (x: T) => T;
 
 export function useGlobalState<T>(initial: T) {
-  const [reducer$, runReducer] = makeSubject<Reducer<T>>();
+  const [reducer$, runReducer] = makeSubject<Reducer<T>>("useGlobalState");
   const state$ = useSources().state.stream;
 
   registerSinks({
-    effects: xs.of(() => console.log("coucou")),
-    state: reducer$.startWith((x) => (x === undefined ? initial : x)),
+    state: reducer$.startWith((state) => {
+      return state === undefined ? initial : state;
+    }),
   });
 
   return [
     state$,
     function setState(val: Reducer<T> | T | Partial<T>) {
-      console.log("val", val);
       if (typeof val === "function") {
         return runReducer(val as Reducer<T>);
       }

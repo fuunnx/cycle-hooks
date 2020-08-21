@@ -22,6 +22,14 @@ export function sinksGatherer(keys: string[]) {
     const returnValue = withContext(
       gathererKey,
       (sinks: Sinks) => {
+        Object.keys(sinks).forEach((key) => {
+          if (!keys.includes(key)) {
+            console.warn(
+              `Unknown registered sink "${key}", please add it to "withHooks" second argument`
+            );
+          }
+        });
+
         const unmount$ = onUnmount();
         subscriptions.push(
           replicateMany(

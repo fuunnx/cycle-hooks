@@ -1,6 +1,6 @@
 import xs from "xstream";
 import { run } from "@cycle/run";
-import { makeDOMDriver } from "@cycle/dom";
+import { makeDOMDriver, code } from "@cycle/dom";
 import modules from "@cycle/dom/lib/es6/modules";
 import { withHooks } from "../lib/wrapper";
 import { makeEffectsDriver } from "../lib/driver";
@@ -11,18 +11,24 @@ import { useEffect } from "../lib/hooks/useEffect";
 import { withState } from "@cycle/state";
 import { useGlobalState } from "../lib/hooks/useGlobalState";
 import { onUnmount } from "../lib/context/unmount";
+import { useSources } from "../lib";
 
 function App() {
   const [visible$, setVisible] = useState(true);
+  const state$ = useSources().state.stream;
 
   onUnmount(() => console.log("goodbye App"));
 
   return (
     <div>
       <h1>Examples</h1>
+      <code>
+        {state$.startWith(undefined).map((x) => JSON.stringify(x, null, "  "))}
+      </code>
+      <br />
       <button
         on={{
-          click: () => setVisible((x) => true),
+          click: () => setVisible((x) => !x),
         }}
       >
         Afficher ?
@@ -87,7 +93,7 @@ function Input() {
         },
       }}
     />
-  );
+  ).debug("INPUT");
 }
 
 const drivers = {
@@ -97,15 +103,4 @@ const drivers = {
   }),
 };
 
-run(
-  withState((sources) => {
-    const sinks = withHooks(App, Object.keys(drivers))(sources);
-    sinks.state.addListener({
-      error(e) {
-        console.log(e);
-      },
-    });
-    return { ...sinks, state: sinks.state };
-  }),
-  drivers
-);
+run(withState(withHooks(App, [...Object.keys(drivers), "state"])), drivers);

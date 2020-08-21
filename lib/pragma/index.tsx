@@ -29,10 +29,14 @@ export function createElement<T extends { [k: string]: unknown }>(
           )
           .map(Object.fromEntries)
           .map((props) =>
-            liftIfObservable(children, (c) => h(tagOrFunction, props, c))
+            liftIfObservable(children, (c) =>
+              h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
+            )
           );
       }
-      return liftIfObservable(children, (c) => h(tagOrFunction, props, c));
+      return liftIfObservable(children, (c) =>
+        h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
+      );
     }
     return liftIfObservable(children, (c) => h(tagOrFunction, c));
   }

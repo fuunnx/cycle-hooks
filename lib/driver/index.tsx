@@ -17,13 +17,17 @@ function triggerEffect(symbol: Symbol, value: unknown) {
   listener?.next([symbol, value]);
 }
 
-export function makeSubject<T>(): [Stream<T>, (value: T) => void] {
-  const symbol = Symbol();
+export function makeSubject<T>(name = ""): [Stream<T>, (value: T) => void] {
+  const symbol = Symbol(name);
   const { effects } = useSources() as { effects: EffectsSources };
   if (!effects) {
     throw new Error("Please add an Effects Driver");
   }
-  const stream$ = effects.filter((x) => x[0] === symbol).map((x) => x[1] as T);
+  const stream$ = effects
+    .filter((x) => {
+      return x[0] === symbol;
+    })
+    .map((x) => x[1] as T);
 
   return [
     stream$,
