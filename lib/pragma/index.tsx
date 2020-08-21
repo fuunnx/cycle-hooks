@@ -1,9 +1,10 @@
 // WIP
 import { h, VNode } from "@cycle/dom";
-import xs, { MemoryStream, Stream } from "xstream";
+import xs, { MemoryStream, Stream, Subscription } from "xstream";
 import { isObservable, streamify } from "../helpers";
 import { JSX } from "../../definitions";
-import { Ref, safeUseRef } from "./ref";
+import { Ref, safeUseRef, withRef } from "./ref";
+import uponStop from "xstream-upon-stop";
 
 export type Component<T> = (
   props: T
@@ -49,18 +50,22 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
 
   return streamify(stream)
     .map((vtree) => {
-      ref.tracker.open();
-      const res = walk(vtree);
-      ref.tracker.close();
-      return res;
+      return withRef(ref, () => {
+        return walk(vtree);
+      });
     })
     .map(streamify)
     .flatten()
-    .remember();
+    .remember()
+    .compose(
+      uponStop(() => {
+        ref.tracker.destroy();
+      })
+    );
 
   function walk(vnode: VNode) {
     if (!vnode) {
-      return xs.of(vnode);
+      return vnode;
     }
     if ((vnode as any)._isComponent) {
       return ref.tracker.track((vnode as any).type).data.instance.DOM as any;
@@ -75,18 +80,8 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
           };
         });
     }
-    return xs.of(vnode);
+    return vnode;
   }
-}
-
-function mount<T>(component: Component<T>, props: T) {
-  const sinks = component(props);
-
-  if ("DOM" in sinks) {
-    return sinks.DOM;
-  }
-
-  return sinks;
 }
 
 export function Fragment(
