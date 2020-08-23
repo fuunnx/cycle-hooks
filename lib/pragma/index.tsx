@@ -1,11 +1,9 @@
-// WIP
 import { h, VNode } from "@cycle/dom";
 import xs, { MemoryStream, Stream } from "xstream";
 import concat from "xstream/extra/concat";
 import { isObservable, streamify } from "../helpers";
 import { JSX } from "../../definitions";
 import { Ref, safeUseRef, withRef } from "./ref";
-import uponStop from "xstream-upon-stop";
 
 export type Component<T> = (
   props: T
@@ -63,13 +61,7 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
     .filter((x) => x !== END)
     .map(streamify)
     .flatten()
-    .remember()
-    .compose(
-      uponStop(() => {
-        ref.tracker.open();
-        ref.tracker.close();
-      })
-    );
+    .remember();
 
   function walk(vnode: VNode) {
     if (!vnode) {
