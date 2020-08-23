@@ -1,11 +1,11 @@
 import xs, { Stream } from "xstream";
 import { IndexedTracker, makeUsageTrackerIndexed } from "./trackUsageIndexed";
 import { ContextKey, withContext, useContext, safeUseContext } from "..";
-import { useSources } from "../context/sources";
-import { mapObj, isObservable, streamify } from "../helpers";
+import { mapObj, streamify } from "../helpers";
 import { Sinks } from "../types";
 import { withUnmount } from "../context/unmount";
 import { trackChildren } from ".";
+import { gathererKey } from "../context/sinks";
 
 export type Ref = {
   data: {
@@ -45,8 +45,16 @@ export function Ref(constructorFn?: Function): Ref {
         const result = constructorFn();
         const sinks = result.DOM ? result : { DOM: streamify(result) };
 
+        const transformedSinks = mapObj(
+          (sink$: Stream<any>) => sink$.endWhen(destroy$),
+          sinks
+        );
+        delete transformedSinks.DOM;
+
+        safeUseContext(gathererKey)?.(transformedSinks);
+
         return {
-          ...mapObj((sink$: Stream<any>) => sink$.endWhen(destroy$), sinks),
+          ...transformedSinks,
           DOM: trackChildren(sinks.DOM).remember(),
         };
       }, "component");
