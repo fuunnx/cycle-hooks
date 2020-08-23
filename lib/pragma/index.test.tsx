@@ -27,7 +27,7 @@ test("pragma works like h() for simple tags", (done) => {
   assertDomEqual(
     Time,
     xs.of(<input type="text" value="coucou" />),
-    xs.of(h("input", { type: "text", value: "coucou" }, []))
+    xs.of(h("input", { props: { type: "text", value: "coucou" } }, []))
   );
 
   Time.run(done);
@@ -75,7 +75,7 @@ test("pragma unwraps props", (done) => {
   assertDomEqual(
     Time,
     <input type="text" value={value$} />,
-    value$.map((value) => h("input", { type: "text", value }, []))
+    value$.map((value) => h("input", { props: { type: "text", value } }, []))
   );
 
   Time.run(done);
