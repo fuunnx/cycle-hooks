@@ -1,6 +1,7 @@
 // WIP
 import { h, VNode } from "@cycle/dom";
-import xs, { MemoryStream, Stream, Subscription } from "xstream";
+import xs, { MemoryStream, Stream } from "xstream";
+import concat from "xstream/extra/concat";
 import { isObservable, streamify } from "../helpers";
 import { JSX } from "../../definitions";
 import { Ref, safeUseRef, withRef } from "./ref";
@@ -51,19 +52,22 @@ export function createElement<T extends { [k: string]: unknown }>(
 
 export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
   const ref = safeUseRef() || Ref();
+  const END = Symbol("END");
 
-  return streamify(stream)
+  return concat(streamify(stream), xs.of(END as any))
     .map((vtree) => {
       return withRef(ref, () => {
         return walk(vtree);
       });
     })
+    .filter((x) => x !== END)
     .map(streamify)
     .flatten()
     .remember()
     .compose(
       uponStop(() => {
-        ref.tracker.destroy();
+        ref.tracker.open();
+        ref.tracker.close();
       })
     );
 

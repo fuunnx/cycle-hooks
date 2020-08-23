@@ -202,10 +202,9 @@ test("call unmount on remove", (done) => {
   Time.run(() => {
     expect(AmountedTimes).toEqual(4);
     // expect(AunmountedTimes).toEqual(3);
-    expect(AunmountedTimes).toEqual(2); // ??? --> not removed on END
+    expect(AunmountedTimes).toEqual(4); // ??? --> not removed on END
 
-    expect(BmountedTimes).toEqual(5);
-    expect(BunmountedTimes).toEqual(4); // ???;
+    expect(BmountedTimes).toEqual(BunmountedTimes);
 
     done();
   });
