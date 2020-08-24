@@ -1,9 +1,9 @@
 import { sourcesKey } from "../context/sources";
 import { refSymbol, Ref } from "../pragma/ref";
-import { forkZone, useCurrentZone, withZone } from "../context";
+import { withContexts } from "../context";
 import { Sinks, Sources } from "../types";
 import { sinksGatherer } from "../context/sinks";
-import { mergeSinks, streamify } from "../helpers";
+import { mergeSinks } from "../helpers";
 import xs, { MemoryStream, Stream } from "xstream";
 import { Reducer } from "@cycle/state";
 import { trackChildren } from "../pragma";
@@ -22,7 +22,8 @@ export function withHooks(
         [sourcesKey, sources],
         [refSymbol, Ref()],
       ];
-      return withZone(forkZone(useCurrentZone(), injections as any), App);
+
+      return withContexts(injections as any, App);
     });
 
     const finalSinks =
