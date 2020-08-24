@@ -1,4 +1,4 @@
-import xs from "xstream";
+import xs, { MemoryStream } from "xstream";
 import { run } from "@cycle/run";
 import { makeDOMDriver, code } from "@cycle/dom";
 import modules from "@cycle/dom/lib/es6/modules";
@@ -12,6 +12,7 @@ import { withState } from "@cycle/state";
 import { useGlobalState } from "../lib/hooks/useGlobalState";
 import { onUnmount } from "../lib/context/unmount";
 import { useSources } from "../lib";
+import { define } from "../lib/pragma/define";
 
 function App() {
   const [visible$, setVisible] = useState(true);
@@ -34,13 +35,17 @@ function App() {
         Afficher ?
       </button>
       {visible$.map((visible) =>
-        visible ? [<Incrementer />, <Input />] : null
+        visible
+          ? [<Incrementer value={xs.periodic(1000).debug("next")} />, <Input />]
+          : null
       )}
     </div>
   );
 }
 
-function Incrementer() {
+const Incrementer = define<{ value: number }>(function Incrementer(
+  props$: MemoryStream<{ value: number }>
+) {
   const [count$, setCount] = useState(0);
   const [isDown$, setIsDown] = useState(false);
   const increment$ = isDown$
@@ -48,6 +53,11 @@ function Incrementer() {
     .flatten()
     .mapTo((x: number) => x + 1);
 
+  useEffect(
+    props$.map((props) => {
+      return () => setCount(props.value);
+    })
+  );
   useEffect(
     increment$.map((fn) => {
       return () => setCount(fn);
@@ -74,9 +84,9 @@ function Incrementer() {
       </button>
     </div>
   );
-}
+});
 
-function Input() {
+const Input = define(function Input() {
   const [state$, setState] = useGlobalState({});
 
   console.log("run Input");
@@ -94,7 +104,7 @@ function Input() {
       }}
     />
   ).debug("INPUT");
-}
+});
 
 const drivers = {
   effects: makeEffectsDriver(),

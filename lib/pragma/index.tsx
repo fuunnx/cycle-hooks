@@ -6,11 +6,18 @@ import { JSX } from "../../definitions";
 import { Ref, safeUseRef, withRef } from "./ref";
 
 export type Component<T> = (
-  props: T
-) =>
-  | JSX.Element
-  | MemoryStream<JSX.Element>
-  | { DOM: MemoryStream<JSX.Element> };
+  props?: MemoryStream<T>
+) => JSX.Element | { DOM: MemoryStream<JSX.Element> };
+
+export function flattenObjectInnerStreams(props: object) {
+  return xs
+    .combine(
+      ...Object.entries(props).map(([k, v]) =>
+        (isObservable(v) ? v : xs.of(v)).map((v) => [k, v])
+      )
+    )
+    .map(Object.fromEntries);
+}
 
 export function createElement<T extends { [k: string]: unknown }>(
   tagOrFunction: string | Component<T>,
@@ -20,18 +27,11 @@ export function createElement<T extends { [k: string]: unknown }>(
   if (typeof tagOrFunction === "string") {
     if (props) {
       if (Object.values(props).some(isObservable)) {
-        return xs
-          .combine(
-            ...Object.entries(props).map(([k, v]) =>
-              (isObservable(v) ? v : xs.of(v)).map((v) => [k, v])
-            )
+        return flattenObjectInnerStreams(props).map((props) =>
+          liftIfObservable(children, (c) =>
+            h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
           )
-          .map(Object.fromEntries)
-          .map((props) =>
-            liftIfObservable(children, (c) =>
-              h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
-            )
-          );
+        );
       }
       return liftIfObservable(children, (c) =>
         h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
@@ -42,9 +42,11 @@ export function createElement<T extends { [k: string]: unknown }>(
 
   return {
     _isComponent: true,
-    type: tagOrFunction,
-    props,
-    children,
+    type: (tagOrFunction as any)._isWrappedComponent
+      ? tagOrFunction()
+      : tagOrFunction,
+    props: props || {},
+    children: Fragment(...(children || [])),
   };
 }
 
@@ -68,7 +70,12 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
       return vnode;
     }
     if ((vnode as any)._isComponent) {
-      return ref.tracker.track((vnode as any).type).data.instance.DOM as any;
+      const childRef = ref.tracker.track((vnode as any).type);
+      childRef.data.pushPropsAndChildren(
+        (vnode as any).props,
+        vnode.children as any
+      );
+      return childRef.data.instance.DOM as any;
     }
     if (vnode.children) {
       return xs
@@ -92,7 +99,7 @@ export function Fragment(
 
 function liftIfObservable(
   children: (string | null | number | JSX.Element)[],
-  func: (children: JSX.Element[]) => JSX.Element | JSX.Element[]
+  func: (children: any[]) => JSX.Element | JSX.Element[]
 ): JSX.Element | JSX.Element[] | MemoryStream<JSX.Element | JSX.Element[]> {
   if (children.some(isObservable)) {
     return flattenObservables(children).map((children) => func(children));

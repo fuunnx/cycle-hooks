@@ -1,35 +1,61 @@
-import xs, { Stream } from "xstream";
+import dropRepeats from "xstream/extra/dropRepeats";
+import xs, { Stream, MemoryStream } from "xstream";
 import { IndexedTracker, makeUsageTrackerIndexed } from "./trackUsageIndexed";
 import { ContextKey, withContext, useContext, safeUseContext } from "..";
 import { mapObj, streamify } from "../helpers";
 import { Sinks } from "../types";
 import { withUnmount } from "../context/unmount";
-import { trackChildren } from ".";
+import { trackChildren, flattenObjectInnerStreams } from ".";
 import { gathererKey } from "../context/sinks";
+import { VNode } from "@cycle/dom";
 
 export type Ref = {
   data: {
     instance: null | Sinks;
     unmount: () => void;
     constructorFn: Function | undefined;
+    pushPropsAndChildren: (props: object, children: Stream<VNode[]>) => void;
   };
   tracker: IndexedTracker<Function, Ref>;
 };
 
+function shallowEquals(a: object, b: object) {
+  if (a === b) return true;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) => a[key] === b[key]);
+}
+
 export function Ref(constructorFn?: Function): Ref {
   const destroy$ = xs.create();
-  const ref = {
+  const props$: MemoryStream<Object> = xs.createWithMemory();
+  const children$: Stream<Stream<any[]>> = xs.createWithMemory();
+  const finalProps$ = xs
+    .combine(
+      props$
+        .compose(dropRepeats(shallowEquals))
+        .map(flattenObjectInnerStreams)
+        .flatten() as Stream<object>,
+      children$.map(streamify).flatten().compose(dropRepeats())
+    )
+    .map(([props, children]) => ({ ...props, children }));
+
+  const ref: Ref = {
     data: {
       constructorFn,
       instance: {},
-      unmount: () => {},
+      unmount() {},
+      pushPropsAndChildren(props, children) {
+        props$.shamefullySendNext(props);
+        children$.shamefullySendNext(children);
+      },
     },
     tracker: makeUsageTrackerIndexed<Function, Ref>({
       create(func) {
         return Ref(func);
       },
       use(ref) {
-        // TODO props update
         return ref;
       },
       destroy(ref) {
@@ -42,7 +68,7 @@ export function Ref(constructorFn?: Function): Ref {
   if (constructorFn) {
     ref.data.instance = withRef(ref, () => {
       const [unmount, result] = withUnmount(() => {
-        const result = constructorFn();
+        const result = constructorFn(finalProps$);
         const sinks = result.DOM ? result : { DOM: streamify(result) };
 
         const transformedSinks = mapObj(
