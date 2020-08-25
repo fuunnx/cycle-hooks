@@ -1,6 +1,6 @@
 import { sourcesKey } from "../context/sources";
 import { refSymbol, Ref } from "../pragma/ref";
-import { withContexts } from "../context";
+import { withContext } from "../context";
 import { Sinks, Sources } from "../types";
 import { sinksGatherer } from "../context/sinks";
 import { mergeSinks } from "../helpers";
@@ -18,12 +18,13 @@ export function withHooks(
 ): (sources: Sources) => AppSinks {
   return function AppWithHooks(sources: Sources): AppSinks {
     const [gathered, sinks] = sinksGatherer(sinksNames)(() => {
-      const injections = [
-        [sourcesKey, sources],
-        [refSymbol, Ref()],
-      ];
-
-      return withContexts(injections as any, App);
+      return withContext(
+        [
+          [sourcesKey, sources],
+          [refSymbol, Ref()],
+        ],
+        App
+      );
     });
 
     const finalSinks =

@@ -1,12 +1,4 @@
-import {
-  withContext,
-  useContext,
-  ContextKey,
-  safeUseContext,
-  forkZone,
-  useCurrentZone,
-  withContexts,
-} from ".";
+import { ContextKey, safeUseContext, withContext } from ".";
 import xs from "xstream";
 
 type RegisterUnmountCallback = (callback: () => void) => void;
@@ -27,7 +19,7 @@ export function withUnmount<T>(
   const key: ContextKey<RegisterUnmountCallback> =
     type === "stream" ? unMountKeyStream : unMountKeyComp;
 
-  const returnValue = withContexts(
+  const returnValue = withContext(
     [
       [unMountKey, addListener],
       [key, addListener],

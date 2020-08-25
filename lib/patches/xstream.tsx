@@ -1,5 +1,5 @@
 import { Stream, InternalProducer, NO } from "xstream";
-import { useCurrentZone, withZone, safeUseContext, forkZone } from "../context";
+import { useCurrentZone, withZone, safeUseContext } from "../context";
 import { gathererKey } from "../context/sinks";
 import { Sinks } from "../types";
 import { withUnmount } from "../context/unmount";
@@ -24,7 +24,7 @@ function patch(stream: Stream<any>): void {
   let unmount = () => {};
   const gatherer = safeUseContext(gathererKey);
   if (gatherer) {
-    zone = forkZone(zone, [
+    zone = zone.fork([
       [
         gathererKey,
         (sinks: Sinks) => {

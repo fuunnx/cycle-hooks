@@ -3,21 +3,30 @@ export type ContextKey<T = unknown> = Symbol | string | SymbolFor<T>;
 export type Context = Map<ContextKey, unknown>;
 
 // TODO use real zones ? makes jest bug, so…
+
+type ZoneProperties = [ContextKey, any][];
 type Zone = {
   parent: Zone | null;
   content: Context;
+  fork(properties: ZoneProperties): Zone;
 };
 
-let currentZone: Zone = { parent: null, content: new Map() };
-export function useCurrentZone() {
-  return currentZone;
+let currentZone: Zone = Zone();
+
+function Zone(parent: Zone = null, properties: ZoneProperties = []): Zone {
+  const zone: Zone = {
+    parent,
+    content: new Map(properties),
+    fork(properties: ZoneProperties) {
+      return Zone(zone, properties);
+    },
+  };
+
+  return zone;
 }
 
-export function forkZone(zone: Zone, properties: [ContextKey, any][]) {
-  return {
-    parent: zone,
-    content: new Map(properties),
-  };
+export function useCurrentZone() {
+  return currentZone;
 }
 
 export function withZone<T>(zone: Zone, exec: () => T): T {
@@ -31,19 +40,25 @@ export function withZone<T>(zone: Zone, exec: () => T): T {
   }
 }
 
-export function withContexts<T>(
-  properties: [ContextKey, any][],
-  exec: () => T
-): T {
-  return withZone(forkZone(useCurrentZone(), properties), exec);
-}
-
+export function withContext<T, U>(properties: ZoneProperties, exec: () => U): U;
 export function withContext<T, U>(
   name: ContextKey<T>,
   value: T,
   exec: () => U
+): U;
+export function withContext<T, U>(
+  name: ContextKey<T> | ZoneProperties,
+  value: T | (() => U),
+  exec?: () => U
 ): U {
-  return withZone(forkZone(useCurrentZone(), [[name, value]]), exec);
+  if (Array.isArray(name)) {
+    const properties = name as ZoneProperties;
+    exec = value as () => U;
+
+    return withZone(useCurrentZone().fork(properties), exec);
+  }
+
+  return withZone(useCurrentZone().fork([[name, value]]), exec);
 }
 
 export function safeUseContext<T>(name: ContextKey<T>): T | undefined {
@@ -60,7 +75,7 @@ export function useContext<T>(name: ContextKey<T>): T {
 }
 
 const NOT_FOUND = {} as const;
-export function resolveContext<T>(name: ContextKey<T>): T | typeof NOT_FOUND {
+function resolveContext<T>(name: ContextKey<T>): T | typeof NOT_FOUND {
   let origin = useCurrentZone();
   if (origin.content.has(name)) {
     return origin.content.get(name);

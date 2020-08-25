@@ -326,13 +326,13 @@ function App(sources) {
 
 ### Changing a child's sinks
 
-// Wellllllllllll
+// Wellllllllllll could be better ?
 
 ```js
 function App(sources) {
   const [childSinks, Child_] = gatherSinks(() => {
-    const zone = useCurrentZone()
-    return (props) => withZone(zone, () => Child(props))
+    const gatherer = useContext(gathererKey)
+    return (props) => withContext(gathererKey, gatherer, () => Child(props))
   })
 
   registerSinks({
