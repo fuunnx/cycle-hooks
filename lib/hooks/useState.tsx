@@ -1,6 +1,5 @@
 import { makeSubject } from "../driver";
-
-export type Reducer<T> = (x: T) => T;
+import { Reducer } from "./types";
 
 export function useState<T>(initial: T) {
   const [reducer$, runReducer] = makeSubject<Reducer<T>>();

@@ -2,3 +2,7 @@
 - [ ] Essayer d'implémenter les effets, subjects etc. de manière à ce que tout appel impératif puisse être aisé à faire avec des streams, ou autre (en gros éviter une soupe de callbacks, et encourager The Cycle Way tout en permettant d'avoir quelques échappatoires impératifs sans qu'ils prennent le dessus)
 - [ ] syntax onClick etc.
 - [ ] terms : different words for same concepts : useContext/onUnmount/registerSinks, withContext/provideSources/gatherSinks
+- [ ] triggerEffect -> it's global, should it be injected ? another mechanism ?
+- [ ] idGenerator -> should be injected (replace symbols in Subject)
+- [ ] trackChildren -> take care of keys too !
+- [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?

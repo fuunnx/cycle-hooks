@@ -2,8 +2,7 @@ import xs from "xstream";
 import { makeSubject } from "../driver";
 import { registerSinks } from "../context/sinks";
 import { useSources } from "../context/sources";
-
-export type Reducer<T> = (x: T) => T;
+import { Reducer } from "./types";
 
 export function useGlobalState<T>(initial: T) {
   const [reducer$, runReducer] = makeSubject<Reducer<T>>("useGlobalState");
