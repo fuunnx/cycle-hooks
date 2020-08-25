@@ -3,7 +3,7 @@ import { run } from "@cycle/run";
 import { makeDOMDriver, code } from "@cycle/dom";
 import modules from "@cycle/dom/lib/es6/modules";
 import { withHooks } from "../lib/wrapper";
-import { makeEffectsDriver } from "../lib/driver";
+import { makeEffectsDriver, makeSubject } from "../lib/driver";
 import { useState } from "../lib/hooks/useState";
 import { createElement } from "../lib/pragma";
 import { eventListenersModule } from "snabbdom/build/package/modules/eventlisteners";
@@ -39,9 +39,25 @@ function App() {
           ? [<Incrementer value={xs.periodic(1000).debug("next")} />, <Input />]
           : null
       )}
+      <Timer />
     </div>
   );
 }
+
+const Timer = define(function Timer() {
+  const [reset$, reset] = makeSubject();
+
+  return (
+    <div>
+      Count :
+      {reset$
+        .startWith(null)
+        .map(() => xs.periodic(500).startWith(0))
+        .flatten()}
+      <button on={{ click: reset }}>Reset</button>
+    </div>
+  );
+});
 
 const Incrementer = define<{ value: number }>(function Incrementer(
   props$: MemoryStream<{ value: number }>
