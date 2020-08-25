@@ -190,9 +190,9 @@ const appSinks = provideSources(
 );
 ```
 
-#### makeGatherSinks
+#### gatherSinks
 
-A wrapper function factory. The returned function `gatherSinks()` can wrap and call any function. It's returned values contains the provided function's results, and the all the gathered `sinks` collected with `registerSinks(sinks)`
+The function `gatherSinks()` can wrap and call any function. It's returned values contains the provided function's results, and all the gathered `sinks` collected via `registerSinks(sinks)`
 
 ```js
 const gatherSinks = makeGatherSinks(["click$"]);

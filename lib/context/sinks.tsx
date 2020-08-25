@@ -3,46 +3,71 @@ import "../patches/xstream";
 import { Sinks } from "../types";
 import xs, { Stream } from "xstream";
 import { replicateMany } from "@cycle/run/lib/cjs/internals";
-import { ContextKey, withContext, useContext } from ".";
+import { ContextKey, withContext, useContext, safeUseContext } from ".";
 import { onUnmount } from "./unmount";
 import { mapObj } from "../helpers";
 
 export type Registerer = (sinks: Sinks) => void;
 export const gathererKey: ContextKey<Registerer> = Symbol("registerer");
 
-export function sinksGatherer(keys: string[]) {
-  function initSinksProxy(): { [key: string]: Stream<unknown> } {
-    return Object.fromEntries(keys.map((key) => [key, xs.create()]));
+type GatherableKeys = string[];
+const gatherableSymbol: ContextKey<GatherableKeys> = Symbol("gatherableKeys");
+
+export function gatherSinks<T>(exec: () => T): [Sinks, T];
+export function gatherSinks<T>(
+  gatherableKeys: string[],
+  exec: () => T
+): [Sinks, T];
+export function gatherSinks<T>(
+  keys_: string[] | (() => T),
+  exec_?: () => T
+): [Sinks, T] {
+  // type arguments
+  let exec: () => T;
+  let keys: string[];
+  if (exec_) {
+    exec = exec_ as () => T;
+    keys = keys_ as string[];
+  } else {
+    exec = keys_ as () => T;
+    keys = [] as string[];
   }
 
-  return function gatherSinks<T>(exec: () => T): [Sinks, T] {
-    let sinksProxy = initSinksProxy();
-    let subscriptions: (() => void)[] = [];
+  // implementation
+  const scopeKeys = safeUseContext(gatherableSymbol) || [];
+  const gatherableKeys = [...scopeKeys, ...keys];
 
-    const returnValue = withContext(
-      gathererKey,
-      (sinks: Sinks) => {
-        Object.keys(sinks).forEach((key) => {
-          if (!keys.includes(key)) {
-            console.warn(
-              `Unknown registered sink "${key}", please add it to "withHooks" second argument`
-            );
-          }
-        });
-
-        const unmount$ = onUnmount();
-        subscriptions.push(
-          replicateMany(
-            mapObj((x$: Stream<any>) => x$.endWhen(unmount$), sinks),
-            sinksProxy
-          )
+  let sinksProxy = initSinksProxy();
+  function gatherer(sinks: Sinks) {
+    Object.keys(sinks).forEach((key) => {
+      if (!gatherableKeys.includes(key)) {
+        console.warn(
+          `Unknown registered sink "${key}", please add it to "withHooks" second argument`
         );
-      },
-      exec
-    );
+      }
+    });
 
-    return [sinksProxy, returnValue];
-  };
+    let dispose = () => {};
+    const unmount$ = onUnmount(dispose);
+    dispose = replicateMany(
+      mapObj((x$: Stream<any>) => x$.endWhen(unmount$), sinks),
+      sinksProxy
+    );
+  }
+
+  const returnValue = withContext(
+    [
+      [gathererKey, gatherer],
+      [gatherableSymbol, gatherableKeys],
+    ],
+    exec
+  );
+
+  return [sinksProxy, returnValue];
+
+  function initSinksProxy(): { [key: string]: Stream<unknown> } {
+    return Object.fromEntries(gatherableKeys.map((key) => [key, xs.create()]));
+  }
 }
 
 export function registerSinks(sinks: Sinks) {

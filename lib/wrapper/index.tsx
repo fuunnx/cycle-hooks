@@ -2,7 +2,7 @@ import { sourcesKey } from "../context/sources";
 import { refSymbol, Ref } from "../pragma/ref";
 import { withContext } from "../context";
 import { Sinks, Sources } from "../types";
-import { sinksGatherer } from "../context/sinks";
+import { gatherSinks } from "../context/sinks";
 import { mergeSinks } from "../helpers";
 import xs, { MemoryStream, Stream } from "xstream";
 import { Reducer } from "@cycle/state";
@@ -17,7 +17,7 @@ export function withHooks(
   sinksNames: string[]
 ): (sources: Sources) => AppSinks {
   return function AppWithHooks(sources: Sources): AppSinks {
-    const [gathered, sinks] = sinksGatherer(sinksNames)(() => {
+    const [gathered, sinks] = gatherSinks(sinksNames, () => {
       return withContext(
         [
           [sourcesKey, sources],
