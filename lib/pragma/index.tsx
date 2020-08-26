@@ -6,7 +6,7 @@ import { JSX } from "../../definitions";
 import { Ref, safeUseRef, withRef } from "./ref";
 
 export type Component<T> = (
-  props?: MemoryStream<T>
+  props?: MemoryStream<T & { children: JSX.Element | JSX.Element[] }>
 ) => JSX.Element | { DOM: MemoryStream<JSX.Element> };
 
 export function flattenObjectInnerStreams(props: object) {
@@ -104,14 +104,14 @@ function liftIfObservable(
   if (children.some(isObservable)) {
     return flattenObservables(children).map((children) => func(children));
   }
-  return func(children.flat() as any[]);
+  return func(children.flat().filter(Boolean) as any[]);
 }
 
 function flattenObservables(children: any[]) {
   if (children.some(isObservable)) {
     return xs
-      .combine(...children.map((x) => (isObservable(x) ? x : xs.of(x))))
-      .map((x) => x.flat())
+      .combine(...children.map(streamify))
+      .map((x) => x.flat().filter(Boolean))
       .map((children) =>
         children.some(isObservable)
           ? flattenObservables(children)

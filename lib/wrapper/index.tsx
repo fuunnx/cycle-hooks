@@ -13,7 +13,7 @@ type AppSinks = Sinks & {
 };
 
 export function withHooks(
-  App: () => Sinks | MemoryStream<any>,
+  App: (sources?: Sources) => Sinks | MemoryStream<any>,
   sinksNames: string[]
 ): (sources: Sources) => AppSinks {
   return function AppWithHooks(sources: Sources): AppSinks {
@@ -23,19 +23,21 @@ export function withHooks(
           [sourcesKey, sources],
           [refSymbol, Ref()],
         ],
-        App
+        () => {
+          const appSinks = App(sources);
+          const normalizedSinks =
+            "DOM" in appSinks ? appSinks : { DOM: appSinks };
+
+          normalizedSinks.DOM = trackChildren(normalizedSinks.DOM as any);
+          return normalizedSinks as Sinks;
+        }
       );
     });
 
-    const finalSinks =
-      "DOM" in sinks
-        ? mergeSinks([gathered, sinks])
-        : mergeSinks([gathered, { DOM: sinks } as Sinks]);
-
     return {
       state: xs.empty(),
-      ...finalSinks,
-      DOM: trackChildren(finalSinks.DOM as any),
+      ...mergeSinks([gathered, sinks]),
+      DOM: sinks.DOM,
     };
   };
 }

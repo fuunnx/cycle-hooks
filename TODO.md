@@ -6,3 +6,4 @@
 - [ ] idGenerator -> should be injected (replace symbols in Subject)
 - [ ] trackChildren -> take care of keys too !
 - [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
+- [ ] add registerOutlivedSinks()

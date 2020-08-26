@@ -21,12 +21,12 @@ function App() {
   });
 }
 
-function useFetchButton(props$) {
+function useFetchButton() {
   const [response$, { post }] = useHTTP();
 
   return [
     response$,
-    () =>
+    (props) =>
       xs
         .combine(response$.map((x) => x.response$).flatten(), props$)
         .map(([res, { name }]) => {

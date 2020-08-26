@@ -39,7 +39,8 @@ export function Ref(constructorFn?: Function): Ref {
         .flatten() as Stream<object>,
       children$.map(streamify).flatten().compose(dropRepeats())
     )
-    .map(([props, children]) => ({ ...props, children }));
+    .map(([props, children]) => ({ ...props, children }))
+    .remember();
 
   const ref: Ref = {
     data: {
