@@ -8,6 +8,7 @@ import { withUnmount } from "../context/unmount";
 import { trackChildren, flattenObjectInnerStreams } from ".";
 import { gathererKey } from "../context/sinks";
 import { VNode } from "@cycle/dom";
+import { useSources } from "../hooks";
 
 export type Ref = {
   data: {
@@ -69,7 +70,7 @@ export function Ref(constructorFn?: Function): Ref {
   if (constructorFn) {
     ref.data.instance = withRef(ref, () => {
       const [unmount, result] = withUnmount(() => {
-        const result = constructorFn(finalProps$);
+        const result = constructorFn({ ...useSources, props$: finalProps$ });
         const sinks = result.DOM ? result : { DOM: streamify(result) };
 
         const transformedSinks = mapObj(

@@ -1,7 +1,6 @@
 import xs from "xstream";
 import { useState } from "../lib/hooks/useState";
 import { useEffect } from "../lib/hooks/useEffect";
-import { onUnmount } from "../lib/context/unmount";
 import { createElement } from "../lib/pragma";
 import { define } from "../lib/pragma/define";
 
@@ -9,7 +8,7 @@ type Props = {
   value: number;
 };
 
-export const Incrementer = define<Props>(function Incrementer(props$) {
+export const Incrementer = define<Props>(function Incrementer({ props$ }) {
   const [count$, setCount] = useState(0);
   const [isDown$, setIsDown] = useState(false);
   const increment$ = isDown$
@@ -27,10 +26,6 @@ export const Incrementer = define<Props>(function Incrementer(props$) {
       return () => setCount(fn);
     })
   );
-
-  console.log("run Incrementer");
-  useEffect(xs.of(() => console.log("hello Incrementer")));
-  onUnmount(() => console.log("goodbye Incrementer"));
 
   return (
     <div>

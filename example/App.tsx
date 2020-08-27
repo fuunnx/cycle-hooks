@@ -38,7 +38,7 @@ export function App() {
 type Props = {
   title: string;
 };
-const Togglable = define<Props>(function Togglable(props$) {
+const Togglable = define<Props>(function Togglable({ props$ }) {
   const [visible$, setVisible] = useState(true);
 
   return (

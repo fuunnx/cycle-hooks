@@ -4,9 +4,12 @@ import concat from "xstream/extra/concat";
 import { isObservable, streamify } from "../helpers";
 import { JSX } from "../../definitions";
 import { Ref, safeUseRef, withRef } from "./ref";
+import { Sources } from "../types";
 
 export type Component<T> = (
-  props?: MemoryStream<T & { children: JSX.Element | JSX.Element[] }>
+  sources: Sources & {
+    props$: MemoryStream<T & { children: JSX.Element | JSX.Element[] }>;
+  }
 ) => JSX.Element | { DOM: MemoryStream<JSX.Element> };
 
 export function flattenObjectInnerStreams(props: object) {
@@ -43,7 +46,7 @@ export function createElement<T extends { [k: string]: unknown }>(
   return {
     _isComponent: true,
     type: (tagOrFunction as any)._isWrappedComponent
-      ? tagOrFunction()
+      ? (tagOrFunction as any)()
       : tagOrFunction,
     props: props || {},
     children: Fragment(...(children || [])),
