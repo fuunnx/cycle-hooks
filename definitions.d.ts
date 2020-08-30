@@ -2,7 +2,7 @@ import { VNode, VNodeData } from "snabbdom/build/package/vnode";
 import { MemoryStream } from "xstream";
 
 declare namespace JSX {
-  type Element = VNode | MemoryStream<VNode>;
+  type Element = VNode | VNode[] | MemoryStream<VNode | VNode[]>;
 
   interface IntrinsicElements {
     [elemName: string]: VNodeData;

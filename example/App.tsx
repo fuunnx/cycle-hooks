@@ -1,10 +1,12 @@
-import xs from "xstream";
+import xs, { Stream } from "xstream";
 import { useState } from "../lib/hooks/useState";
 import { useSources, createElement } from "../lib";
 import { Input } from "./Input";
 import { Incrementer } from "./Incrementer";
 import { Timer } from "./Timer";
 import { define } from "../lib/pragma/define";
+import { JSX } from "../definitions";
+import { VNode } from "@cycle/dom";
 
 export function App() {
   const state$ = useSources().state.stream;
@@ -39,22 +41,23 @@ type Props = {
   title: string;
 };
 const Togglable = define<Props>(function Togglable({ props$ }) {
-  const [visible$, setVisible] = useState(true);
+  const [open$, setOpen] = useState(false);
 
-  return (
-    <section>
+  return open$.map((open) => (
+    <section className="togglable-section" class={{ "-open": open }}>
       <header
+        className="header"
         tabIndex={0}
+        attrs={{ "aria-role": "button" }}
         on={{
-          click: () => setVisible((x) => !x),
+          click: () => setOpen((x) => !x),
         }}
       >
         <h2>{props$.map((x) => x.title)}</h2>
       </header>
-      {visible$.map(
-        (visible) =>
-          visible && <content>{props$.map((x) => x.children)}</content>
+      {open && (
+        <content className="content">{props$.map((x) => x.children)}</content>
       )}
     </section>
-  );
+  ));
 });

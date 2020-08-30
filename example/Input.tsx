@@ -7,7 +7,7 @@ export function Input() {
   return (
     <input
       type="text"
-      value={state$.map((x) => x.value).startWith("")}
+      value={state$.map((x) => x.value || "")}
       on={{
         input(e) {
           setState({ value: e.target.value });
