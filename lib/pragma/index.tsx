@@ -1,16 +1,17 @@
-import { h, VNode } from "@cycle/dom";
+import { h, VNode, rt } from "@cycle/dom";
 import xs, { MemoryStream, Stream } from "xstream";
 import concat from "xstream/extra/concat";
 import { isObservable, streamify } from "../helpers";
 import { JSX } from "../../definitions";
 import { Ref, safeUseRef, withRef } from "./ref";
 import { Sources } from "../types";
+import { assocPath } from "rambda";
 
 export type Component<T> = (
   sources: Sources & {
-    props$: MemoryStream<T & { children: JSX.Element | JSX.Element[] }>;
+    props$: MemoryStream<T & { children: JSX.Element }>;
   }
-) => JSX.Element | { DOM: MemoryStream<JSX.Element> };
+) => JSX.Element | { DOM: JSX.Element };
 
 export function flattenObjectInnerStreams(props: object) {
   return xs
@@ -20,6 +21,34 @@ export function flattenObjectInnerStreams(props: object) {
       )
     )
     .map(Object.fromEntries);
+}
+
+type VnodeData = {
+  props: { [k: string]: any };
+  attrs?: { [k: string]: string };
+  on?: { [k: string]: EventListener };
+  class?: { [k: string]: boolean };
+  key?: string;
+};
+function normalizeProps(props: { [k: string]: any }) {
+  let result: VnodeData = { props };
+  if (props.on) {
+    result.on = props.on;
+  }
+  if (props.class) {
+    result.class = props.class;
+  }
+  if (props.attrs) {
+    result.attrs = props.attrs;
+  }
+  if (props.props) {
+    result.props = props.props;
+  }
+  if (props.key) {
+    result.key = props.key;
+  }
+
+  return result;
 }
 
 export function createElement<T extends { [k: string]: unknown }>(
@@ -32,12 +61,12 @@ export function createElement<T extends { [k: string]: unknown }>(
       if (Object.values(props).some(isObservable)) {
         return flattenObjectInnerStreams(props).map((props) =>
           liftIfObservable(children, (c) =>
-            h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
+            h(tagOrFunction, normalizeProps(props), c)
           )
         );
       }
       return liftIfObservable(children, (c) =>
-        h(tagOrFunction, { on: (props.on as any) || {}, props }, c)
+        h(tagOrFunction, normalizeProps(props), c)
       );
     }
     return liftIfObservable(children, (c) => h(tagOrFunction, c));
@@ -53,11 +82,58 @@ export function createElement<T extends { [k: string]: unknown }>(
   };
 }
 
+function unwrapObjectStream(in$: Stream<JSX.Element>): Stream<VNode> {
+  return in$
+    .map((val) => {
+      const nested = indexNestedStreams(val);
+      return xs
+        .combine(
+          ...nested.map((x) =>
+            x.value
+              .compose(unwrapObjectStream)
+              .map((unwrapped) => (acc) => assocPath(x.path, unwrapped, acc))
+          )
+        )
+        .map((reducers) => reducers.reduce((acc, func) => func(acc), val));
+    })
+    .flatten();
+}
+
+type IndexedStream<T> = {
+  path: (string | number)[];
+  value: Stream<T>;
+};
+
+function indexNestedStreams(input: any) {
+  let indexed: IndexedStream<unknown>[] = [];
+
+  function run(value, path: (string | number)[]) {
+    if (!value || typeof value !== "object") return;
+    if (isObservable(value)) {
+      indexed.push({
+        value,
+        path,
+      });
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((x, index) => run(x, [...path, index]));
+      return;
+    }
+    Object.entries(value).forEach(([k, v]) => run(v, [...path, k]));
+    return;
+  }
+
+  run(input, []);
+
+  return indexed;
+}
+
 export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
   const ref = safeUseRef() || Ref();
   const END = Symbol("END");
 
-  return concat(streamify(stream), xs.of(END as any))
+  return concat(unwrapObjectStream(streamify(stream)), xs.of(END as any))
     .map((vtree) => {
       return withRef(ref, () => {
         return walk(vtree);
@@ -104,22 +180,21 @@ function liftIfObservable(
   children: (string | null | number | JSX.Element)[],
   func: (children: any[]) => JSX.Element | JSX.Element[]
 ): JSX.Element | JSX.Element[] | MemoryStream<JSX.Element | JSX.Element[]> {
-  if (children.some(isObservable)) {
-    return flattenObservables(children).map((children) => func(children));
+  const childrenn = children.flat(Infinity).filter(Boolean) as any[];
+  if (childrenn.some(isObservable)) {
+    return flattenObservables(childrenn).map((children) => func(children));
   }
-  return func(children.flat().filter(Boolean) as any[]);
+  return func(childrenn);
 }
 
-function flattenObservables(children: any[]) {
-  if (children.some(isObservable)) {
-    return xs
-      .combine(...children.map(streamify))
-      .map((x) => x.flat().filter(Boolean))
-      .map((children) =>
-        children.some(isObservable)
-          ? flattenObservables(children)
-          : xs.of(children)
-      )
-      .flatten();
-  }
+function flattenObservables(children: (any | Stream<any>)[]): Stream<VNode[]> {
+  return xs
+    .combine(...children.map(streamify))
+    .map((x) => x.flat(Infinity).filter(Boolean))
+    .map((children) =>
+      children.some(isObservable)
+        ? flattenObservables(children)
+        : xs.of(children)
+    )
+    .flatten();
 }
