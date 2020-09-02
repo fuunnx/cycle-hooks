@@ -7,7 +7,7 @@ import { ContextKey, withContext, useContext, safeUseContext } from ".";
 import { onUnmount } from "./unmount";
 import { mapObj } from "../helpers";
 
-export type Registerer = (sinks: Sinks) => void;
+export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void;
 export const gathererKey: ContextKey<Registerer> = Symbol("registerer");
 
 type GatherableKeys = string[];
@@ -38,7 +38,7 @@ export function gatherSinks<T>(
   const gatherableKeys = [...scopeKeys, ...keys];
 
   let sinksProxy = initSinksProxy();
-  function gatherer(sinks: Sinks) {
+  function gatherer(sinks: Sinks, stopSignal$: Stream<any> = onUnmount()) {
     Object.keys(sinks).forEach((key) => {
       if (!gatherableKeys.includes(key)) {
         console.warn(
@@ -48,9 +48,12 @@ export function gatherSinks<T>(
     });
 
     let dispose = () => {};
-    const unmount$ = onUnmount(dispose);
     dispose = replicateMany(
-      mapObj((x$: Stream<any>) => x$.endWhen(unmount$), sinks),
+      mapObj(
+        (x$: Stream<any>) =>
+          x$.endWhen(stopSignal$.debug(() => Promise.resolve().then(dispose))),
+        sinks
+      ),
       sinksProxy
     );
   }
@@ -70,6 +73,9 @@ export function gatherSinks<T>(
   }
 }
 
-export function registerSinks(sinks: Sinks) {
-  return useContext(gathererKey)(sinks);
+export function registerSinks(
+  sinks: Sinks,
+  stopSignal$: Stream<any> = onUnmount()
+) {
+  return useContext(gathererKey)(sinks, stopSignal$);
 }
