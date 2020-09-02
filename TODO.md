@@ -7,3 +7,6 @@
 - [ ] trackChildren -> take care of keys too !
 - [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
 - [ ] add registerOutlivedSinks()
+- [ ] rename with handler / effect / frame / context ?
+- [ ] guess registerSinks keys thanks to 'sources' keys ?
+- [ ] implement eventListeners with `useEffect(DOM.select(key).events(name).map(evt => () => handler(evt)))`
