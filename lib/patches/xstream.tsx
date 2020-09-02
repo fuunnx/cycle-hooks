@@ -4,7 +4,7 @@ import { gathererKey } from "../context/sinks";
 import { Sinks } from "../types";
 import { withUnmount } from "../context/unmount";
 
-// it's just a way to hook into the Stream constructor call
+// this is a way to hook into the Stream constructor call
 Object.defineProperty(Stream.prototype, "_prod", {
   set<T>(producer: InternalProducer<T> | typeof NO) {
     this.__prod = producer;
