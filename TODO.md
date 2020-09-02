@@ -6,7 +6,7 @@
 - [ ] idGenerator -> should be injected (replace symbols in Subject)
 - [ ] trackChildren -> take care of keys too !
 - [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
-- [ ] add registerOutlivedSinks()
+- [x] add registerOutlivedSinks() --> stopSignal\$
 - [ ] rename with handler / effect / frame / context ?
 - [ ] guess registerSinks keys thanks to 'sources' keys ?
 - [ ] implement eventListeners with `useEffect(DOM.select(key).events(name).map(evt => () => handler(evt)))`

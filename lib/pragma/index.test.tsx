@@ -40,10 +40,12 @@ test("pragma unwraps child streams", (done) => {
   const childB$ = Time.diagram("b-B----");
   assertDomEqual(
     Time,
-    <div>
-      {childA$}
-      <h1>{childB$}</h1>
-    </div>,
+    trackChildren(
+      <div>
+        {childA$}
+        <h1>{childB$}</h1>
+      </div>
+    ),
     xs
       .combine(childA$, childB$)
       .map(([childA, childB]) => h("div", [childA, h("h1", childB)]))
@@ -58,7 +60,7 @@ test("pragma unwraps arbitrary nested child streams", (done) => {
   const childA$ = Time.diagram("a--A--a").map(xs.of).map(xs.of);
   assertDomEqual(
     Time,
-    <div>{childA$}</div>,
+    trackChildren(<div>{childA$}</div>),
     childA$
       .flatten()
       .flatten()
@@ -74,8 +76,11 @@ test("pragma unwraps props", (done) => {
   const value$ = Time.diagram("a--A--a").map(xs.of).map(xs.of);
   assertDomEqual(
     Time,
-    <input type="text" value={value$} />,
-    value$.map((value) => h("input", { props: { type: "text", value } }, []))
+    value$
+      .flatten()
+      .flatten()
+      .map((value) => h("input", { props: { type: "text", value } }, [])),
+    trackChildren(<input type="text" value={value$} />)
   );
 
   Time.run(done);

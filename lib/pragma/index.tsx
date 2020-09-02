@@ -51,34 +51,42 @@ function normalizeProps(props: { [k: string]: any }) {
   return result;
 }
 
+export type ComponentDescription<T> = {
+  _isComponent: true;
+  _function: Component<T>;
+  sel: string;
+  data: {
+    props: T;
+    children: JSX.Element[];
+  };
+};
+type WrappedComponent<T> = {
+  (): Component<T>;
+  _props: T;
+  _isWrappedComponent: true;
+};
+
 export function createElement<T extends { [k: string]: unknown }>(
-  tagOrFunction: string | Component<T>,
+  tagOrFunction: string | Component<T> | WrappedComponent<T>,
   props?: T,
-  ...children: (string | null | number | JSX.Element)[]
-) {
+  ...children: JSX.Element[]
+): JSX.Element {
   if (typeof tagOrFunction === "string") {
     if (props) {
-      if (Object.values(props).some(isObservable)) {
-        return flattenObjectInnerStreams(props).map((props) =>
-          liftIfObservable(children, (c) =>
-            h(tagOrFunction, normalizeProps(props), c)
-          )
-        );
-      }
-      return liftIfObservable(children, (c) =>
-        h(tagOrFunction, normalizeProps(props), c)
-      );
+      return h(tagOrFunction, normalizeProps(props), children as any);
     }
-    return liftIfObservable(children, (c) => h(tagOrFunction, c));
+    return h(tagOrFunction, children);
   }
 
   return {
     _isComponent: true,
-    type: (tagOrFunction as any)._isWrappedComponent
-      ? (tagOrFunction as any)()
-      : tagOrFunction,
-    props: props || {},
-    children: Fragment(...(children || [])),
+    _function:
+      "_isWrappedComponent" in tagOrFunction ? tagOrFunction() : tagOrFunction,
+    sel: tagOrFunction.name,
+    data: {
+      props: props || {},
+      children,
+    },
   };
 }
 
@@ -144,18 +152,19 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
     .flatten()
     .remember();
 
-  function walk(vnode: VNode) {
-    if (!vnode) {
+  function walk(vnode: JSX.Element) {
+    if (!vnode || typeof vnode !== "object") {
       return vnode;
     }
-    if ((vnode as any)._isComponent) {
-      const childRef = ref.tracker.track((vnode as any).type);
+    if ("_isComponent" in vnode) {
+      const childRef = ref.tracker.track(vnode._function);
       childRef.data.pushPropsAndChildren(
         (vnode as any).props,
-        vnode.children as any
+        vnode.data.children as any
       );
       return childRef.data.instance.DOM as any;
     }
+
     if (vnode.children) {
       return xs
         .combine(...vnode.children.map(walk).map(streamify))
@@ -170,31 +179,6 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
   }
 }
 
-export function Fragment(
-  ...children: (string | null | number | JSX.Element)[]
-) {
-  return liftIfObservable(children, (x) => x);
-}
-
-function liftIfObservable(
-  children: (string | null | number | JSX.Element)[],
-  func: (children: any[]) => JSX.Element | JSX.Element[]
-): JSX.Element | JSX.Element[] | MemoryStream<JSX.Element | JSX.Element[]> {
-  const childrenn = children.flat(Infinity).filter(Boolean) as any[];
-  if (childrenn.some(isObservable)) {
-    return flattenObservables(childrenn).map((children) => func(children));
-  }
-  return func(childrenn);
-}
-
-function flattenObservables(children: (any | Stream<any>)[]): Stream<VNode[]> {
-  return xs
-    .combine(...children.map(streamify))
-    .map((x) => x.flat(Infinity).filter(Boolean))
-    .map((children) =>
-      children.some(isObservable)
-        ? flattenObservables(children)
-        : xs.of(children)
-    )
-    .flatten();
+export function Fragment(...children: JSX.Element[]): JSX.Element[] {
+  return children.flat(Infinity).filter(Boolean);
 }
