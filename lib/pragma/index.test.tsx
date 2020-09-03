@@ -1,6 +1,7 @@
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
 import { h } from '@cycle/dom'
-import { createElement, trackChildren } from './index'
+import { createElement } from './index'
+import { trackChildren } from './trackChildren'
 import xs, { Stream } from 'xstream'
 import toHTML from 'snabbdom-to-html'
 import prettify from 'html-prettify'
@@ -20,7 +21,7 @@ function assertDomEqual(
   )
 }
 
-test('pragma works like h() for simple tags', (done) => {
+test('pragma + trackChildren works like h() for simple tags', (done) => {
   const Time = mockTimeSource()
 
   assertDomEqual(Time, xs.of(<div>coucou</div>), xs.of(h('div', ['coucou'])))
@@ -33,7 +34,7 @@ test('pragma works like h() for simple tags', (done) => {
   Time.run(done)
 })
 
-test('pragma unwraps child streams', (done) => {
+test('pragma + trackChildren unwraps child streams', (done) => {
   const Time = mockTimeSource()
 
   const childA$ = Time.diagram('a--A--a')
@@ -54,7 +55,7 @@ test('pragma unwraps child streams', (done) => {
   Time.run(done)
 })
 
-test('pragma unwraps arbitrary nested child streams', (done) => {
+test('pragma + trackChildren unwraps arbitrary nested child streams', (done) => {
   const Time = mockTimeSource()
 
   const childA$ = Time.diagram('a--A--a').map(xs.of).map(xs.of)
@@ -70,7 +71,7 @@ test('pragma unwraps arbitrary nested child streams', (done) => {
   Time.run(done)
 })
 
-test('pragma unwraps props', (done) => {
+test('pragma + trackChildren unwraps props', (done) => {
   const Time = mockTimeSource()
 
   const value$ = Time.diagram('a--A--a').map(xs.of).map(xs.of)
@@ -86,7 +87,7 @@ test('pragma unwraps props', (done) => {
   Time.run(done)
 })
 
-test('pragma handles simple components', (done) => {
+test('pragma + trackChildren handles simple components', (done) => {
   const Time = mockTimeSource()
 
   function Component() {

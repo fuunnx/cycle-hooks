@@ -1,4 +1,4 @@
-import xs, { Stream } from 'xstream'
+import xs from 'xstream'
 import { useState } from '../lib/hooks/useState'
 import { useSources, createElement } from '../lib'
 import { Input } from './Input'
@@ -6,7 +6,6 @@ import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
 import { define } from '../lib/pragma/define'
 import { JSX } from '../definitions'
-import { VNode } from '@cycle/dom'
 
 export function App() {
   const state$ = useSources().state.stream
@@ -18,13 +17,13 @@ export function App() {
         <code>
           {state$
             .startWith(undefined)
-            .map((x) => JSON.stringify(x, null, '  '))}
+            .map((x: any) => JSON.stringify(x, null, '  '))}
         </code>
       </Togglable>
       <code>
         {/* {state$.startWith(undefined).map((x) => JSON.stringify(x, null, "  "))} */}
       </code>
-      <Togglable title="Incrementer">
+      <Togglable>
         <Incrementer value={xs.periodic(1000)} />
       </Togglable>
       <Togglable title="Input">
@@ -39,6 +38,7 @@ export function App() {
 
 type Props = {
   title: string
+  children: JSX.Element[]
 }
 const Togglable = define<Props>(function Togglable({ props$ }) {
   const [open$, setOpen] = useState(false)

@@ -5,10 +5,18 @@ import { ContextKey, withContext, useContext, safeUseContext } from '..'
 import { mapObj, streamify } from '../helpers'
 import { Sinks } from '../types'
 import { withUnmount } from '../context/unmount'
-import { trackChildren, flattenObjectInnerStreams } from '.'
+import { trackChildren } from './trackChildren'
 import { gathererKey } from '../context/sinks'
 import { VNode } from '@cycle/dom'
 import { useSources } from '../hooks'
+
+function flattenObjectInnerStreams(props: object) {
+  return xs
+    .combine(
+      ...Object.entries(props).map(([k, v]) => streamify(v).map((v) => [k, v])),
+    )
+    .map(Object.fromEntries)
+}
 
 export type Ref = {
   data: {

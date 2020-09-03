@@ -14,10 +14,11 @@ declare namespace JSX {
   }
 
   interface ElementClass {
-    _props: any
+    _propsType: any
+    _isWrappedComponent: true
   }
 
   interface ElementAttributesProperty {
-    _props // specify the property name to use
+    _propsType // specify the property name to use
   }
 }
