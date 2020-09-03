@@ -9,11 +9,14 @@ import { trackChildren } from './trackChildren'
 import { gathererKey } from '../context/sinks'
 import { VNode } from '@cycle/dom'
 import { useSources } from '../hooks'
+import { JSX } from '../../definitions'
 
-function flattenObjectInnerStreams(props: object) {
+function flattenObjectInnerStreams(props?: object) {
   return xs
     .combine(
-      ...Object.entries(props).map(([k, v]) => streamify(v).map((v) => [k, v])),
+      ...Object.entries(props || {}).map(([k, v]) =>
+        streamify(v).map((v) => [k, v]),
+      ),
     )
     .map(Object.fromEntries)
 }
@@ -23,7 +26,10 @@ export type Ref = {
     instance: null | Sinks
     unmount: () => void
     constructorFn: Function | undefined
-    pushPropsAndChildren: (props: object, children: Stream<VNode[]>) => void
+    pushPropsAndChildren: (
+      props: object,
+      children: (JSX.Element | Stream<JSX.Element>)[],
+    ) => void
   }
   tracker: IndexedTracker<Function, Ref>
 }
@@ -39,7 +45,9 @@ function shallowEquals(a: object, b: object) {
 export function Ref(constructorFn?: Function): Ref {
   const destroy$ = xs.create()
   const props$: MemoryStream<Object> = xs.createWithMemory()
-  const children$: Stream<Stream<any[]>> = xs.createWithMemory()
+  const children$: Stream<
+    (JSX.Element | Stream<JSX.Element>)[]
+  > = xs.createWithMemory()
   const finalProps$ = xs
     .combine(
       props$
@@ -107,12 +115,7 @@ export const refSymbol: ContextKey<Ref> = Symbol('ref')
 
 export function withRef<T>(ref: Ref, exec: () => T): T {
   return withContext(refSymbol, ref, () => {
-    try {
-      ref.tracker.open()
-      return exec()
-    } finally {
-      ref.tracker.close()
-    }
+    return exec()
   })
 }
 

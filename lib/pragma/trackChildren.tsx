@@ -1,15 +1,16 @@
 import { assocPath } from 'rambda'
-import { VNode } from 'snabbdom-to-html-common'
 import xs, { Stream } from 'xstream'
 import concat from 'xstream/extra/concat'
 import { JSX } from '../../definitions'
 import { isObservable, streamify } from '../helpers'
 import { safeUseRef, Ref, withRef } from './ref'
+import { h, VNode } from '@cycle/dom'
+import { Component, ComponentDescription } from '.'
 
 function unwrapObjectStream(in$: Stream<JSX.Element>): Stream<VNode> {
   return in$
     .map((val) => {
-      const nested = indexNestedStreams(val)
+      const nested = indexTree(isObservable, val)
       return xs
         .combine(
           ...nested.map((x) =>
@@ -23,27 +24,25 @@ function unwrapObjectStream(in$: Stream<JSX.Element>): Stream<VNode> {
     .flatten()
 }
 
-type IndexedStream<T> = {
-  path: (string | number)[]
-  value: Stream<T>
-}
-
-function indexNestedStreams(input: any) {
-  let indexed: IndexedStream<unknown>[] = []
+function indexTree<T>(condition: (val: any) => val is T, input: any) {
+  let indexed: { value: T; path: (string | number)[] }[] = []
 
   function run(value, path: (string | number)[]) {
-    if (!value || typeof value !== 'object') return
-    if (isObservable(value)) {
+    if (condition(value)) {
       indexed.push({
         value,
         path,
       })
       return
     }
+
+    if (!value || typeof value !== 'object') return
+
     if (Array.isArray(value)) {
       value.forEach((x, index) => run(x, [...path, index]))
       return
     }
+
     Object.entries(value).forEach(([k, v]) => run(v, [...path, k]))
     return
   }
@@ -53,14 +52,39 @@ function indexNestedStreams(input: any) {
   return indexed
 }
 
-export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
+export function trackChildren(
+  stream: JSX.Element | Stream<JSX.Element>,
+): Stream<JSX.Element> {
   const ref = safeUseRef() || Ref()
   const END = Symbol('END')
 
   return concat(unwrapObjectStream(streamify(stream)), xs.of(END as any))
     .map((vtree) => {
       return withRef(ref, () => {
-        return walk(vtree)
+        ref.tracker.open()
+        const descs = indexTree(isComponentDescription, vtree)
+        if (!descs.length) {
+          ref.tracker.close()
+          return vtree
+        }
+
+        const doms = descs.map((desc) => {
+          const childRef = ref.tracker.track(desc.value._function)
+          childRef.data.pushPropsAndChildren(
+            desc.value.data.props as object,
+            desc.value.data.children,
+          )
+
+          return childRef.data.instance.DOM.map((val) => (acc) =>
+            assocPath(desc.path, val, acc),
+          )
+        })
+        ref.tracker.close()
+
+        return xs
+          .combine(...doms)
+          .map((funcs) => funcs.reduce((acc, func) => func(acc), vtree))
+          .map(cleanup)
       })
     })
     .filter((x) => x !== END)
@@ -68,29 +92,28 @@ export function trackChildren(stream: VNode | Stream<VNode>): Stream<VNode> {
     .flatten()
     .remember()
 
-  function walk(vnode: JSX.Element) {
+  function cleanup(vnode: any) {
     if (!vnode || typeof vnode !== 'object') {
       return vnode
     }
-    if ('_isComponent' in vnode) {
-      const childRef = ref.tracker.track(vnode._function)
-      childRef.data.pushPropsAndChildren(
-        (vnode as any).props,
-        vnode.data.children as any,
-      )
-      return childRef.data.instance.DOM as any
+
+    if (Array.isArray(vnode)) {
+      return vnode.map(cleanup).flat(Infinity).filter(Boolean)
     }
 
     if (vnode.children) {
-      return xs
-        .combine(...vnode.children.map(walk).map(streamify))
-        .map((children) => {
-          return {
-            ...vnode,
-            children,
-          }
-        })
+      return h(
+        vnode.sel,
+        vnode.data,
+        cleanup(vnode.children as any)
+          .flat(Infinity)
+          .filter(Boolean),
+      )
     }
     return vnode
   }
+}
+
+function isComponentDescription(x: any): x is ComponentDescription<unknown> {
+  return x && x._isComponent
 }

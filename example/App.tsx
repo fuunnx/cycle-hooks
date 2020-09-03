@@ -21,9 +21,9 @@ export function App() {
         </code>
       </Togglable>
       <code>
-        {/* {state$.startWith(undefined).map((x) => JSON.stringify(x, null, "  "))} */}
+        {state$.startWith(undefined).map((x) => JSON.stringify(x, null, '  '))}
       </code>
-      <Togglable>
+      <Togglable title="Incrementer">
         <Incrementer value={xs.periodic(1000)} />
       </Togglable>
       <Togglable title="Input">
@@ -38,7 +38,7 @@ export function App() {
 
 type Props = {
   title: string
-  children: JSX.Element[]
+  children?: JSX.Element | JSX.Element[]
 }
 const Togglable = define<Props>(function Togglable({ props$ }) {
   const [open$, setOpen] = useState(false)

@@ -1,4 +1,4 @@
-import { h } from '@cycle/dom'
+import { h, VNode } from '@cycle/dom'
 import { ArgumentTypes } from 'rambda'
 import { MemoryStream, Stream } from 'xstream'
 import { JSX } from '../../definitions'
@@ -43,16 +43,15 @@ function normalizeProps(props: { [k: string]: any }) {
 export type ComponentDescription<T> = {
   _isComponent: true
   _function: Component<T>
-  sel: string
   data: {
     props: T
     children: JSX.Element[]
   }
 }
-export type WrappedComponent<Props> = {
-  (jsxProps: Props): ReturnType<Component<Props>>
-  // (...args: ArgumentTypes<Component<Props>>): ReturnType<Component<Props>>
-}
+
+export type WrappedComponent<Props> = (
+  jsxProps: { [P in keyof Props]: Props[P] | Stream<Props[P]> },
+) => ReturnType<Component<Props>>
 
 export function createElement<T extends { [k: string]: unknown }>(
   tagOrFunction: string | Component<T> | WrappedComponent<T>,
@@ -61,7 +60,7 @@ export function createElement<T extends { [k: string]: unknown }>(
 ): JSX.Element {
   if (typeof tagOrFunction === 'string') {
     if (props) {
-      return h(tagOrFunction, normalizeProps(props), children as any)
+      return h(tagOrFunction, normalizeProps(props), children as VNode[])
     }
     return h(tagOrFunction, children)
   }
@@ -69,12 +68,11 @@ export function createElement<T extends { [k: string]: unknown }>(
   return {
     _isComponent: true,
     _function: tagOrFunction as Component<T>,
-    sel: tagOrFunction.name,
     data: {
       props: props || {},
       children,
     },
-  }
+  } as ComponentDescription<T>
 }
 
 export function Fragment(...children: JSX.Element[]): JSX.Element[] {
