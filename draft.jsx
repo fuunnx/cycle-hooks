@@ -1,8 +1,8 @@
 function App() {
-  const log = useLogger();
+  const log = useLogger()
 
-  const [name$, setName] = useState();
-  const [response$, FetchButton] = useFetchButton();
+  const [name$, setName] = useState()
+  const [response$, FetchButton] = useFetchButton()
 
   return name$.map((name) => {
     return (
@@ -10,19 +10,19 @@ function App() {
         <input
           type="text"
           onInput={(e) => {
-            setName(e.target.value);
-            log(e.target.value);
+            setName(e.target.value)
+            log(e.target.value)
           }}
           value={name}
         />
         <FetchButton name={name} />
       </>
-    );
-  });
+    )
+  })
 }
 
 function useFetchButton() {
-  const [response$, { post }] = useHTTP();
+  const [response$, { post }] = useHTTP()
 
   return [
     response$,
@@ -33,13 +33,13 @@ function useFetchButton() {
           return (
             <button
               onClick={() => {
-                post("lol");
+                post('lol')
               }}
             >
               {res}
               {name}
             </button>
-          );
+          )
         }),
-  ];
+  ]
 }

@@ -23,37 +23,37 @@ npm install cycle-hooks --save
 
 ```js
 // 1
-import { makeDOMDriver } from "@cycle/dom";
-import modules from "@cycle/dom/lib/es6/modules";
-import { eventListenersModule } from "snabbdom/build/package/modules/eventlisteners";
+import { makeDOMDriver } from '@cycle/dom'
+import modules from '@cycle/dom/lib/es6/modules'
+import { eventListenersModule } from 'snabbdom/build/package/modules/eventlisteners'
 // 2 and 3
-import { makeEffectsDriver, withHooks } from "cycle-hooks";
+import { makeEffectsDriver, withHooks } from 'cycle-hooks'
 
 // 4
-import { run } from "@cycle/run";
-import { App } from "./App.js";
+import { run } from '@cycle/run'
+import { App } from './App.js'
 
 const drivers = {
   // 1
-  DOM: makeDOMDriver("#app", {
+  DOM: makeDOMDriver('#app', {
     modules: [...modules, eventListenersModule],
   }),
   // 2
   effects: makeEffectsDriver(),
-};
+}
 
 // 3
-const RunnableApp = withHooks(App, Object.keys(drivers));
+const RunnableApp = withHooks(App, Object.keys(drivers))
 
 // 4
-run(RunnableApp, drivers);
+run(RunnableApp, drivers)
 ```
 
 ### Write your first component
 
 ```tsx
 function Timer() {
-  const [reset$, reset] = makeSubject();
+  const [reset$, reset] = makeSubject()
 
   return (
     <div>
@@ -64,7 +64,7 @@ function Timer() {
         .flatten()}
       <button on={{ click: reset }}>Reset</button>
     </div>
-  );
+  )
 }
 ```
 
@@ -182,12 +182,12 @@ This is the main piece. It wraps a component or an entire application, enable th
 A wrapper function to provide or update "ghost sources" in the ambiant context of the executed function. Returns the result of the provided function
 
 ```js
-const appSinks = provideSources({ message: xs.of("hello") }, App);
+const appSinks = provideSources({ message: xs.of('hello') }, App)
 
 const appSinks = provideSources(
   (sources) => ({ ...sources, message: message.map(toUpper) }),
-  App
-);
+  App,
+)
 ```
 
 #### gatherSinks
@@ -195,11 +195,11 @@ const appSinks = provideSources(
 The function `gatherSinks()` can wrap and call any function. It's returned values contains the provided function's results, and all the gathered `sinks` collected via `registerSinks(sinks)`
 
 ```js
-const gatherSinks = makeGatherSinks(["click$"]);
+const gatherSinks = makeGatherSinks(['click$'])
 
-const [ghostSinks, appSinks] = gatherSinks(() => App(sources));
+const [ghostSinks, appSinks] = gatherSinks(() => App(sources))
 
-console.log(ghostSinks); // --> { click$: Stream }
+console.log(ghostSinks) // --> { click$: Stream }
 ```
 
 #### withContext
@@ -274,13 +274,13 @@ It's the base building block of the imperative style hooks. Its purpose is to pe
 You can pass a value with
 
 ```js
-const result = withContext(key, value, () => func());
+const result = withContext(key, value, () => func())
 ```
 
 Down the call stack, you can then use its value
 
 ```js
-const value = useContext(key);
+const value = useContext(key)
 ```
 
 ### Creating a hook
@@ -294,7 +294,7 @@ But thanks to the context API it's not necessary to pass sinks and sinks all the
 If you want to test a component using this API, all you have to do is wrap it :
 
 ```js
-const sinks = withHooks(Component)(sources);
+const sinks = withHooks(Component)(sources)
 ```
 
 You can simulate 'effects' by providing a custom effects source:

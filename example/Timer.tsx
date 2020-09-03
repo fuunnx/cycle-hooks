@@ -1,9 +1,9 @@
-import xs from "xstream";
-import { makeSubject } from "../lib/driver";
-import { createElement } from "../lib";
+import xs from 'xstream'
+import { makeSubject } from '../lib/driver'
+import { createElement } from '../lib'
 
 export const Timer = () => {
-  const [reset$, reset] = makeSubject();
+  const [reset$, reset] = makeSubject()
 
   return (
     <div>
@@ -14,5 +14,5 @@ export const Timer = () => {
         .flatten()}
       <button on={{ click: reset }}>Reset</button>
     </div>
-  );
-};
+  )
+}

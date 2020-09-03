@@ -1,15 +1,15 @@
-import xs, { Stream } from "xstream";
-import { useState } from "../lib/hooks/useState";
-import { useSources, createElement } from "../lib";
-import { Input } from "./Input";
-import { Incrementer } from "./Incrementer";
-import { Timer } from "./Timer";
-import { define } from "../lib/pragma/define";
-import { JSX } from "../definitions";
-import { VNode } from "@cycle/dom";
+import xs, { Stream } from 'xstream'
+import { useState } from '../lib/hooks/useState'
+import { useSources, createElement } from '../lib'
+import { Input } from './Input'
+import { Incrementer } from './Incrementer'
+import { Timer } from './Timer'
+import { define } from '../lib/pragma/define'
+import { JSX } from '../definitions'
+import { VNode } from '@cycle/dom'
 
 export function App() {
-  const state$ = useSources().state.stream;
+  const state$ = useSources().state.stream
 
   return (
     <div>
@@ -18,7 +18,7 @@ export function App() {
         <code>
           {state$
             .startWith(undefined)
-            .map((x) => JSON.stringify(x, null, "  "))}
+            .map((x) => JSON.stringify(x, null, '  '))}
         </code>
       </Togglable>
       <code>
@@ -34,21 +34,21 @@ export function App() {
         <Timer />
       </Togglable>
     </div>
-  );
+  )
 }
 
 type Props = {
-  title: string;
-};
+  title: string
+}
 const Togglable = define<Props>(function Togglable({ props$ }) {
-  const [open$, setOpen] = useState(false);
+  const [open$, setOpen] = useState(false)
 
   return open$.map((open) => (
-    <section className="togglable-section" class={{ "-open": open }}>
+    <section className="togglable-section" class={{ '-open': open }}>
       <header
         className="header"
         tabIndex={0}
-        attrs={{ "aria-role": "button" }}
+        attrs={{ 'aria-role': 'button' }}
         on={{
           click: () => setOpen((x) => !x),
         }}
@@ -59,5 +59,5 @@ const Togglable = define<Props>(function Togglable({ props$ }) {
         <content className="content">{props$.map((x) => x.children)}</content>
       )}
     </section>
-  ));
-});
+  ))
+})

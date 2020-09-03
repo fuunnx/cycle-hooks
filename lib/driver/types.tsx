@@ -1,4 +1,4 @@
-import { Stream } from "xstream";
+import { Stream } from 'xstream'
 
-export type Effect = [Symbol, unknown];
-export type EffectsSources = Stream<Effect>;
+export type Effect = [Symbol, unknown]
+export type EffectsSources = Stream<Effect>

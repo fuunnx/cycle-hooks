@@ -10,3 +10,4 @@
 - [ ] rename with handler / effect / frame / context ?
 - [ ] guess registerSinks keys thanks to 'sources' keys ?
 - [ ] implement eventListeners with `useEffect(DOM.select(key).events(name).map(evt => () => handler(evt)))`
+- [ ] measure performance overhead
