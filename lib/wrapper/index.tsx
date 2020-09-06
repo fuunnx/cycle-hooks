@@ -35,7 +35,9 @@ export function withHooks<Props>(
                 ? appSinks
                 : { DOM: streamify(appSinks) }
 
-            normalizedSinks.DOM = trackChildren(normalizedSinks.DOM as any)
+            normalizedSinks.DOM = trackChildren(
+              normalizedSinks.DOM as Stream<any>,
+            )
             return normalizedSinks as Sinks
           },
         )

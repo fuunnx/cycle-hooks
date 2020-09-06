@@ -5,7 +5,7 @@ import { JSX } from '../../definitions'
 import { isObservable, streamify } from '../helpers'
 import { safeUseRef, Ref, withRef } from './ref'
 import { h, VNode } from '@cycle/dom'
-import { Component, ComponentDescription } from '.'
+import { ComponentDescription } from '.'
 
 function unwrapObjectStream(in$: Stream<JSX.Element>): Stream<VNode> {
   return in$
@@ -58,7 +58,10 @@ export function trackChildren(
   const ref = safeUseRef() || Ref()
   const END = Symbol('END')
 
-  return concat(unwrapObjectStream(streamify(stream)), xs.of(END as any))
+  return concat<VNode | typeof END>(
+    unwrapObjectStream(streamify(stream)),
+    xs.of(END),
+  )
     .map((vtree) => {
       return withRef(ref, () => {
         ref.tracker.open()
