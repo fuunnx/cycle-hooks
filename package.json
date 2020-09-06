@@ -26,6 +26,7 @@
     "@cycle/time": "^0.20.0",
     "@types/jest": "^26.0.5",
     "cyclejs-utils": "^4.0.2",
+    "multi-key-cache": "^1.0.2",
     "rambda": "^5.9.0",
     "snabbdom": "^1.0.1",
     "xstream": "^11.12.0",

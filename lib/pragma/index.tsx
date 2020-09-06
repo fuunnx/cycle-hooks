@@ -1,8 +1,7 @@
 import { h, VNode } from '@cycle/dom'
-import { ArgumentTypes } from 'rambda'
 import { MemoryStream, Stream } from 'xstream'
-import { JSX } from '../../definitions'
-import { Sources } from '../types'
+import { Sources, JSX } from '../types'
+import { Key } from './ref'
 
 export type Component<T> = (
   sources: Sources & { props$: MemoryStream<T> },
@@ -44,13 +43,14 @@ export type ComponentDescription<T> = {
   _isComponent: true
   _function: Component<T>
   data: {
+    key: Key
     props: T
     children: JSX.Element[]
   }
 }
 
 export type WrappedComponent<Props> = (
-  jsxProps: { [P in keyof Props]: Props[P] | Stream<Props[P]> },
+  jsxProps: { [P in keyof Props]: Props[P] | Stream<Props[P]> } & { key?: Key },
 ) => ReturnType<Component<Props>>
 
 export function createElement<T extends { [k: string]: unknown }>(
@@ -69,7 +69,7 @@ export function createElement<T extends { [k: string]: unknown }>(
     _isComponent: true,
     _function: tagOrFunction as Component<T>,
     data: {
-      props: props || {},
+      ...normalizeProps(props || {}),
       children,
     },
   } as ComponentDescription<T>

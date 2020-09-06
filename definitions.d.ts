@@ -1,14 +1,12 @@
-import { VNode, VNodeData } from 'snabbdom/build/package/vnode'
-import { ComponentDescription } from './lib/pragma'
-
-declare namespace JSX {
-  type Element = string | null | number | VNode | ComponentDescription<unknown>
-
-  interface IntrinsicElements {
-    [elemName: string]: VNodeData
+declare module 'multi-key-cache' {
+  class MultiKeyCache<K extends Array<unknown>, V> {
+    new(): MultiKeyCache<K, V>
+    has(keys: K): boolean
+    get(keys: K): V | undefined
+    set(keys: K, value: V): void
+    delete(keys: K): boolean
+    values(): V[]
+    keyNodes(): K[]
   }
-
-  interface ElementChildrenAttribute {
-    children: {} // specify children name to use
-  }
+  export = MultiKeyCache
 }

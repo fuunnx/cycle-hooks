@@ -1,7 +1,7 @@
 import { assocPath } from 'rambda'
 import xs, { Stream } from 'xstream'
 import concat from 'xstream/extra/concat'
-import { JSX } from '../../definitions'
+import { JSX } from '../types'
 import { isObservable, streamify } from '../helpers'
 import { safeUseRef, Ref, withRef } from './ref'
 import { h, VNode } from '@cycle/dom'
@@ -72,7 +72,10 @@ export function trackChildren(
         }
 
         const doms = descs.map((desc) => {
-          const childRef = ref.tracker.track(desc.value._function)
+          const childRef = ref.tracker.track(
+            desc.value._function,
+            desc.value.data.key,
+          )
           childRef.data.pushPropsAndChildren(
             desc.value.data.props as object,
             desc.value.data.children,

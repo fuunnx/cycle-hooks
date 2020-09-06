@@ -104,14 +104,11 @@ test('keeps dynamic components alive until unmount', (done) => {
 
   function ComponentA() {
     const rerender$ = Time.diagram('1-1---1--')
-    onUnmount(() => console.log('unmount A'))
     return rerender$.map(() => <ComponentB />)
   }
 
   function ComponentB() {
     const timer$ = Time.diagram('1---2---3')
-
-    onUnmount(() => console.log('unmount B'))
     return timer$
   }
 

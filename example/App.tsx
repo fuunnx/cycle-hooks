@@ -5,7 +5,7 @@ import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
 import { define } from '../lib/pragma/define'
-import { JSX } from '../definitions'
+import { JSX } from '../lib/types'
 
 export function App() {
   const state$ = useSources().state.stream
@@ -25,6 +25,8 @@ export function App() {
       </code>
       <Togglable title="Incrementer">
         <Incrementer value={xs.periodic(1000)} />
+        <Incrementer key="hello" value={xs.periodic(1000)} />
+        <Incrementer key="hello" value={xs.periodic(1000)} />
       </Togglable>
       <Togglable title="Input">
         <Input />

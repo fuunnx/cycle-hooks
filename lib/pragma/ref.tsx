@@ -1,15 +1,15 @@
 import dropRepeats from 'xstream/extra/dropRepeats'
 import xs, { Stream, MemoryStream } from 'xstream'
-import { IndexedTracker, makeUsageTrackerIndexed } from './trackUsageIndexed'
+import { makeUsageTrackerIndexed } from './trackUsageIndexed'
 import { ContextKey, withContext, useContext, safeUseContext } from '..'
 import { mapObj, streamify } from '../helpers'
 import { Sinks } from '../types'
 import { withUnmount } from '../context/unmount'
 import { trackChildren } from './trackChildren'
 import { gathererKey } from '../context/sinks'
-import { VNode } from '@cycle/dom'
 import { useSources } from '../hooks'
-import { JSX } from '../../definitions'
+import { JSX } from '../types'
+import { makeUsageTrackerKeyed } from './trackUsageKeyed'
 
 function flattenObjectInnerStreams(props?: object) {
   return xs
@@ -21,6 +21,7 @@ function flattenObjectInnerStreams(props?: object) {
     .map(Object.fromEntries)
 }
 
+export type Key = string | number | Symbol
 export type Ref = {
   data: {
     instance: null | Sinks
@@ -31,7 +32,12 @@ export type Ref = {
       children: (JSX.Element | Stream<JSX.Element>)[],
     ) => void
   }
-  tracker: IndexedTracker<Function, Ref>
+  tracker: {
+    open(): void
+    close(): void
+    destroy(): void
+    track(type: Function, key?: Key): Ref
+  }
 }
 
 function shallowEquals(a: object, b: object) {
@@ -59,6 +65,21 @@ export function Ref(constructorFn?: Function): Ref {
     .map(([props, children]) => ({ ...props, children }))
     .remember()
 
+  const lifecycle = {
+    create(arg: [Function, Key] | Function) {
+      return Ref(Array.isArray(arg) ? arg[0] : arg)
+    },
+    use(ref) {
+      return ref
+    },
+    destroy(ref) {
+      ref.data.unmount()
+      destroy$.shamefullySendNext(null)
+    },
+  }
+  const indexedTracker = makeUsageTrackerIndexed<Function, Ref>(lifecycle)
+  const keyedTracker = makeUsageTrackerKeyed<[Function, Key], Ref>(lifecycle)
+
   const ref: Ref = {
     data: {
       constructorFn,
@@ -69,18 +90,26 @@ export function Ref(constructorFn?: Function): Ref {
         children$.shamefullySendNext(children)
       },
     },
-    tracker: makeUsageTrackerIndexed<Function, Ref>({
-      create(func) {
-        return Ref(func)
+    tracker: {
+      open() {
+        indexedTracker.open()
+        keyedTracker.open()
       },
-      use(ref) {
-        return ref
+      close() {
+        indexedTracker.close()
+        keyedTracker.close()
       },
-      destroy(ref) {
-        ref.data.unmount()
-        destroy$.shamefullySendNext(null)
+      destroy() {
+        indexedTracker.destroy()
+        keyedTracker.destroy()
       },
-    }),
+      track(type: Function, key?: Key) {
+        if (key) {
+          return keyedTracker.track([type, key])
+        }
+        return indexedTracker.track(type)
+      },
+    },
   }
 
   if (constructorFn) {

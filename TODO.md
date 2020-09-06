@@ -8,7 +8,7 @@
 - [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
 - [x] add registerOutlivedSinks() --> stopSignal\$
 - [ ] rename with handler / effect / frame / context ?
-- [ ] guess registerSinks keys thanks to 'sources' keys ?
+- [x] guess registerSinks keys thanks to 'sources' keys ?
 - [ ] implement eventListeners with `useEffect(DOM.select(key).events(name).map(evt => () => handler(evt)))`
 - [ ] measure performance overhead
 - [ ] provide better typings
