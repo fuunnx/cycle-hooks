@@ -1,11 +1,12 @@
 import xs from 'xstream'
 import { makeSubject } from '../lib/driver'
 import { createElement } from '../lib'
+import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 
 export const Timer = () => {
   const [reset$, reset] = makeSubject()
 
-  return (
+  return unwrapVtree$(
     <div>
       Count :
       {reset$
@@ -13,6 +14,6 @@ export const Timer = () => {
         .map(() => xs.periodic(500).startWith(0))
         .flatten()}
       <button on={{ click: reset }}>Reset</button>
-    </div>
+    </div>,
   )
 }

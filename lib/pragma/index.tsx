@@ -1,15 +1,5 @@
 import { h, VNode } from '@cycle/dom'
-import { MemoryStream, Stream } from 'xstream'
-import { Sources, JSX } from '../types'
-import { Key } from './ref'
-
-export type Component<T> = (
-  sources: Sources & { props$: MemoryStream<T> },
-) =>
-  | JSX.Element
-  | JSX.Element[]
-  | Stream<JSX.Element | JSX.Element[]>
-  | { DOM: Stream<JSX.Element | JSX.Element[]> }
+import { Component, WrappedComponent, ComponentDescription, JSX } from './types'
 
 type VnodeData = {
   props: { [k: string]: any }
@@ -18,6 +8,7 @@ type VnodeData = {
   class?: { [k: string]: boolean }
   key?: string
 }
+
 function normalizeProps(props: { [k: string]: any }) {
   let result: VnodeData = { props }
   if (props.on) {
@@ -38,20 +29,6 @@ function normalizeProps(props: { [k: string]: any }) {
 
   return result
 }
-
-export type ComponentDescription<T> = {
-  _isComponent: true
-  _function: Component<T>
-  data: {
-    key: Key
-    props: T
-    children: JSX.Element[]
-  }
-}
-
-export type WrappedComponent<Props> = (
-  jsxProps: { [P in keyof Props]: Props[P] | Stream<Props[P]> } & { key?: Key },
-) => ReturnType<Component<Props>>
 
 export function createElement<T extends { [k: string]: unknown }>(
   tagOrFunction: string | Component<T> | WrappedComponent<T>,

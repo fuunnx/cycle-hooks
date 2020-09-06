@@ -3,6 +3,7 @@ import { useState } from '../lib/hooks/useState'
 import { useEffect } from '../lib/hooks/useEffect'
 import { createElement } from '../lib/pragma'
 import { define } from '../lib/pragma/define'
+import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 
 type Props = {
   value: number
@@ -27,7 +28,7 @@ export const Incrementer = define<Props>(function Incrementer({ props$ }) {
     }),
   )
 
-  return (
+  return unwrapVtree$(
     <div>
       <button
         on={{
@@ -41,6 +42,6 @@ export const Incrementer = define<Props>(function Incrementer({ props$ }) {
       <button type="button" on={{ click: () => setCount(0) }}>
         Reset
       </button>
-    </div>
+    </div>,
   )
 })

@@ -1,56 +1,11 @@
 import { assocPath } from 'rambda'
 import xs, { Stream } from 'xstream'
 import concat from 'xstream/extra/concat'
-import { JSX } from '../types'
-import { isObservable, streamify } from '../helpers'
+import { streamify, isObservable } from '../helpers'
 import { safeUseRef, Ref, withRef } from './ref'
-import { h, VNode } from '@cycle/dom'
-import { ComponentDescription } from '.'
-
-function unwrapObjectStream(in$: Stream<JSX.Element>): Stream<VNode> {
-  return in$
-    .map((val) => {
-      const nested = indexTree(isObservable, val)
-      return xs
-        .combine(
-          ...nested.map((x) =>
-            x.value
-              .compose(unwrapObjectStream)
-              .map((unwrapped) => (acc) => assocPath(x.path, unwrapped, acc)),
-          ),
-        )
-        .map((reducers) => reducers.reduce((acc, func) => func(acc), val))
-    })
-    .flatten()
-}
-
-function indexTree<T>(condition: (val: any) => val is T, input: any) {
-  let indexed: { value: T; path: (string | number)[] }[] = []
-
-  function run(value, path: (string | number)[]) {
-    if (condition(value)) {
-      indexed.push({
-        value,
-        path,
-      })
-      return
-    }
-
-    if (!value || typeof value !== 'object') return
-
-    if (Array.isArray(value)) {
-      value.forEach((x, index) => run(x, [...path, index]))
-      return
-    }
-
-    Object.entries(value).forEach(([k, v]) => run(v, [...path, k]))
-    return
-  }
-
-  run(input, [])
-
-  return indexed
-}
+import { h } from '@cycle/dom'
+import { ComponentDescription, JSX } from './types'
+import { indexTree } from '../helpers/unwrapVtree$'
 
 export function trackChildren(
   stream: JSX.Element | Stream<JSX.Element>,
@@ -58,14 +13,15 @@ export function trackChildren(
   const ref = safeUseRef() || Ref()
   const END = Symbol('END')
 
-  return concat<VNode | typeof END>(
-    unwrapObjectStream(streamify(stream)),
-    xs.of(END),
-  )
+  return concat<JSX.Element | typeof END>(streamify(stream), xs.of(END))
     .map((vtree) => {
       return withRef(ref, () => {
         ref.tracker.open()
-        const descs = indexTree(isComponentDescription, vtree)
+        const descs = indexTree(
+          vtree,
+          isComponentDescription,
+          (x) => isObservable(x) || isComponentDescription(x),
+        )
         if (!descs.length) {
           ref.tracker.close()
           return vtree
@@ -76,6 +32,7 @@ export function trackChildren(
             desc.value._function,
             desc.value.data.key,
           )
+
           childRef.data.pushPropsAndChildren(
             desc.value.data.props as object,
             desc.value.data.children,

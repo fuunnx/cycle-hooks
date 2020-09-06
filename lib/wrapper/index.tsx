@@ -7,7 +7,7 @@ import { mergeSinks, streamify } from '../helpers'
 import xs, { Stream } from 'xstream'
 import { Reducer } from '@cycle/state'
 import { trackChildren } from '../pragma/trackChildren'
-import { Component } from '../pragma'
+import { Component } from '../pragma/types'
 
 type AppSinks = Sinks & {
   state: Stream<Reducer<unknown>>

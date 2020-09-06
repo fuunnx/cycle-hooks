@@ -1,10 +1,11 @@
 import { useGlobalState } from '../lib/hooks/useGlobalState'
 import { createElement } from '../lib/pragma'
+import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 
 export function Input() {
   const [state$, setState] = useGlobalState({})
 
-  return (
+  return unwrapVtree$(
     <input
       type="text"
       value={state$.map((x) => x.value || '')}
@@ -13,6 +14,6 @@ export function Input() {
           setState({ value: e.target.value })
         },
       }}
-    />
+    />,
   )
 }
