@@ -2,7 +2,9 @@
 
 # Cycle hooks
 
-This is a set of experimental utilities revolving around the implementation of an ambiant context called. By bringing them together it creates new capabilities on top of the CycleJS framework.
+This is a BYOF (Bring Your Own Framework) extension to cyclejs
+
+Constituted of a set of experimental utilities revolving around the implementation of a scoped ambiant context and other niceties
 
 ## Setup
 
