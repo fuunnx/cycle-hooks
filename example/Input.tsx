@@ -5,15 +5,15 @@ import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 export function Input() {
   const [state$, setState] = useGlobalState({})
 
-  return unwrapVtree$(
+  return state$.map((state) => (
     <input
       type="text"
-      value={state$.map((x) => x.value || '')}
+      value={state.value || ''}
       on={{
         input(e) {
           setState({ value: e.target.value })
         },
       }}
-    />,
-  )
+    />
+  ))
 }

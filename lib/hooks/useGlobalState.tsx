@@ -5,7 +5,7 @@ import { useSources } from '../context/sources'
 import { Reducer } from './types'
 
 export function useGlobalState<T>(initial: T) {
-  const [reducer$, runReducer] = makeSubject<Reducer<T>>('useGlobalState')
+  const [reducer$, runReducer] = makeSubject<Reducer<T>>()
   const state$ = useSources().state.stream
 
   registerSinks({

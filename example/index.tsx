@@ -6,12 +6,15 @@ import { makeEffectsDriver } from '../lib/driver'
 import { eventListenersModule } from 'snabbdom/build/package/modules/eventlisteners'
 import { withState } from '@cycle/state'
 import { App } from './App'
+import { Stream } from 'xstream'
 
 const drivers = {
   effects: makeEffectsDriver(),
   DOM: makeDOMDriver('#app', {
     modules: [...modules, eventListenersModule],
   }),
+  log: (sink$: Stream<any>) =>
+    sink$.addListener({ next: (x) => console.log(x) }),
 }
 
 run(withState(withHooks(App, [...Object.keys(drivers), 'state'])), drivers)

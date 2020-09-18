@@ -28,7 +28,7 @@ export const Incrementer = define<Props>(function Incrementer({ props$ }) {
     }),
   )
 
-  return unwrapVtree$(
+  return count$.map((count) => (
     <div>
       <button
         on={{
@@ -37,11 +37,11 @@ export const Incrementer = define<Props>(function Incrementer({ props$ }) {
           mouseleave: () => setIsDown(false),
         }}
       >
-        {count$}
+        {count}
       </button>
       <button type="button" on={{ click: () => setCount(0) }}>
         Reset
       </button>
-    </div>,
-  )
+    </div>
+  ))
 })

@@ -11,15 +11,11 @@ import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 export function App() {
   const state$ = useSources().state.stream
 
-  return unwrapVtree$(
+  return state$.startWith(undefined).map((state: any) => (
     <div>
       <h1>Examples</h1>
       <Togglable title="Serialized global state">
-        <code>
-          {state$
-            .startWith(undefined)
-            .map((x: any) => JSON.stringify(x, null, '  '))}
-        </code>
+        <code>{JSON.stringify(state, null, '  ')}</code>
       </Togglable>
       <Togglable title="Incrementer">
         <Incrementer value={xs.periodic(1000)} />
@@ -32,8 +28,8 @@ export function App() {
       <Togglable title="Timer">
         <Timer />
       </Togglable>
-    </div>,
-  )
+    </div>
+  ))
 }
 
 type Props = {
@@ -43,23 +39,19 @@ type Props = {
 const Togglable = define<Props>(function Togglable({ props$ }) {
   const [open$, setOpen] = useState(false)
 
-  return open$
-    .map((open) => (
-      <section className="togglable-section" class={{ '-open': open }}>
-        <header
-          className="header"
-          tabIndex={0}
-          attrs={{ 'aria-role': 'button' }}
-          on={{
-            click: () => setOpen((x) => !x),
-          }}
-        >
-          <h2>{props$.map((x) => x.title)}</h2>
-        </header>
-        {open && (
-          <content className="content">{props$.map((x) => x.children)}</content>
-        )}
-      </section>
-    ))
-    .compose(unwrapVtree$)
+  return xs.combine(open$, props$).map(([open, props]) => (
+    <section className="togglable-section" class={{ '-open': open }}>
+      <header
+        className="header"
+        tabIndex={0}
+        attrs={{ 'aria-role': 'button' }}
+        on={{
+          click: () => setOpen((x) => !x),
+        }}
+      >
+        <h2>{props.title}</h2>
+      </header>
+      {open && <content className="content">{props.children}</content>}
+    </section>
+  ))
 })
