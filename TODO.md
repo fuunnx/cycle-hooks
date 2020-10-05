@@ -1,4 +1,4 @@
-## V1
+## first release
 
 - [ ] implement eventListeners with `useEffect(DOM.select(key).events(name).map(evt => () => handler(evt)))`
 - [ ] idGenerator -> should be injected (replace symbols in Subject)
@@ -15,6 +15,7 @@
 
 - [ ] File an issue about mergeSinks causing a maximum call stack error in typescript, if no type arguments provided
 - [ ] measure performance overhead
+- [ ] with cycle neo
 
 ## Maybe someday
 
