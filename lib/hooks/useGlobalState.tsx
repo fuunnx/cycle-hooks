@@ -1,11 +1,11 @@
 import xs from 'xstream'
-import { makeSubject } from '../driver'
-import { registerSinks } from '../context/sinks'
-import { useSources } from '../context/sources'
+import { useSubject } from '../helpers/subjects'
+import { registerSinks } from './sinks'
+import { useSources } from './sources'
 import { Reducer } from './types'
 
 export function useGlobalState<T>(initial: T) {
-  const [reducer$, runReducer] = makeSubject<Reducer<T>>()
+  const [reducer$, runReducer] = useSubject<Reducer<T>>()
   const state$ = useSources().state.stream
 
   registerSinks({

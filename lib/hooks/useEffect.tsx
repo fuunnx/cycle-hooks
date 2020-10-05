@@ -1,5 +1,5 @@
 import { Stream } from 'xstream'
-import { registerSinks } from '../context/sinks'
+import { registerSinks } from './sinks'
 
 export function useEffect(effect$: Stream<() => void>) {
   return registerSinks({

@@ -1,11 +1,11 @@
-import { ContextKey, safeUseContext, withContext } from '.'
+import { EffectName, safeUseContext, runWithHandlers } from '../context'
 import xs from 'xstream'
 
 type RegisterUnmountCallback = (callback: () => void) => void
 
-const unMountKey: ContextKey<RegisterUnmountCallback> = Symbol('unmount')
-const unMountKeyComp: ContextKey<RegisterUnmountCallback> = Symbol('unmount')
-const unMountKeyStream: ContextKey<RegisterUnmountCallback> = Symbol('unmount')
+const unMountKey: EffectName<RegisterUnmountCallback> = Symbol('unmount')
+const unMountKeyComp: EffectName<RegisterUnmountCallback> = Symbol('unmount')
+const unMountKeyStream: EffectName<RegisterUnmountCallback> = Symbol('unmount')
 
 export function withUnmount<T>(
   exec: () => T,
@@ -16,14 +16,14 @@ export function withUnmount<T>(
     callbacks.push(callback)
   }
 
-  const key: ContextKey<RegisterUnmountCallback> =
+  const key: EffectName<RegisterUnmountCallback> =
     type === 'stream' ? unMountKeyStream : unMountKeyComp
 
-  const returnValue = withContext(
-    [
-      [unMountKey, addListener],
-      [key, addListener],
-    ],
+  const returnValue = runWithHandlers(
+    {
+      [unMountKey as symbol]: addListener,
+      [key as symbol]: addListener,
+    },
     exec,
   )
 

@@ -1,11 +1,11 @@
-import { makeSubject } from '../driver'
+import { useSubject } from '../helpers/subjects'
 import { useSources } from '.'
-import { registerSinks } from '..'
+import { registerSinks } from '../hooks/sinks'
 
 // TODO needs tests and proper typings
 export function useHTTP() {
   const category = Symbol('HTTP')
-  const [event$, request] = makeSubject()
+  const [event$, request] = useSubject()
 
   const { HTTP } = useSources()
 

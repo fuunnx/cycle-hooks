@@ -1,73 +1,88 @@
-export interface SymbolFor<T> extends Symbol {}
-export type ContextKey<T = unknown> = Symbol | string | SymbolFor<T>
-export type Context = Map<ContextKey, unknown>
+export interface InjectionKey<T> extends Symbol {}
+export type EffectName<T = unknown> = symbol | string | InjectionKey<T> | number
+type _EffectName<T = unknown> = symbol | string | number
 
-// TODO use real zones ? makes jest bug, so…
-
-type ZoneProperties = [ContextKey, any][]
-type Zone = {
-  parent: Zone | null
-  content: Context
-  fork(properties: ZoneProperties): Zone
+type Handlers = Record<_EffectName, any>
+type HandlersMap = Map<_EffectName, unknown>
+type Frame = {
+  parent: Frame | null
+  handlers: HandlersMap
+  forkWith(handlers: Handlers): Frame
 }
 
-let currentZone: Zone = Zone()
+let currentFrame: Frame = Frame()
 
-function Zone(parent: Zone = null, properties: ZoneProperties = []): Zone {
-  const zone: Zone = {
+function Frame(parent: Frame = null, handlers: Handlers = {}): Frame {
+  const frame: Frame = {
     parent,
-    content: new Map(properties),
-    fork(properties: ZoneProperties) {
-      return Zone(zone, properties)
+    handlers: new Map(Object.entries(handlers)),
+    forkWith(handlers: Handlers) {
+      return Frame(frame, handlers)
     },
   }
 
-  return zone
+  return frame
 }
 
-export function useCurrentZone() {
-  return currentZone
+export function useFrame() {
+  return currentFrame
 }
 
-export function withZone<T>(zone: Zone, exec: () => T): T {
-  let zoneBefore = currentZone
-  currentZone = zone
+export function runWithFrame<T>(frame: Frame, exec: () => T): T {
+  let frameBefore = currentFrame
+  currentFrame = frame
 
   try {
     return exec()
   } finally {
-    currentZone = zoneBefore
+    currentFrame = frameBefore
   }
 }
 
-export function withContext<T, U>(properties: ZoneProperties, exec: () => U): U
-export function withContext<T, U>(
-  name: ContextKey<T>,
+export function withFrame<T extends any[], U>(
+  frame: Frame,
+  func: (...args: T) => U,
+): (...args: T) => U {
+  return (...args: T) => runWithFrame(frame, () => func(...args))
+}
+
+export function withHandlers<T extends [], U>(
+  handlers: Handlers,
+  func: (...args: T) => U,
+): (...args: T) => U {
+  return withFrame(useFrame().forkWith(handlers), func)
+}
+
+export function withHandler<E, T extends [], U>(
+  name: EffectName<E>,
+  value: E,
+  func: (...args: T) => U,
+): (...args: T) => U {
+  return withFrame(useFrame().forkWith({ [name as symbol]: value }), func)
+}
+
+export function runWithHandler<T, U>(
+  name: EffectName<T>,
   value: T,
   exec: () => U,
-): U
-export function withContext<T, U>(
-  name: ContextKey<T> | ZoneProperties,
-  value: T | (() => U),
-  exec?: () => U,
 ): U {
-  if (Array.isArray(name)) {
-    const properties = name as ZoneProperties
-    exec = value as () => U
+  return runWithHandlers({ [name as symbol]: value }, exec)
+}
 
-    return withZone(useCurrentZone().fork(properties), exec)
+export function runWithHandlers<T, U>(handlers: Handlers, run: () => U): U {
+  return runWithFrame(useFrame().forkWith(handlers), run)
+}
+
+export function safeUseContext<T>(name: EffectName<T>): T | undefined {
+  const value = resolveHandler(name)
+  if (value === NOT_FOUND) {
+    return undefined
   }
-
-  return withZone(useCurrentZone().fork([[name, value]]), exec)
+  return value as T
 }
 
-export function safeUseContext<T>(name: ContextKey<T>): T | undefined {
-  const value = resolveContext(name)
-  return value === NOT_FOUND ? undefined : (value as T)
-}
-
-export function useContext<T>(name: ContextKey<T>): T {
-  const value = resolveContext(name)
+export function useContext<T>(name: EffectName<T>): T {
+  const value = resolveHandler(name)
   if (value === NOT_FOUND) {
     throw new Error(`Unknown key ${name.toString()} in context`)
   }
@@ -75,21 +90,29 @@ export function useContext<T>(name: ContextKey<T>): T {
 }
 
 const NOT_FOUND = {} as const
-function resolveContext<T>(name: ContextKey<T>): T | typeof NOT_FOUND {
-  let origin = useCurrentZone()
-  if (origin.content.has(name)) {
-    return origin.content.get(name)
+function resolveHandler<T>(name: EffectName<T>): T | typeof NOT_FOUND
+function resolveHandler<T>(name: EffectName<T>, defaultValue: T): T
+function resolveHandler<T>(name: EffectName<T>, defaultValue?: T) {
+  const _name = name as _EffectName<T>
+  let origin = useFrame()
+  if (origin.handlers.has(_name)) {
+    return origin.handlers.get(_name)
   }
 
   let current = origin.parent
   while (current) {
-    const ctx = current.content
-    if (ctx.has(name)) {
-      const value = ctx.get(name)
-      origin.content.set(name, value)
+    const ctx = current.handlers
+    if (ctx.has(_name)) {
+      const value = ctx.get(_name)
+      origin.handlers.set(_name, value)
       return value
     }
     current = current.parent
   }
+
+  if (defaultValue !== undefined) {
+    return defaultValue
+  }
+
   return NOT_FOUND
 }

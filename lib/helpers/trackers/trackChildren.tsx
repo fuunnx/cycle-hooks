@@ -1,11 +1,11 @@
 import { assocPath } from 'rambda'
 import xs, { Stream } from 'xstream'
 import concat from 'xstream/extra/concat'
-import { streamify, isObservable } from '../helpers'
-import { safeUseRef, Ref, withRef } from './ref'
+import { streamify, isObservable } from '..'
+import { safeUseRef, Ref, withRef } from '../../pragma/ref'
 import { h } from '@cycle/dom'
-import { ComponentDescription, JSX } from './types'
-import { indexTree } from '../helpers/unwrapVtree$'
+import { ComponentDescription, JSX } from '../../pragma/types'
+import { indexTree } from '../unwrapVtree$'
 
 export function trackChildren(
   stream: JSX.Element | Stream<JSX.Element>,

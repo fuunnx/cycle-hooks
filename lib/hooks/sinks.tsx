@@ -3,15 +3,20 @@ import '../patches/xstream'
 import { Sinks } from '../types'
 import xs, { Stream } from 'xstream'
 import { replicateMany } from '@cycle/run/lib/cjs/internals'
-import { ContextKey, withContext, useContext, safeUseContext } from '.'
+import {
+  EffectName,
+  runWithHandlers,
+  useContext,
+  safeUseContext,
+} from '../context'
 import { onUnmount } from './unmount'
 import { mapObj } from '../helpers'
 
 export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
-export const gathererKey: ContextKey<Registerer> = Symbol('registerer')
+export const gathererKey: EffectName<Registerer> = Symbol('registerer')
 
 type GatherableKeys = string[]
-const gatherableSymbol: ContextKey<GatherableKeys> = Symbol('gatherableKeys')
+const gatherableSymbol: EffectName<GatherableKeys> = Symbol('gatherableKeys')
 
 export function gatherSinks<T>(exec: () => T): [Sinks, T]
 export function gatherSinks<T>(
@@ -58,11 +63,11 @@ export function gatherSinks<T>(
     )
   }
 
-  const returnValue = withContext(
-    [
-      [gathererKey, gatherer],
-      [gatherableSymbol, gatherableKeys],
-    ],
+  const returnValue = runWithHandlers(
+    {
+      [gathererKey as symbol]: gatherer,
+      [gatherableSymbol as symbol]: gatherableKeys,
+    },
     exec,
   )
 

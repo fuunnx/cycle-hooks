@@ -16,7 +16,9 @@
 - [ ] File an issue about mergeSinks causing a maximum call stack error in typescript, if no type arguments provided
 - [ ] measure performance overhead
 - [ ] with cycle neo
+- [ ] with react
 
 ## Maybe someday
 
 - [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
+- [ ] provide real hooks for pre / post process stuff

@@ -1,9 +1,9 @@
 import { mockTimeSource } from '@cycle/time'
 import xs from 'xstream'
-import { createElement } from '.'
+import { createElement } from '../../pragma'
 import { trackChildren } from './trackChildren'
-import { onUnmount } from '../context/unmount'
-import { assertDomEqual } from '../helpers/assertDomEqual'
+import { onUnmount } from '../../hooks/unmount'
+import { assertDomEqual } from '../assertDomEqual'
 
 console.log(createElement)
 

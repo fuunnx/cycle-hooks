@@ -1,15 +1,15 @@
 import dropRepeats from 'xstream/extra/dropRepeats'
 import xs, { Stream, MemoryStream } from 'xstream'
-import { ContextKey, withContext, useContext, safeUseContext } from '..'
+import { EffectName, runWithHandler, useContext, safeUseContext } from '..'
 import { mapObj, streamify } from '../helpers'
-import { withUnmount } from '../context/unmount'
-import { trackChildren } from './trackChildren'
-import { gathererKey } from '../context/sinks'
+import { withUnmount } from '../hooks/unmount'
+import { trackChildren } from '../helpers/trackers/trackChildren'
+import { gathererKey } from '../hooks/sinks'
 import { useSources } from '../hooks'
 import { IRef, Key, JSX } from './types'
 import { shallowEquals } from '../helpers/shallowEquals'
-import { makeUsageTrackerIndexed } from '../helpers/trackUsageIndexed'
-import { makeUsageTrackerKeyed } from '../helpers/trackUsageKeyed'
+import { makeUsageTrackerIndexed } from '../helpers/trackers/trackUsageIndexed'
+import { makeUsageTrackerKeyed } from '../helpers/trackers/trackUsageKeyed'
 
 export function Ref(constructorFn?: Function): IRef {
   const destroy$ = xs.create()
@@ -109,12 +109,10 @@ export function Ref(constructorFn?: Function): IRef {
   }
 }
 
-export const refSymbol: ContextKey<IRef> = Symbol('ref')
+export const refSymbol: EffectName<IRef> = Symbol('ref')
 
 export function withRef<T>(ref: IRef, exec: () => T): T {
-  return withContext(refSymbol, ref, () => {
-    return exec()
-  })
+  return runWithHandler(refSymbol, ref, exec)
 }
 
 export function useRef(): IRef {

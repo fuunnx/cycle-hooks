@@ -1,9 +1,6 @@
 import { Stream } from 'xstream'
 import { VNode } from '@cycle/dom'
-import { makeUsageTrackerKeyed } from './helpers/trackUsageKeyed'
-import { onUnmount } from './context/unmount'
-import { makeUsageTrackerIndexed } from './helpers/trackUsageIndexed'
-import { useSources } from './hooks'
+import { useSources } from '../hooks'
 
 export function mountEventListeners(dom$: Stream<VNode>) {
   const DOM = useSources().DOM

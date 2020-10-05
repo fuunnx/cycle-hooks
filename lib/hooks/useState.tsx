@@ -1,8 +1,8 @@
-import { makeSubject } from '../driver'
+import { useSubject } from '../helpers/subjects'
 import { Reducer } from './types'
 
 export function useState<T>(initial: T) {
-  const [reducer$, runReducer] = makeSubject<Reducer<T>>()
+  const [reducer$, runReducer] = useSubject<Reducer<T>>()
   const state$ = reducer$.fold((acc, red) => red(acc), initial)
 
   return [

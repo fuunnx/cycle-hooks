@@ -1,9 +1,9 @@
 import xs from 'xstream'
-import { makeSubject } from '../lib/driver'
+import { useSubject } from '../lib/helpers/subjects'
 import { createElement } from '../lib'
 
 export const Timer = () => {
-  const [reset$, reset] = makeSubject()
+  const [reset$, reset] = useSubject()
   const count$ = reset$
     .startWith(null)
     .map(() => xs.periodic(500).startWith(0))

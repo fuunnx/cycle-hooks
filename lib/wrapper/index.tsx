@@ -1,19 +1,19 @@
-import { sourcesKey } from '../context/sources'
+import { sourcesKey } from '../hooks/sources'
 import { refSymbol, Ref } from '../pragma/ref'
-import { withContext } from '../context'
+import { runWithHandlers } from '../context'
 import { Sinks, Sources } from '../types'
-import { gatherSinks } from '../context/sinks'
+import { gatherSinks } from '../hooks/sinks'
 import { mergeSinks, streamify } from '../helpers'
 import xs, { Stream } from 'xstream'
 import { Reducer } from '@cycle/state'
-import { trackChildren } from '../pragma/trackChildren'
+import { trackChildren } from '../helpers/trackers/trackChildren'
 
 type AppSinks = Sinks & {
   state: Stream<Reducer<unknown>>
 }
 
 export function withHooks<Props>(
-  App: () => Partial<AppSinks>,
+  App: (sources: Sources) => Partial<AppSinks>,
   sinksNames: string[] = [],
 ): (sources: Sources) => AppSinks {
   return function AppWithHooks(
@@ -22,11 +22,11 @@ export function withHooks<Props>(
     const [gathered, sinks] = gatherSinks(
       [...sinksNames, ...Object.keys(sources)],
       () => {
-        return withContext(
-          [
-            [sourcesKey, sources],
-            [refSymbol, Ref()],
-          ],
+        return runWithHandlers(
+          {
+            [sourcesKey as symbol]: sources,
+            [refSymbol as symbol]: Ref(),
+          },
           () => {
             const appSinks = App(sources)
             const normalizedSinks =

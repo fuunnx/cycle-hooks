@@ -1,12 +1,12 @@
 import xs from 'xstream'
 import { useState } from '../lib/hooks/useState'
-import { useSources, createElement } from '../lib'
+import { createElement } from '../lib'
+import { useSources } from '../lib/hooks'
 import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
 import { define } from '../lib/pragma/define'
 import { JSX } from '../lib/pragma/types'
-import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 
 export function App() {
   const state$ = useSources().state.stream
