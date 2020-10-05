@@ -1,15 +1,21 @@
-- [ ] File an issue about mergeSinks causing a maximum call stack error in typescript, if no type arguments provided
-- [ ] Essayer d'implémenter les effets, subjects etc. de manière à ce que tout appel impératif puisse être aisé à faire avec des streams, ou autre (en gros éviter une soupe de callbacks, et encourager The Cycle Way tout en permettant d'avoir quelques échappatoires impératifs sans qu'ils prennent le dessus)
-- [ ] syntax onClick etc.
-- [ ] terms : different words for same concepts : useContext/onUnmount/registerSinks, withContext/provideSources/gatherSinks
-- [ ] triggerEffect -> it's global, should it be injected ? another mechanism ?
-- [ ] idGenerator -> should be injected (replace symbols in Subject)
-- [ ] trackChildren -> take care of keys too !
-- [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
-- [x] add registerOutlivedSinks() --> stopSignal\$
-- [ ] rename with handler / effect / frame / context ?
-- [x] guess registerSinks keys thanks to 'sources' keys ?
+## V1
+
 - [ ] implement eventListeners with `useEffect(DOM.select(key).events(name).map(evt => () => handler(evt)))`
-- [ ] measure performance overhead
+- [ ] idGenerator -> should be injected (replace symbols in Subject)
+- [ ] prevent scope creep : minimal features, remove unnecessary stuff
+- [ ] change terms : different words for same concepts : useContext/onUnmount/registerSinks, withContext/provideSources/gatherSinks : rename with handler / effect / frame / context ?
 - [ ] provide better typings
-- [ ] split by features, prevent scope creep
+
+## Design principles
+
+- [ ] Imperative stuff should be sugar but not the main way of programming
+- [ ] Explore how the stream graph could be preserved despite the sugar
+
+## someday
+
+- [ ] File an issue about mergeSinks causing a maximum call stack error in typescript, if no type arguments provided
+- [ ] measure performance overhead
+
+## Maybe someday
+
+- [ ] channels are hardcoded (by convention) : HTTP, DOM, state, etc. -> allow overrides by injecting that ?
