@@ -1,5 +1,5 @@
 import { Stream, InternalProducer, NO } from 'xstream'
-import { useFrame, safeUseContext, withFrame } from '../context'
+import { useFrame, safeUseContext, withFrame, runWithFrame } from '../context'
 import { gathererKey } from '../hooks/sinks'
 import { Sinks } from '../types'
 import { withUnmount } from '../hooks/unmount'
@@ -24,29 +24,35 @@ function patch(stream: Stream<any>): void {
   let unmountPrevious = () => {}
   const gatherer = safeUseContext(gathererKey)
   if (gatherer) {
-    frame = frame.forkWith({
+    frame = frame.withHandlers({
       [gathererKey as symbol]: (sinks: Sinks) => {
         gatherer(sinks)
       },
     })
   }
 
-  let _n = withFrame(frame, stream._n.bind(stream))
-  let _c = withFrame(frame, stream._c.bind(stream))
-  let _e = withFrame(frame, stream._e.bind(stream))
+  let _n = stream._n.bind(stream)
+  let _c = stream._c.bind(stream)
+  let _e = stream._e.bind(stream)
 
   Object.assign(stream, {
     _e(e) {
       unmountPrevious()
-      ;[unmountPrevious] = withUnmount(() => _e(e))
+      runWithFrame(frame, () => {
+        ;[unmountPrevious] = withUnmount(() => _e(e))
+      })
     },
     _c() {
       unmountPrevious()
-      ;[unmountPrevious] = withUnmount(() => _c())
+      runWithFrame(frame, () => {
+        ;[unmountPrevious] = withUnmount(() => _c())
+      })
     },
     _n(v: any) {
       unmountPrevious()
-      ;[unmountPrevious] = withUnmount(() => _n(v))
+      runWithFrame(frame, () => {
+        ;[unmountPrevious] = withUnmount(() => _n(v))
+      })
     },
   })
 }

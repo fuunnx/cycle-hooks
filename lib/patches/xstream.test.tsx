@@ -1,55 +1,25 @@
-import { provideSources, useSources, safeUseSources } from './sources'
+import './xstream'
 import xs, { Stream } from 'xstream'
 import { mockTimeSource } from '@cycle/time'
+import { useContext, safeUseContext, runWithHandler } from '../context'
 
-test('provides sources 1 level deep', () => {
-  const sources = { a: xs.empty() }
-  const App = () => {
-    let innerSources = useSources()
-    expect(innerSources).toEqual(sources)
-    return {}
-  }
-  provideSources(sources, () => App())
-})
-
-test('cleans up after execution', () => {
-  const sources = { a: xs.empty() }
-  provideSources(sources, () => {})
-  expect(() => useSources()).toThrow()
-})
-
-test('provides sources 2 levels deep', () => {
-  const sources1 = { a: xs.empty() }
-  const sources2 = { b: xs.empty() }
-  const App = () => {
-    provideSources(sources2, () => {
-      return Component()
-    })
-  }
-  const Component = () => {
-    let innerSources = useSources()
-    expect(innerSources).toEqual(sources2)
-    return {}
-  }
-
-  provideSources(sources1, () => App())
-})
+const CTX = Symbol('test-ctx')
 
 test('provides sources over temporality (simple)', (done) => {
-  const sources = { a: xs.empty() }
+  const handler = { a: 'A' }
   const App = () => {
     return {
       a: xs
         .periodic(10)
         .take(1)
-        .map(() => useSources()),
+        .map(() => useContext(CTX)),
     }
   }
-  const sinks = provideSources(sources, () => App())
+  const sinks = runWithHandler(CTX, handler, App)
 
   sinks.a.subscribe({
-    next(innerSources) {
-      expect(innerSources).toEqual(sources)
+    next(val) {
+      expect(val).toEqual(handler)
     },
     error(e) {
       throw e
@@ -60,15 +30,15 @@ test('provides sources over temporality (simple)', (done) => {
   })
 })
 
-function testMethod(methodName: string, getStream: () => Stream<any>) {
+function testMethod(methodName: string, initObservable: () => Stream<any>) {
   test(`provides sources over temporality (${methodName})`, (done) => {
-    const sources = { a: xs.empty() }
+    const sources = { a: 'A' }
     const App = () => {
       return {
-        a: getStream().map(() => safeUseSources()),
+        a: initObservable().map(() => safeUseContext(CTX)),
       }
     }
-    const sinks = provideSources(sources, () => App())
+    const sinks = runWithHandler(CTX, sources, () => App())
 
     var sub = sinks.a.subscribe({
       next(innerSources) {

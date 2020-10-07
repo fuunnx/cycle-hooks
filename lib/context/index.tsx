@@ -3,11 +3,10 @@ export type EffectName<T = unknown> = symbol | string | InjectionKey<T> | number
 type _EffectName<T = unknown> = symbol | string | number
 
 type Handlers = Record<_EffectName, any>
-type HandlersMap = Map<_EffectName, unknown>
 type Frame = {
   parent: Frame | null
-  handlers: HandlersMap
-  forkWith(handlers: Handlers): Frame
+  handlers: Handlers
+  withHandlers(handlers: Handlers): Frame
 }
 
 let currentFrame: Frame = Frame()
@@ -15,8 +14,8 @@ let currentFrame: Frame = Frame()
 function Frame(parent: Frame = null, handlers: Handlers = {}): Frame {
   const frame: Frame = {
     parent,
-    handlers: new Map(Object.entries(handlers)),
-    forkWith(handlers: Handlers) {
+    handlers,
+    withHandlers(handlers: Handlers) {
       return Frame(frame, handlers)
     },
   }
@@ -50,7 +49,7 @@ export function withHandlers<T extends [], U>(
   handlers: Handlers,
   func: (...args: T) => U,
 ): (...args: T) => U {
-  return withFrame(useFrame().forkWith(handlers), func)
+  return withFrame(useFrame().withHandlers(handlers), func)
 }
 
 export function withHandler<E, T extends [], U>(
@@ -58,7 +57,7 @@ export function withHandler<E, T extends [], U>(
   value: E,
   func: (...args: T) => U,
 ): (...args: T) => U {
-  return withFrame(useFrame().forkWith({ [name as symbol]: value }), func)
+  return withFrame(useFrame().withHandlers({ [name as symbol]: value }), func)
 }
 
 export function runWithHandler<T, U>(
@@ -70,7 +69,7 @@ export function runWithHandler<T, U>(
 }
 
 export function runWithHandlers<T, U>(handlers: Handlers, run: () => U): U {
-  return runWithFrame(useFrame().forkWith(handlers), run)
+  return runWithFrame(useFrame().withHandlers(handlers), run)
 }
 
 export function safeUseContext<T>(name: EffectName<T>): T | undefined {
@@ -95,16 +94,16 @@ function resolveHandler<T>(name: EffectName<T>, defaultValue: T): T
 function resolveHandler<T>(name: EffectName<T>, defaultValue?: T) {
   const _name = name as _EffectName<T>
   let origin = useFrame()
-  if (origin.handlers.has(_name)) {
-    return origin.handlers.get(_name)
+  if (_name in origin.handlers) {
+    return origin.handlers[_name as string]
   }
 
   let current = origin.parent
   while (current) {
     const ctx = current.handlers
-    if (ctx.has(_name)) {
-      const value = ctx.get(_name)
-      origin.handlers.set(_name, value)
+    if (_name in ctx) {
+      const value = ctx[_name as string]
+      origin.handlers[_name as string] = value
       return value
     }
     current = current.parent
