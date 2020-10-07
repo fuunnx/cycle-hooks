@@ -1,5 +1,5 @@
-import { sourcesKey } from '../hooks/sources'
-import { refSymbol, Ref } from '../pragma/ref'
+import { readSourcesEffect } from '../hooks/sources'
+import { Ref, readRefEffect } from '../pragma/ref'
 import { runWithHandlers } from '../context'
 import { Sinks, Sources } from '../types'
 import { gatherSinks } from '../hooks/sinks'
@@ -22,10 +22,11 @@ export function withHooks<Props>(
     const [gathered, sinks] = gatherSinks(
       [...sinksNames, ...Object.keys(sources)],
       () => {
+        const ref = Ref()
         return runWithHandlers(
           {
-            [sourcesKey as symbol]: sources,
-            [refSymbol as symbol]: Ref(),
+            [readSourcesEffect as symbol]: () => sources,
+            [readRefEffect as symbol]: () => ref,
           },
           () => {
             const appSinks = App(sources)

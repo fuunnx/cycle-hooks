@@ -1,8 +1,13 @@
-export interface InjectionKey<T> extends Symbol {}
-export type EffectName<T = unknown> = symbol | string | InjectionKey<T> | number
+interface InjectionKey<T> extends Symbol {}
+export type EffectName<T extends Handler = () => unknown> =
+  | symbol
+  | string
+  | InjectionKey<T>
+  | number
 type _EffectName<T = unknown> = symbol | string | number
 
-type Handlers = Record<_EffectName, any>
+type Handler<R = any, Args extends any[] = any[]> = (...args: Args) => R
+type Handlers = Record<_EffectName, Handler>
 type Frame = {
   parent: Frame | null
   handlers: Handlers
@@ -45,53 +50,68 @@ export function withFrame<T extends any[], U>(
   return (...args: T) => runWithFrame(frame, () => func(...args))
 }
 
-export function withHandlers<T extends [], U>(
+export function withHandlers<T extends any[], U>(
   handlers: Handlers,
   func: (...args: T) => U,
 ): (...args: T) => U {
   return withFrame(useFrame().withHandlers(handlers), func)
 }
 
-export function withHandler<E, T extends [], U>(
-  name: EffectName<E>,
-  value: E,
+export function withHandler<H extends Handler, T extends any[], U>(
+  name: EffectName<H>,
+  handler: H,
   func: (...args: T) => U,
 ): (...args: T) => U {
-  return withFrame(useFrame().withHandlers({ [name as symbol]: value }), func)
+  return withFrame(useFrame().withHandlers({ [name as symbol]: handler }), func)
 }
 
-export function runWithHandler<T, U>(
-  name: EffectName<T>,
-  value: T,
+export function runWithHandler<H extends Handler, U>(
+  name: EffectName<H>,
+  handler: H,
   exec: () => U,
 ): U {
-  return runWithHandlers({ [name as symbol]: value }, exec)
+  return runWithHandlers({ [name as symbol]: handler }, exec)
 }
 
-export function runWithHandlers<T, U>(handlers: Handlers, run: () => U): U {
+export function runWithHandlers<U>(handlers: Handlers, run: () => U): U {
   return runWithFrame(useFrame().withHandlers(handlers), run)
 }
 
-export function safeUseContext<T>(name: EffectName<T>): T | undefined {
-  const value = resolveHandler(name)
-  if (value === NOT_FOUND) {
+export function performSafe<R, Args extends any[]>(
+  name: EffectName<Handler<R, Args>>,
+  ...args: Args
+): R | undefined {
+  const handler = resolveHandler(name)
+  if (handler === NOT_FOUND) {
     return undefined
   }
-  return value as T
+  return handler(...args)
 }
 
-export function useContext<T>(name: EffectName<T>): T {
-  const value = resolveHandler(name)
-  if (value === NOT_FOUND) {
+export function perform<R, Args extends any[]>(
+  name: EffectName<Handler<R, Args>>,
+  ...args: Args
+): R {
+  const handler = resolveHandler(name)
+  if (handler === NOT_FOUND) {
     throw new Error(`Unknown key ${name.toString()} in context`)
   }
-  return value as T
+  console.log(handler, handler.name, handler.toString(), args)
+  return handler(...args)
 }
 
-const NOT_FOUND = {} as const
-function resolveHandler<T>(name: EffectName<T>): T | typeof NOT_FOUND
-function resolveHandler<T>(name: EffectName<T>, defaultValue: T): T
-function resolveHandler<T>(name: EffectName<T>, defaultValue?: T) {
+const NOT_FOUND = Symbol('HANDLER_NOT_FOUND')
+function resolveHandler<T extends Handler>(
+  name: EffectName<T>,
+): T | typeof NOT_FOUND
+function resolveHandler<T extends Handler>(
+  name: EffectName<T>,
+  defaultValue: T,
+): T
+function resolveHandler<T extends Handler>(
+  name: EffectName<T>,
+  defaultValue?: T,
+) {
   const _name = name as _EffectName<T>
   let origin = useFrame()
   if (_name in origin.handlers) {

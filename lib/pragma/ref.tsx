@@ -1,10 +1,10 @@
 import dropRepeats from 'xstream/extra/dropRepeats'
 import xs, { Stream, MemoryStream } from 'xstream'
-import { EffectName, runWithHandler, useContext, safeUseContext } from '..'
+import { EffectName, runWithHandler, perform, performSafe } from '..'
 import { mapObj, streamify } from '../helpers'
 import { withUnmount } from '../hooks/unmount'
 import { trackChildren } from '../helpers/trackers/trackChildren'
-import { gathererKey } from '../hooks/sinks'
+import { gatherEffect } from '../hooks/sinks'
 import { useSources } from '../hooks'
 import { IRef, Key, JSX } from './types'
 import { shallowEquals } from '../helpers/shallowEquals'
@@ -57,7 +57,7 @@ export function Ref(constructorFn?: Function): IRef {
         )
         delete transformedSinks.DOM
 
-        safeUseContext(gathererKey)?.(transformedSinks)
+        performSafe(gatherEffect, transformedSinks)
 
         return {
           ...transformedSinks,
@@ -109,15 +109,15 @@ export function Ref(constructorFn?: Function): IRef {
   }
 }
 
-export const refSymbol: EffectName<IRef> = Symbol('ref')
+export const readRefEffect: EffectName<() => IRef> = Symbol('ref')
 
 export function withRef<T>(ref: IRef, exec: () => T): T {
-  return runWithHandler(refSymbol, ref, exec)
+  return runWithHandler(readRefEffect, () => ref, exec)
 }
 
 export function useRef(): IRef {
-  return useContext(refSymbol)
+  return perform(readRefEffect)
 }
 export function safeUseRef(): IRef {
-  return safeUseContext(refSymbol)
+  return performSafe(readRefEffect)
 }

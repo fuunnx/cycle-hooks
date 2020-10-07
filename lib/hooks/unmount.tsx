@@ -1,11 +1,17 @@
-import { EffectName, safeUseContext, runWithHandlers } from '../context'
+import { EffectName, performSafe, runWithHandlers } from '../context'
 import xs from 'xstream'
 
 type RegisterUnmountCallback = (callback: () => void) => void
 
-const unMountKey: EffectName<RegisterUnmountCallback> = Symbol('unmount')
-const unMountKeyComp: EffectName<RegisterUnmountCallback> = Symbol('unmount')
-const unMountKeyStream: EffectName<RegisterUnmountCallback> = Symbol('unmount')
+const registerUnmountEff: EffectName<RegisterUnmountCallback> = Symbol(
+  'registerUnmountEff',
+)
+const registerComponentUnmountEff: EffectName<RegisterUnmountCallback> = Symbol(
+  'registerComponentUnmountEff',
+)
+const registerStreamUnmountEff: EffectName<RegisterUnmountCallback> = Symbol(
+  'registerStreamUnmountEff',
+)
 
 export function withUnmount<T>(
   exec: () => T,
@@ -16,18 +22,18 @@ export function withUnmount<T>(
     callbacks.push(callback)
   }
 
-  const key: EffectName<RegisterUnmountCallback> =
-    type === 'stream' ? unMountKeyStream : unMountKeyComp
+  const registerOwnChannelEff: EffectName<RegisterUnmountCallback> =
+    type === 'stream' ? registerStreamUnmountEff : registerComponentUnmountEff
 
   const returnValue = runWithHandlers(
     {
-      [unMountKey as symbol]: addListener,
-      [key as symbol]: addListener,
+      [registerUnmountEff as symbol]: addListener,
+      [registerOwnChannelEff as symbol]: addListener,
     },
     exec,
   )
 
-  safeUseContext(key)?.(triggerUnmount)
+  performSafe(registerOwnChannelEff, triggerUnmount)
 
   return [triggerUnmount, returnValue] as const
 
@@ -39,7 +45,7 @@ export function withUnmount<T>(
 export function onUnmount(callback: () => void = () => {}) {
   const unmount$ = xs.create()
   let unmounted = false
-  safeUseContext(unMountKey)?.(() => {
+  performSafe(registerUnmountEff, () => {
     if (unmounted) return
 
     callback()

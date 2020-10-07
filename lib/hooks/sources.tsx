@@ -1,30 +1,25 @@
 import '../patches/xstream'
 
 import { Sources } from '../types'
-import {
-  EffectName,
-  runWithHandler,
-  useContext,
-  safeUseContext,
-} from '../context'
+import { EffectName, runWithHandler, perform, performSafe } from '../context'
 
-export const sourcesKey: EffectName<Sources> = Symbol('sources')
+export const readSourcesEffect: EffectName<() => Sources> = Symbol('sources')
 
 export function provideSources<T>(
   sources: Sources | ((sources: Sources) => Sources),
   func: () => T,
 ) {
   if (typeof sources === 'function') {
-    return runWithHandler(sourcesKey, sources(useSources()), func)
+    return runWithHandler(readSourcesEffect, sources(useSources()), func)
   }
 
-  return runWithHandler(sourcesKey, sources, func)
+  return runWithHandler(readSourcesEffect, () => sources, func)
 }
 
 export function useSources() {
-  return useContext(sourcesKey)
+  return perform(readSourcesEffect)
 }
 
 export function safeUseSources() {
-  return safeUseContext(sourcesKey)
+  return performSafe(readSourcesEffect)
 }

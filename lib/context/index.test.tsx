@@ -1,34 +1,34 @@
-import { runWithHandler, useContext } from './index'
+import { runWithHandler, perform, EffectName } from './index'
 
-const CTX = Symbol('test-ctx')
+const CTX: EffectName<() => number> = Symbol('test-ctx')
 
 test('provides context 1 level deep', () => {
-  const handler = { a: 'a' }
+  const handler = () => 1
   const App = () => {
-    let resolved = useContext(CTX)
-    expect(resolved).toEqual(handler)
+    let resolved = perform(CTX)
+    expect(resolved).toEqual(handler())
     return {}
   }
   runWithHandler(CTX, handler, App)
 })
 
 test('cleans up after execution', () => {
-  const handler = { a: 'a' }
+  const handler = () => 1
   runWithHandler(CTX, handler, () => {})
-  expect(() => useContext(CTX)).toThrow()
+  expect(() => perform(CTX)).toThrow()
 })
 
 test('context can be overriden', () => {
-  const handler1 = { a: 'a' }
-  const handler2 = { b: 'b' }
+  const handler1 = () => 1
+  const handler2 = () => 2
   const App = () => {
-    let resolved = useContext(CTX)
-    expect(resolved).toEqual(handler1)
+    let resolved = perform(CTX)
+    expect(resolved).toEqual(handler1())
     runWithHandler(CTX, handler2, Component)
   }
   const Component = () => {
-    let resolved = useContext(CTX)
-    expect(resolved).toEqual(handler2)
+    let resolved = perform(CTX)
+    expect(resolved).toEqual(handler2())
     return {}
   }
 

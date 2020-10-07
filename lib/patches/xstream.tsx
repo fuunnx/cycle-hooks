@@ -1,7 +1,5 @@
 import { Stream, InternalProducer, NO } from 'xstream'
-import { useFrame, safeUseContext, withFrame, runWithFrame } from '../context'
-import { gathererKey } from '../hooks/sinks'
-import { Sinks } from '../types'
+import { useFrame, runWithFrame } from '../context'
 import { withUnmount } from '../hooks/unmount'
 
 // this is a way to hook into the Stream constructor call
@@ -22,14 +20,6 @@ function patch(stream: Stream<any>): void {
   }
 
   let unmountPrevious = () => {}
-  const gatherer = safeUseContext(gathererKey)
-  if (gatherer) {
-    frame = frame.withHandlers({
-      [gathererKey as symbol]: (sinks: Sinks) => {
-        gatherer(sinks)
-      },
-    })
-  }
 
   let _n = stream._n.bind(stream)
   let _c = stream._c.bind(stream)

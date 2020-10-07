@@ -3,20 +3,17 @@ import '../patches/xstream'
 import { Sinks } from '../types'
 import xs, { Stream } from 'xstream'
 import { replicateMany } from '@cycle/run/lib/cjs/internals'
-import {
-  EffectName,
-  runWithHandlers,
-  useContext,
-  safeUseContext,
-} from '../context'
+import { EffectName, runWithHandlers, perform, performSafe } from '../context'
 import { onUnmount } from './unmount'
 import { mapObj } from '../helpers'
 
 export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
-export const gathererKey: EffectName<Registerer> = Symbol('registerer')
+export const gatherEffect: EffectName<Registerer> = Symbol('registerer')
 
 type GatherableKeys = string[]
-const gatherableSymbol: EffectName<GatherableKeys> = Symbol('gatherableKeys')
+const readGatherableEff: EffectName<() => GatherableKeys> = Symbol(
+  'gatherableKeys',
+)
 
 export function gatherSinks<T>(exec: () => T): [Sinks, T]
 export function gatherSinks<T>(
@@ -39,18 +36,20 @@ export function gatherSinks<T>(
   }
 
   // implementation
-  const scopeKeys = safeUseContext(gatherableSymbol) || []
+  const scopeKeys = performSafe(readGatherableEff) || []
   const gatherableKeys = [...scopeKeys, ...keys]
 
   let sinksProxy = initSinksProxy()
   function gatherer(sinks: Sinks, stopSignal$: Stream<any> = onUnmount()) {
-    Object.keys(sinks).forEach((key) => {
-      if (!gatherableKeys.includes(key)) {
-        console.warn(
-          `Unknown registered sink "${key}", please add it to "withHooks" second argument`,
-        )
-      }
-    })
+    if (process.env.NODE_ENV !== 'production') {
+      Object.keys(sinks).forEach((key) => {
+        if (!gatherableKeys.includes(key)) {
+          console.warn(
+            `Unknown registered sink "${key}", please add it to "withHooks" second argument`,
+          )
+        }
+      })
+    }
 
     let dispose = () => {}
     dispose = replicateMany(
@@ -65,8 +64,8 @@ export function gatherSinks<T>(
 
   const returnValue = runWithHandlers(
     {
-      [gathererKey as symbol]: gatherer,
-      [gatherableSymbol as symbol]: gatherableKeys,
+      [gatherEffect as symbol]: gatherer,
+      [readGatherableEff as symbol]: () => gatherableKeys,
     },
     exec,
   )
@@ -82,5 +81,5 @@ export function registerSinks(
   sinks: Sinks,
   stopSignal$: Stream<any> = onUnmount(),
 ) {
-  return useContext(gathererKey)(sinks, stopSignal$)
+  return perform(gatherEffect, sinks, stopSignal$)
 }
