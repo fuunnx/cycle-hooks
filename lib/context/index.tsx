@@ -94,7 +94,7 @@ export function perform<R, Args extends any[]>(
 ): R {
   const handler = resolveHandler(name)
   if (handler === NOT_FOUND) {
-    throw new Error(`Unknown key ${name.toString()} in context`)
+    throw new Error(`Unknown handler for ${name.toString()} in current frame`)
   }
   return handler(...args)
 }
