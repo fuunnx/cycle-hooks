@@ -96,7 +96,6 @@ export function perform<R, Args extends any[]>(
   if (handler === NOT_FOUND) {
     throw new Error(`Unknown key ${name.toString()} in context`)
   }
-  console.log(handler, handler.name, handler.toString(), args)
   return handler(...args)
 }
 
@@ -115,16 +114,14 @@ function resolveHandler<T extends Handler>(
   const _name = name as _EffectName<T>
   let origin = useFrame()
   if (_name in origin.handlers) {
-    return origin.handlers[_name as string]
+    return withFrame(origin.parent, origin.handlers[_name as string])
   }
 
   let current = origin.parent
   while (current) {
     const ctx = current.handlers
     if (_name in ctx) {
-      const value = ctx[_name as string]
-      origin.handlers[_name as string] = value
-      return value
+      return withFrame(current.parent, ctx[_name as string])
     }
     current = current.parent
   }

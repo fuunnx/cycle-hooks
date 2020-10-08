@@ -34,3 +34,15 @@ test('context can be overriden', () => {
 
   runWithHandler(CTX, handler1, App)
 })
+
+test('context is preserved for handler execution', () => {
+  const App = () => {
+    runWithHandler(CTX, () => perform(CTX) + 1, Component)
+  }
+  const Component = () => {
+    expect(perform(CTX)).toEqual(2)
+    return {}
+  }
+
+  runWithHandler(CTX, () => 1, App)
+})
