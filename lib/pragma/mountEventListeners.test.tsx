@@ -54,22 +54,6 @@ test(
       }
     })
 
-    const sources = {
-      DOM: mockDOMSource({
-        '#clickMe': {
-          click: Time.diagram('--x--x--|'),
-        },
-      }),
-    }
-
-    // const expectedSinks = Expected(sources)
-    // const actualSinks = Actual(sources)
-    // Time.assertEqual(actualSinks.DOM, expectedSinks.DOM)
-    // Time.assertEqual(
-    //   xs.merge(actualSinks.click$, xs.never()),
-    //   xs.merge(expectedSinks.click$, xs.never()),
-    // )
-
     compareComponents(
       Time,
       {

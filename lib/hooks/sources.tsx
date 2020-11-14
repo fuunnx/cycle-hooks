@@ -21,10 +21,10 @@ export function provideSources<T>(
   return withHandler([readSourcesEffect, () => sources], func)
 }
 
-export function useSources() {
-  return perform(readSourcesEffect)
+export function useSources<So extends Sources>(): So {
+  return perform(readSourcesEffect) as So
 }
 
-export function safeUseSources() {
-  return performOrFailSilently(readSourcesEffect)
+export function safeUseSources<So extends Sources>(): So {
+  return performOrFailSilently(readSourcesEffect) as So
 }
