@@ -3,7 +3,6 @@ import { useState } from '../lib/hooks/useState'
 import { useEffect } from '../lib/hooks/useEffect'
 import { createElement } from '../lib/pragma'
 import { define } from '../lib/pragma/define'
-import { unwrapVtree$ } from '../lib/helpers/unwrapVtree$'
 
 type Props = {
   value: number

@@ -1,6 +1,11 @@
 import dropRepeats from 'xstream/extra/dropRepeats'
 import xs, { Stream, MemoryStream } from 'xstream'
-import { EffectName, runWithHandler, perform, performSafe } from '..'
+import {
+  EffectName,
+  withHandler,
+  perform,
+  performOrFailSilently,
+} from 'performative-ts'
 import { mapObj, streamify } from '../helpers'
 import { withUnmount } from '../hooks/unmount'
 import { trackChildren } from '../helpers/trackers/trackChildren'
@@ -57,7 +62,7 @@ export function Ref(constructorFn?: Function): IRef {
         )
         delete transformedSinks.DOM
 
-        performSafe(gatherEffect, transformedSinks)
+        performOrFailSilently(gatherEffect, transformedSinks)
 
         return {
           ...transformedSinks,
@@ -112,12 +117,12 @@ export function Ref(constructorFn?: Function): IRef {
 export const readRefEffect: EffectName<() => IRef> = Symbol('ref')
 
 export function withRef<T>(ref: IRef, exec: () => T): T {
-  return runWithHandler(readRefEffect, () => ref, exec)
+  return withHandler([readRefEffect, () => ref], exec)
 }
 
 export function useRef(): IRef {
   return perform(readRefEffect)
 }
 export function safeUseRef(): IRef {
-  return performSafe(readRefEffect)
+  return performOrFailSilently(readRefEffect)
 }

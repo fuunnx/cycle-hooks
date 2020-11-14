@@ -5,7 +5,7 @@ import { streamify, isObservable } from '..'
 import { safeUseRef, Ref, withRef } from '../../pragma/ref'
 import { h } from '@cycle/dom'
 import { ComponentDescription, JSX } from '../../pragma/types'
-import { indexTree } from '../unwrapVtree$'
+import { indexTree } from '../indexTree'
 
 export function trackChildren(
   stream: JSX.Element | Stream<JSX.Element>,

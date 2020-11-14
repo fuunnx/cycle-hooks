@@ -1,15 +1,11 @@
 import { mountEventListeners } from './mountEventListeners'
 
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
-import { h, mockDOMSource } from '@cycle/dom'
+import { mockDOMSource } from '@cycle/dom'
 import { createElement, Sources } from '../index'
 import xs from 'xstream'
-import { assertDomEqual } from '../helpers/assertDomEqual'
-import { provideSources, useSources } from '../hooks/sources'
 import { useSubject } from '../helpers/subjects'
-import { gatherSinks } from '../hooks/sinks'
 import { withHooks } from '../wrapper'
-import { Component } from './types'
 
 // wtf or else the import is dropped
 console.log({ createElement })

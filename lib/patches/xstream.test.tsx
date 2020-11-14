@@ -1,7 +1,12 @@
 import './xstream'
 import xs, { Stream } from 'xstream'
 import { mockTimeSource } from '@cycle/time'
-import { perform, runWithHandler, EffectName, performSafe } from '../context'
+import {
+  perform,
+  withHandler,
+  EffectName,
+  performOrFailSilently,
+} from 'performative-ts'
 
 const CTX: EffectName<() => number> = Symbol('test-ctx')
 
@@ -15,7 +20,7 @@ test('provides sources over temporality (simple)', (done) => {
         .map(() => perform(CTX)),
     }
   }
-  const sinks = runWithHandler(CTX, handler, App)
+  const sinks = withHandler([CTX, handler], App)
 
   sinks.a.subscribe({
     next(val) {
@@ -35,10 +40,10 @@ function testMethod(methodName: string, initObservable: () => Stream<any>) {
     const handler = () => 1
     const App = () => {
       return {
-        a: initObservable().map(() => performSafe(CTX)),
+        a: initObservable().map(() => performOrFailSilently(CTX)),
       }
     }
-    const sinks = runWithHandler(CTX, handler, () => App())
+    const sinks = withHandler([CTX, handler], () => App())
 
     var sub = sinks.a.subscribe({
       next(innerSources) {
