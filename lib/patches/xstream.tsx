@@ -1,5 +1,5 @@
 import { Stream, InternalProducer, NO } from 'xstream'
-import { useFrame, runWithFrame } from '../context'
+import { captureFrame, withFrame } from 'performative-ts'
 import { withUnmount } from '../hooks/unmount'
 
 // this is a way to hook into the Stream constructor call
@@ -14,7 +14,7 @@ Object.defineProperty(Stream.prototype, '_prod', {
 })
 
 function patch(stream: Stream<any>): void {
-  let frame = useFrame()
+  let frame = captureFrame()
   if (!frame.parent) {
     return
   }
@@ -28,19 +28,19 @@ function patch(stream: Stream<any>): void {
   Object.assign(stream, {
     _e(e) {
       unmountPrevious()
-      runWithFrame(frame, () => {
+      withFrame(frame, () => {
         ;[unmountPrevious] = withUnmount(() => _e(e))
       })
     },
     _c() {
       unmountPrevious()
-      runWithFrame(frame, () => {
+      withFrame(frame, () => {
         ;[unmountPrevious] = withUnmount(() => _c())
       })
     },
     _n(v: any) {
       unmountPrevious()
-      runWithFrame(frame, () => {
+      withFrame(frame, () => {
         ;[unmountPrevious] = withUnmount(() => _n(v))
       })
     },

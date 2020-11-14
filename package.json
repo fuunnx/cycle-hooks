@@ -28,7 +28,7 @@
     "@types/jest": "^26.0.5",
     "cyclejs-utils": "^4.0.2",
     "multi-key-cache": "^1.0.2",
-    "performative-ts": "^1.0.1",
+    "performative-ts": "^2.0.0",
     "rambda": "^5.9.0",
     "snabbdom": "^1.0.1",
     "xstream": "^11.12.0",

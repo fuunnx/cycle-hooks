@@ -1,4 +1,4 @@
-import { EffectName, performSafe, runWithHandlers } from '../context'
+import { EffectName, performOrFailSilently, withHandler } from 'performative-ts'
 import xs from 'xstream'
 
 type RegisterUnmountCallback = (callback: () => void) => void
@@ -25,15 +25,13 @@ export function withUnmount<T>(
   const registerOwnChannelEff: EffectName<RegisterUnmountCallback> =
     type === 'stream' ? registerStreamUnmountEff : registerComponentUnmountEff
 
-  const returnValue = runWithHandlers(
-    {
-      [registerUnmountEff as symbol]: addListener,
-      [registerOwnChannelEff as symbol]: addListener,
-    },
+  const returnValue = withHandler(
+    [registerUnmountEff, addListener],
+    [registerOwnChannelEff, addListener],
     exec,
   )
 
-  performSafe(registerOwnChannelEff, triggerUnmount)
+  performOrFailSilently(registerOwnChannelEff, triggerUnmount)
 
   return [triggerUnmount, returnValue] as const
 
@@ -45,7 +43,7 @@ export function withUnmount<T>(
 export function onUnmount(callback: () => void = () => {}) {
   const unmount$ = xs.create()
   let unmounted = false
-  performSafe(registerUnmountEff, () => {
+  performOrFailSilently(registerUnmountEff, () => {
     if (unmounted) return
 
     callback()

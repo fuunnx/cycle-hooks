@@ -1,4 +1,3 @@
-import xs from 'xstream'
 import { useSubject } from '../helpers/subjects'
 import { registerSinks } from './sinks'
 import { useSources } from './sources'

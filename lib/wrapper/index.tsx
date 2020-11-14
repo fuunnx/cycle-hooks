@@ -1,12 +1,12 @@
 import { readSourcesEffect } from '../hooks/sources'
 import { Ref, readRefEffect } from '../pragma/ref'
-import { runWithHandlers } from '../context'
 import { Sinks, Sources } from '../types'
 import { gatherSinks } from '../hooks/sinks'
-import { mergeSinks, streamify } from '../helpers'
+import { mergeSinks } from '../helpers'
 import xs, { Stream } from 'xstream'
 import { Reducer } from '@cycle/state'
 import { trackChildren } from '../helpers/trackers/trackChildren'
+import { withHandler } from 'performative-ts'
 
 type AppSinks = Sinks & {
   state: Stream<Reducer<unknown>>
@@ -23,29 +23,24 @@ export function withHooks<Props>(
       [...sinksNames, ...Object.keys(sources)],
       () => {
         const ref = Ref()
-        return runWithHandlers(
-          {
-            [readSourcesEffect as symbol]: () => sources,
-            [readRefEffect as symbol]: () => ref,
-          },
+
+        return withHandler(
+          [readSourcesEffect, () => sources],
+          [readRefEffect, () => ref],
           () => {
             const appSinks = App(sources)
-            const normalizedSinks =
-              typeof appSinks === 'object' && 'DOM' in appSinks
-                ? appSinks
-                : { DOM: streamify(appSinks) }
 
-            normalizedSinks.DOM = trackChildren(
-              normalizedSinks.DOM as Stream<any>,
-            )
-            return normalizedSinks as Sinks
+            return {
+              ...appSinks,
+              DOM: trackChildren(appSinks.DOM as Stream<any>),
+            }
           },
         )
       },
     )
 
     return {
-      state: xs.empty(),
+      state: xs.empty(), // for typings
       ...mergeSinks([gathered, sinks]),
       DOM: sinks.DOM,
     }

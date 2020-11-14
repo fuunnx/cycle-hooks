@@ -5017,9 +5017,9 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
 
-performative-ts@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/performative-ts/-/performative-ts-1.0.1.tgz#083888e6a053338322fe4db97fa3acc55332ce0f"
+performative-ts@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/performative-ts/-/performative-ts-2.0.0.tgz#b450ec5278b59a03761d2bc01d10c5ff1462ee40"
 
 picomatch@^2.0.4, picomatch@^2.0.5, picomatch@^2.2.1:
   version "2.2.2"

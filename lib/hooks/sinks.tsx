@@ -3,7 +3,12 @@ import '../patches/xstream'
 import { Sinks } from '../types'
 import xs, { Stream } from 'xstream'
 import { replicateMany } from '@cycle/run/lib/cjs/internals'
-import { EffectName, runWithHandlers, perform, performSafe } from '../context'
+import {
+  EffectName,
+  withHandler,
+  perform,
+  performOrFailSilently,
+} from 'performative-ts'
 import { onUnmount } from './unmount'
 import { mapObj } from '../helpers'
 
@@ -36,7 +41,7 @@ export function gatherSinks<T>(
   }
 
   // implementation
-  const scopeKeys = performSafe(readGatherableEff) || []
+  const scopeKeys = performOrFailSilently(readGatherableEff) ?? []
   const gatherableKeys = [...scopeKeys, ...keys]
 
   let sinksProxy = initSinksProxy()
@@ -62,7 +67,7 @@ export function gatherSinks<T>(
     )
   }
 
-  const returnValue = runWithHandlers(
+  const returnValue = withHandler(
     {
       [gatherEffect as symbol]: gatherer,
       [readGatherableEff as symbol]: () => gatherableKeys,

@@ -1,7 +1,12 @@
 import '../patches/xstream'
 
 import { Sources } from '../types'
-import { EffectName, runWithHandler, perform, performSafe } from '../context'
+import {
+  EffectName,
+  withHandler,
+  perform,
+  performOrFailSilently,
+} from 'performative-ts'
 
 export const readSourcesEffect: EffectName<() => Sources> = Symbol('sources')
 
@@ -10,10 +15,10 @@ export function provideSources<T>(
   func: () => T,
 ) {
   if (typeof sources === 'function') {
-    return runWithHandler(readSourcesEffect, sources(useSources()), func)
+    return withHandler([readSourcesEffect, sources(useSources())], func)
   }
 
-  return runWithHandler(readSourcesEffect, () => sources, func)
+  return withHandler([readSourcesEffect, () => sources], func)
 }
 
 export function useSources() {
@@ -21,5 +26,5 @@ export function useSources() {
 }
 
 export function safeUseSources() {
-  return performSafe(readSourcesEffect)
+  return performOrFailSilently(readSourcesEffect)
 }
