@@ -1,7 +1,7 @@
 import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/dom'
 import modules from '@cycle/dom/lib/es6/modules'
-import { withHooks } from '../src/wrapper'
+import { withHooks } from '../src'
 import { eventListenersModule } from 'snabbdom/build/package/modules/eventlisteners'
 import { withState, Reducer } from '@cycle/state'
 import { App } from './App'
