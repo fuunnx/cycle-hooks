@@ -1,6 +1,6 @@
 import xs, { Stream } from 'xstream'
 import { run } from '@cycle/run'
-import { createElement } from '../lib/pragma'
+import { createElement } from '../src/pragma'
 import { MainDOMSource, makeDOMDriver } from '@cycle/dom'
 
 type AppSources = {
@@ -45,11 +45,7 @@ function Component(sources: ComponentSources) {
     DOM: props$.map((props) => {
       const { name } = props
 
-      return (
-        <button props-map-onClick={(event) => event}>
-          Hello {props.name}!
-        </button>
-      )
+      return <button props-map-onClick={(event) => event}>Hello {name}!</button>
     }),
   }
 }

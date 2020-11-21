@@ -3,22 +3,15 @@ import { Ref, readRefEffect } from '../pragma/ref'
 import { Sinks, Sources } from '../types'
 import { gatherSinks } from '../hooks/sinks'
 import { mergeSinks } from '../helpers'
-import xs, { Stream } from 'xstream'
-import { Reducer } from '@cycle/state'
+import { Stream } from 'xstream'
 import { trackChildren } from '../helpers/trackers/trackChildren'
 import { withHandler } from 'performative-ts'
 
-type AppSinks = Sinks & {
-  state: Stream<Reducer<unknown>>
-}
-
-export function withHooks<Props>(
-  App: (sources: Sources) => Partial<AppSinks>,
+export function withHooks<Si extends Sinks>(
+  App: (sources: Sources) => Partial<Sinks>,
   sinksNames: string[] = [],
-): (sources: Sources) => AppSinks {
-  return function AppWithHooks(
-    sources: Sources & { props$: Stream<Props> },
-  ): AppSinks {
+): (sources: Sources) => Si {
+  return function AppWithHooks(sources: Sources): Si {
     const [gathered, sinks] = gatherSinks(
       [...sinksNames, ...Object.keys(sources)],
       () => {
@@ -39,10 +32,9 @@ export function withHooks<Props>(
       },
     )
 
-    return {
-      state: xs.empty(), // for typings
+    return ({
       ...mergeSinks([gathered, sinks]),
       DOM: sinks.DOM,
-    }
+    } as unknown) as Si
   }
 }

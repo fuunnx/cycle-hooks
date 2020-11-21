@@ -1,12 +1,12 @@
 import xs from 'xstream'
-import { useState } from '../lib/hooks/useState'
-import { createElement } from '../lib'
-import { useSources } from '../lib/hooks'
+import { useState } from '../src/hooks/useState'
+import { createElement } from '../src'
+import { useSources } from '../src/hooks'
 import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
-import { define } from '../lib/pragma/define'
-import { JSX } from '../lib/pragma/types'
+import { define } from '../src/pragma/define'
+import { JSX } from '../src/pragma/types'
 
 export function App() {
   const state$ = useSources().state.stream

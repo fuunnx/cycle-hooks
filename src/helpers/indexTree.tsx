@@ -11,10 +11,11 @@ export function indexTree<T>(
         value,
         path,
       })
+      if (stop === match) return
     }
 
-    if (stop(value)) return
     if (!value || typeof value !== 'object') return
+    if (stop(value)) return
 
     if (Array.isArray(value)) {
       value.forEach((x, index) => run(x, [...path, index]))

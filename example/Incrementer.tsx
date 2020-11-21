@@ -1,8 +1,8 @@
 import xs from 'xstream'
-import { useState } from '../lib/hooks/useState'
-import { useEffect } from '../lib/hooks/useEffect'
-import { createElement } from '../lib/pragma'
-import { define } from '../lib/pragma/define'
+import { useState } from '../src/hooks/useState'
+import { useEffect } from '../src/hooks/useEffect'
+import { createElement } from '../src/pragma'
+import { define } from '../src/pragma/define'
 
 type Props = {
   value: number

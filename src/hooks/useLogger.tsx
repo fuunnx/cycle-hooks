@@ -1,4 +1,4 @@
-import { registerSinks } from '../hooks/sinks'
+import { registerSinks } from './sinks'
 import { useSubject } from '../helpers/subjects'
 
 // TODO needs proper typings
