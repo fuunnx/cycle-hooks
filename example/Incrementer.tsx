@@ -1,30 +1,31 @@
-import xs from 'xstream'
+import xs, { Stream } from 'xstream'
 import { useState } from '../src/hooks/useState'
-import { useEffect } from '../src/hooks/useEffect'
 import { createElement } from '../src/pragma'
-import { define } from '../src/pragma/define'
+import { useProps } from '../src/hooks/useProps'
 
 type Props = {
-  value: number
+  value$: Stream<number>
 }
 
-export const Incrementer = define<Props>(function Incrementer({ props$ }) {
-  const [count$, setCount] = useState(0)
+export const Incrementer = function Incrementer(_: Props) {
+  const props$ = useProps<Props>()
+
   const [isDown$, setIsDown] = useState(false)
+
   const increment$ = isDown$
     .map((down) => (down ? xs.periodic(50).startWith(null) : xs.empty()))
     .flatten()
     .mapTo((x: number) => x + 1)
 
-  useEffect(
-    props$.map((props) => {
-      return () => setCount(props.value)
-    }),
-  )
-  useEffect(
-    increment$.map((fn) => {
-      return () => setCount(fn)
-    }),
+  const [count$, setCount] = useState(
+    xs.merge(
+      props$
+        .map((x) => x.value$)
+        .flatten()
+        .map((value) => () => value),
+      increment$,
+    ),
+    0,
   )
 
   return count$.map((count) => (
@@ -43,4 +44,4 @@ export const Incrementer = define<Props>(function Incrementer({ props$ }) {
       </button>
     </div>
   ))
-})
+}

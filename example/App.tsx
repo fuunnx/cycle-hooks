@@ -5,8 +5,8 @@ import { useSources } from '../src/hooks'
 import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
-import { define } from '../src/pragma/define'
 import { JSX } from '../src/pragma/types'
+import { useProps } from '../src/hooks/useProps'
 
 export function App() {
   const state$ = useSources().state.stream
@@ -19,9 +19,9 @@ export function App() {
           <code>{JSON.stringify(state, null, '  ')}</code>
         </Togglable>
         <Togglable title="Incrementer">
-          <Incrementer value={xs.periodic(1000)} />
-          <Incrementer key="hello" value={xs.periodic(1000)} />
-          <Incrementer key="hello" value={xs.periodic(1000)} />
+          <Incrementer value$={xs.periodic(1000)} />
+          <Incrementer value$={xs.periodic(1000)} />
+          <Incrementer value$={xs.periodic(1000)} />
         </Togglable>
         <Togglable title="Input">
           <Input />
@@ -38,8 +38,9 @@ type Props = {
   title: string
   children?: JSX.Element | JSX.Element[]
 }
-const Togglable = define<Props>(function Togglable({ props$ }) {
+const Togglable = function Togglable(_: Props) {
   const [open$, setOpen] = useState(false)
+  const props$ = useProps<Props>()
 
   return {
     DOM: xs.combine(open$, props$).map(([open, props]) => (
@@ -48,9 +49,7 @@ const Togglable = define<Props>(function Togglable({ props$ }) {
           className="header"
           tabIndex={0}
           attrs={{ 'aria-role': 'button' }}
-          on={{
-            click: () => setOpen((x) => !x),
-          }}
+          onClick={() => setOpen((x) => !x)}
         >
           <h2>{props.title}</h2>
         </header>
@@ -58,4 +57,4 @@ const Togglable = define<Props>(function Togglable({ props$ }) {
       </section>
     )),
   }
-})
+}

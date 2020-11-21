@@ -8,8 +8,8 @@ import xs from 'xstream'
 import { useSubject } from '../helpers/subjects'
 import { withHooks } from '.'
 
-// wtf or else the import is dropped
-console.log({ createElement })
+// wtf, if not used, the import is dropped
+console.log(createElement)
 
 function testTime(impl: (Time: MockTimeSource) => void) {
   return function exec(done) {

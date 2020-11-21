@@ -12,6 +12,7 @@ const mountInstances = bindHandler(
   mountInstances_,
 )
 
+// wtf, if not used, the import is dropped
 console.log(createElement)
 
 test('pragma + mountInstances handles simple components', (done) => {
