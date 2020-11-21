@@ -8,13 +8,14 @@ import {
 } from 'performative-ts'
 import { mapObj, streamify } from '../helpers'
 import { withUnmount } from '../hooks/unmount'
-import { trackChildren } from '../wrapper/trackChildren'
+import { mountInstances } from '../wrapper/mountInstances'
 import { gatherEffect } from '../hooks/sinks'
 import { useSources } from '../hooks'
 import { IRef, Key, JSX } from './types'
 import { shallowEquals } from '../helpers/shallowEquals'
 import { makeUsageTrackerIndexed } from '../helpers/trackers/trackUsageIndexed'
 import { makeUsageTrackerKeyed } from '../helpers/trackers/trackUsageKeyed'
+import { mountEventListeners } from '../wrapper/mountEventListeners'
 
 export function Ref(constructorFn?: Function): IRef {
   const destroy$ = xs.create()
@@ -66,7 +67,7 @@ export function Ref(constructorFn?: Function): IRef {
 
         return {
           ...transformedSinks,
-          DOM: trackChildren(sinks.DOM).remember(),
+          DOM: sinks.DOM.compose(mountEventListeners).compose(mountInstances),
         }
       }, 'component')
       ref.data.unmount = unmount

@@ -6,7 +6,7 @@ import { h, VNode } from '@cycle/dom'
 import { ComponentDescription, JSX } from '../pragma/types'
 import { indexVTree, assocVTree } from '../helpers/VTree'
 
-export function trackChildren(
+export function mountInstances(
   stream: JSX.Element | Stream<JSX.Element>,
 ): Stream<JSX.Element> {
   const ref = safeUseRef() || Ref()
@@ -74,6 +74,8 @@ export function trackChildren(
   }
 }
 
-function isComponentDescription(x: any): x is ComponentDescription<unknown> {
+export function isComponentDescription(
+  x: any,
+): x is ComponentDescription<unknown> {
   return x && x._isComponent
 }

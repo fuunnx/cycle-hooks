@@ -4,8 +4,9 @@ import { Sinks, Sources } from '../types'
 import { gatherSinks } from '../hooks/sinks'
 import { mergeSinks } from '../helpers'
 import { Stream } from 'xstream'
-import { trackChildren } from './trackChildren'
+import { mountInstances } from './mountInstances'
 import { withHandler } from 'performative-ts'
+import { mountEventListeners } from './mountEventListeners'
 
 export function withHooks<Si extends Sinks>(
   App: (sources: Sources) => Partial<Sinks>,
@@ -25,7 +26,9 @@ export function withHooks<Si extends Sinks>(
 
             return {
               ...appSinks,
-              DOM: trackChildren(appSinks.DOM as Stream<any>),
+              DOM: (appSinks.DOM as Stream<any>)
+                .compose(mountEventListeners)
+                .compose(mountInstances),
             }
           },
         )

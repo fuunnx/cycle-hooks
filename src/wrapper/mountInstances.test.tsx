@@ -1,13 +1,20 @@
 import { mockTimeSource } from '@cycle/time'
 import xs from 'xstream'
 import { createElement } from '../pragma'
-import { trackChildren } from './trackChildren'
+import { mountInstances as mountInstances_ } from './mountInstances'
 import { onUnmount } from '../hooks/unmount'
 import { assertDomEqual } from '../helpers/assertDomEqual'
+import { readSourcesEffect } from '../hooks/sources'
+import { bindHandler } from 'performative-ts'
+
+const mountInstances = bindHandler(
+  [readSourcesEffect, () => ({})],
+  mountInstances_,
+)
 
 console.log(createElement)
 
-test('pragma + trackChildren handles simple components', (done) => {
+test('pragma + mountInstances handles simple components', (done) => {
   const Time = mockTimeSource()
 
   function Component() {
@@ -16,11 +23,13 @@ test('pragma + trackChildren handles simple components', (done) => {
 
   assertDomEqual(
     Time,
-    trackChildren(
+
+    mountInstances(
       <div>
         <Component />
       </div>,
     ),
+
     Component().map((x) => <div>{x}</div>),
   )
 
@@ -44,7 +53,7 @@ test('keeps dynamic components alive until unmount', (done) => {
   const timer$ = Time.diagram('1---2---3')
 
   Time.assertEqual(
-    trackChildren(<ComponentA />),
+    mountInstances(<ComponentA />),
     xs.combine(rerender$, timer$).map(([, timer]) => timer),
   )
 
@@ -64,7 +73,7 @@ test('stop receiving DOM updates on remove', (done) => {
     return timer$
   }
 
-  Time.assertEqual(trackChildren(<ComponentA />), Time.diagram('1-2-3x'))
+  Time.assertEqual(mountInstances(<ComponentA />), Time.diagram('1-2-3x'))
 
   Time.run(done)
 })
@@ -83,7 +92,7 @@ test('start receiving DOM updates on insert', (done) => {
   }
 
   Time.assertEqual(
-    trackChildren(<ComponentA />),
+    mountInstances(<ComponentA />),
     Time.diagram('0--1-')
       .map((visible) => (visible ? ComponentB() : xs.of('x')))
       .flatten(),
@@ -120,13 +129,14 @@ test('call unmount on remove', (done) => {
     return timer$
   }
 
-  Time.assertEqual(trackChildren(<ComponentA />), Time.diagram('123x'))
+  Time.assertEqual(mountInstances(<ComponentA />), Time.diagram('123x'))
   Time.assertEqual(
-    trackChildren(
+    mountInstances(
       Time.diagram('1-0-1-0-1|').map((visible) =>
         visible ? <ComponentA /> : '',
       ),
     ),
+
     Time.diagram('1x'),
   )
 
@@ -159,7 +169,7 @@ test("don't call unmount on update", (done) => {
     return timer$
   }
 
-  Time.assertEqual(trackChildren(<ComponentA />), ComponentB())
+  Time.assertEqual(mountInstances(<ComponentA />), ComponentB())
 
   Time.run(() => {
     expect(unmounted).toEqual(0)

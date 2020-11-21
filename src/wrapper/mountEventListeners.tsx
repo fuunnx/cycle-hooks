@@ -4,6 +4,7 @@ import { walkVTree, isVNode } from '../helpers/VTree'
 import { VNode } from 'snabbdom/build/package/vnode'
 import { onUnmount } from '../hooks/unmount'
 import { makeUsageTrackerKeyed } from '../helpers/trackers/trackUsageKeyed'
+import { isComponentDescription } from './mountInstances'
 
 type EventSubscription = {
   subscription: Subscription
@@ -55,23 +56,21 @@ export function mountEventListeners(dom$: Stream<VNode>) {
   })
 
   function mountListeners(vnode: VNode, path: number[]) {
+    if (isComponentDescription(vnode)) return
+    if (!vnode.data?.props) return
+
     let selector: string
+    Object.keys(vnode.data.props).forEach((prop) => {
+      const isEventHandler = prop.startsWith('on') && isUpperCase(prop[2])
+      if (!isEventHandler) return
 
-    if (vnode.data.props) {
-      Object.keys(vnode.data.props).forEach((prop) => {
-        const isEventHandler = prop.startsWith('on') && isUpperCase(prop[2])
-        if (!isEventHandler) {
-          return
-        }
-        selector = selector || createAndAssignSelector(vnode, path)
+      selector = selector || createAndAssignSelector(vnode, path)
+      const eventName = prop.replace(/^on/, '').toLowerCase()
+      let eventSubscription = tracker.track([selector, eventName])
 
-        const eventName = prop.replace(/^on/, '').toLowerCase()
-        let eventSubscription = tracker.track([selector, eventName])
-
-        eventSubscription.onNext = vnode.data.props[prop]
-        delete vnode.data.props[prop]
-      })
-    }
+      eventSubscription.onNext = vnode.data.props[prop]
+      delete vnode.data.props[prop]
+    })
   }
 }
 

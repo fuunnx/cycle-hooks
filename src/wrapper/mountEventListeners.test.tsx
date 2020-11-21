@@ -2,11 +2,11 @@ import { mountEventListeners } from './mountEventListeners'
 
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
 import sample from 'xstream-sample'
-import { mockDOMSource, h, button } from '@cycle/dom'
+import { mockDOMSource, h } from '@cycle/dom'
 import { createElement, Sources } from '../index'
 import xs from 'xstream'
 import { useSubject } from '../helpers/subjects'
-import { withHooks } from '../wrapper'
+import { withHooks } from '.'
 
 // wtf or else the import is dropped
 console.log({ createElement })
@@ -29,8 +29,8 @@ function compareComponents(
 
   Object.keys(expectedSinks).forEach((key) => {
     Time.assertEqual(
-      xs.merge(actualSinks[key], xs.never()),
       xs.merge(expectedSinks[key], xs.never()),
+      xs.merge(actualSinks[key], xs.never()),
     )
   })
 }
@@ -91,23 +91,38 @@ test(
         DOM: xs.of(
           <div>
             <button id="clickMe" />
+            {h(
+              'button',
+              {
+                key: 'clickKey',
+                attrs: { ['data-$-key-clickKey']: true },
+                props: { key: 'clickKey' },
+              },
+              [],
+            )}
           </div>,
         ),
-        click$: sources.DOM.select('#clickMe').events('click').mapTo('x'),
+        click1$: sources.DOM.select('#clickMe').events('click').mapTo('x'),
+        click2$: sources.DOM.select('[data-$-key-clickKey]')
+          .events('click')
+          .mapTo('x'),
       }
     }
 
     const Actual = withHooks(function Sugar() {
-      const [click$, onClick] = useSubject()
+      const [click1$, onClick1] = useSubject()
+      const [click2$, onClick2] = useSubject()
       return {
         DOM: xs
           .of(
             <div>
-              <button id="clickMe" onClick={onClick} />
+              <button id="clickMe" onClick={onClick1} />
+              <button key="clickKey" onClick={onClick2} />
             </div>,
           )
           .compose(mountEventListeners),
-        click$: click$.mapTo('x'),
+        click1$: click1$.mapTo('x'),
+        click2$: click2$.mapTo('x'),
       }
     })
 
@@ -116,6 +131,9 @@ test(
       {
         DOM: mockDOMSource({
           '#clickMe': {
+            click: Time.diagram('--x--x--|'),
+          },
+          '[data-$-key-clickKey]': {
             click: Time.diagram('--x--x--|'),
           },
         }),
