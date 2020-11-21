@@ -1,9 +1,9 @@
 import { mockTimeSource } from '@cycle/time'
 import xs from 'xstream'
-import { createElement } from '../../pragma'
+import { createElement } from '../pragma'
 import { trackChildren } from './trackChildren'
-import { onUnmount } from '../../hooks/unmount'
-import { assertDomEqual } from '../assertDomEqual'
+import { onUnmount } from '../hooks/unmount'
+import { assertDomEqual } from '../helpers/assertDomEqual'
 
 console.log(createElement)
 
@@ -14,7 +14,15 @@ test('pragma + trackChildren handles simple components', (done) => {
     return xs.of(<div>Hello</div>)
   }
 
-  assertDomEqual(Time, trackChildren(<Component />), Component())
+  assertDomEqual(
+    Time,
+    trackChildren(
+      <div>
+        <Component />
+      </div>,
+    ),
+    Component().map((x) => <div>{x}</div>),
+  )
 
   Time.run(done)
 })

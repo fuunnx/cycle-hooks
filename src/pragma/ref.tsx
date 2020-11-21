@@ -8,7 +8,7 @@ import {
 } from 'performative-ts'
 import { mapObj, streamify } from '../helpers'
 import { withUnmount } from '../hooks/unmount'
-import { trackChildren } from '../helpers/trackers/trackChildren'
+import { trackChildren } from '../wrapper/trackChildren'
 import { gatherEffect } from '../hooks/sinks'
 import { useSources } from '../hooks'
 import { IRef, Key, JSX } from './types'

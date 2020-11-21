@@ -4,7 +4,7 @@ import { Sinks, Sources } from '../types'
 import { gatherSinks } from '../hooks/sinks'
 import { mergeSinks } from '../helpers'
 import { Stream } from 'xstream'
-import { trackChildren } from '../helpers/trackers/trackChildren'
+import { trackChildren } from './trackChildren'
 import { withHandler } from 'performative-ts'
 
 export function withHooks<Si extends Sinks>(

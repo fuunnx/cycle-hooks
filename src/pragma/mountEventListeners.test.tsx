@@ -1,7 +1,8 @@
 import { mountEventListeners } from './mountEventListeners'
 
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
-import { mockDOMSource } from '@cycle/dom'
+import sample from 'xstream-sample'
+import { mockDOMSource, h, button } from '@cycle/dom'
 import { createElement, Sources } from '../index'
 import xs from 'xstream'
 import { useSubject } from '../helpers/subjects'
@@ -35,11 +36,63 @@ function compareComponents(
 }
 
 test(
-  'efzefgzg',
+  'mounts listeners on simple DOM element',
   testTime((Time) => {
     function Expected(sources: Sources) {
       return {
-        DOM: xs.of(<button id="clickMe" />),
+        DOM: xs.of(
+          <div>
+            {h(
+              'button',
+              { attrs: { ['data-$-button-0-0']: true }, props: {} },
+              [],
+            )}
+          </div>,
+        ),
+        click$: sources.DOM.select('[data-$-button-0-0]')
+          .events('click')
+          .mapTo('x'),
+      }
+    }
+
+    const Actual = withHooks(function Sugar() {
+      const [click$, onClick] = useSubject()
+      return {
+        DOM: xs
+          .of(
+            <div>
+              <button onClick={onClick} />
+            </div>,
+          )
+          .compose(mountEventListeners),
+        click$: click$.mapTo('x'),
+      }
+    })
+
+    compareComponents(
+      Time,
+      {
+        DOM: mockDOMSource({
+          '[data-$-button-0-0]': {
+            click: Time.diagram('--x--x--|'),
+          },
+        }),
+      },
+      [Actual, Expected],
+    )
+  }),
+)
+
+test(
+  'has nice selectors',
+  testTime((Time) => {
+    function Expected(sources: Sources) {
+      return {
+        DOM: xs.of(
+          <div>
+            <button id="clickMe" />
+          </div>,
+        ),
         click$: sources.DOM.select('#clickMe').events('click').mapTo('x'),
       }
     }
@@ -48,7 +101,11 @@ test(
       const [click$, onClick] = useSubject()
       return {
         DOM: xs
-          .of(<button id="clickMe" onClick={onClick} />)
+          .of(
+            <div>
+              <button id="clickMe" onClick={onClick} />
+            </div>,
+          )
           .compose(mountEventListeners),
         click$: click$.mapTo('x'),
       }
@@ -59,6 +116,101 @@ test(
       {
         DOM: mockDOMSource({
           '#clickMe': {
+            click: Time.diagram('--x--x--|'),
+          },
+        }),
+      },
+      [Actual, Expected],
+    )
+  }),
+)
+
+test(
+  'mounted listeners can be updated',
+  testTime((Time) => {
+    function Expected(sources: Sources) {
+      const count$ = Time.periodic(10).take(10).startWith(0)
+
+      return {
+        DOM: count$.mapTo(
+          h('button', { attrs: { ['data-$-button-0']: true }, props: {} }, []),
+        ),
+        click$: sources.DOM.select('[data-$-button-0]')
+          .events('click')
+          .compose(sample(count$)),
+      }
+    }
+
+    const Actual = withHooks(function Sugar() {
+      const [click$, onClick] = useSubject()
+      const count$ = Time.periodic(10).take(10).startWith(0)
+
+      return {
+        DOM: count$
+          .map((count) => {
+            return <button onClick={() => onClick(count)} />
+          })
+          .compose(mountEventListeners),
+        click$: click$,
+      }
+    })
+
+    compareComponents(
+      Time,
+      {
+        DOM: mockDOMSource({
+          '[data-$-button-0]': {
+            click: Time.diagram('--x--x--|'),
+          },
+        }),
+      },
+      [Actual, Expected],
+    )
+  }),
+)
+
+test(
+  'mounted listeners can be updated',
+  testTime((Time) => {
+    function Expected(sources: Sources) {
+      const count$ = Time.periodic(10).take(10).startWith(0)
+
+      return {
+        DOM: count$.map((count) => {
+          if (count > 5) return
+          return h(
+            'button',
+            { attrs: { ['data-$-button-0']: true }, props: {} },
+            [],
+          )
+        }),
+        click$: sources.DOM.select('[data-$-button-0]')
+          .events('click')
+          .compose(sample(count$))
+          .endWhen(count$.filter((x) => x > 5)),
+      }
+    }
+
+    const Actual = withHooks(function Sugar() {
+      const [click$, onClick] = useSubject()
+      const count$ = Time.periodic(10).take(10).startWith(0)
+
+      return {
+        DOM: count$
+          .map((count) => {
+            if (count > 5) return
+            return <button onClick={() => onClick(count)} />
+          })
+          .compose(mountEventListeners),
+        click$: click$,
+      }
+    })
+
+    compareComponents(
+      Time,
+      {
+        DOM: mockDOMSource({
+          '[data-$-button-0]': {
             click: Time.diagram('--x--x--|'),
           },
         }),

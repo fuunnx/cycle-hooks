@@ -1,11 +1,10 @@
-import { assocPath } from 'rambda'
 import xs, { Stream } from 'xstream'
 import concat from 'xstream/extra/concat'
-import { streamify, isObservable } from '..'
-import { safeUseRef, Ref, withRef } from '../../pragma/ref'
-import { h } from '@cycle/dom'
-import { ComponentDescription, JSX } from '../../pragma/types'
-import { indexTree } from '../indexTree'
+import { streamify, isObservable } from '../helpers'
+import { safeUseRef, Ref, withRef } from '../pragma/ref'
+import { h, VNode } from '@cycle/dom'
+import { ComponentDescription, JSX } from '../pragma/types'
+import { indexVTree, assocVTree } from '../helpers/VTree'
 
 export function trackChildren(
   stream: JSX.Element | Stream<JSX.Element>,
@@ -17,36 +16,34 @@ export function trackChildren(
     .map((vtree) => {
       return withRef(ref, () => {
         ref.tracker.open()
-        const descs = indexTree(
+        const descriptions = indexVTree(
           vtree,
           isComponentDescription,
           (x) => isObservable(x) || isComponentDescription(x),
         )
-        if (!descs.length) {
+        if (!descriptions.length) {
           ref.tracker.close()
           return vtree
         }
 
-        const doms = descs.map((desc) => {
-          const childRef = ref.tracker.track(
-            desc.value._function,
-            desc.value.data.key,
-          )
+        const doms = descriptions.map(({ value, path }) => {
+          const childRef = ref.tracker.track(value._function, value.data.key)
 
           childRef.data.pushPropsAndChildren(
-            desc.value.data.props as object,
-            desc.value.data.children,
+            value.data.props as object,
+            value.data.children,
           )
 
-          return childRef.data.instance.DOM.map((val) => (acc) =>
-            assocPath(desc.path, val, acc),
+          return childRef.data.instance.DOM.map(
+            (val: VNode | string) => (acc) => assocVTree(path, val, acc),
           )
         })
         ref.tracker.close()
 
         return xs
-          .combine(...doms)
-          .map((funcs) => funcs.reduce((acc, func) => func(acc), vtree))
+          .merge(...doms)
+          .fold((acc, func) => func(acc), vtree)
+          .drop(1)
           .map(cleanup)
       })
     })

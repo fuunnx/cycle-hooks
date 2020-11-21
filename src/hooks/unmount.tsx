@@ -53,3 +53,17 @@ export function onUnmount(callback: () => void = () => {}) {
   })
   return unmount$
 }
+
+export function onComponentUnmount(callback: () => void = () => {}) {
+  const unmount$ = xs.create()
+  let unmounted = false
+  performOrFailSilently(registerComponentUnmountEff, () => {
+    if (unmounted) return
+
+    callback()
+    unmount$.shamefullySendNext(null)
+
+    unmounted = true
+  })
+  return unmount$
+}
