@@ -74,6 +74,7 @@ export function mountEventListeners(dom$: Stream<VNode>) {
   }
 }
 
+// this function mutates the provided vnode
 function createAndAssignSelector(vNode: VNode, path): string {
   const id = vNode.data.attrs?.id || vNode.data.props?.id
   if (id) {
