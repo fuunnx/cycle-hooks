@@ -1,7 +1,7 @@
 import xs, { Stream } from 'xstream'
 import concat from 'xstream/extra/concat'
 import { streamify, isObservable } from '../libs/isObservable'
-import { safeUseRef, Ref, withRef } from '../pragma/ref'
+import { safeUseRef, Ref, withRef } from './ref'
 import { h, VNode } from '@cycle/dom'
 import { ComponentDescription, JSX } from '../pragma/types'
 import { indexVTree, assocVTree } from '../libs/VTree'

@@ -45,7 +45,7 @@ function Component(_: ComponentProps) {
   })
 }
 
-run(bindHooks(App, ['DOM', 'otherSink'], drivers)
+run(withHooks(App, ['DOM', 'otherSink'], drivers)
 ```
 
 Revient à :
@@ -123,7 +123,7 @@ function Component() {
   }
 }
 
-run(bindHooks(App, ['DOM', 'other'], drivers)
+run(withHooks(App, ['DOM', 'other'], drivers)
 ```
 
 Revient à écrire :

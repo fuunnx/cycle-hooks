@@ -1,5 +1,5 @@
 import xs from 'xstream'
-import { useSubject } from '../src/hooks/subjects'
+import { useSubject } from '../src/hooks/subject'
 import { createElement } from '../src'
 
 export const Timer = () => {

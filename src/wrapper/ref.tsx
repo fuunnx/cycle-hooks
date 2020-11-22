@@ -9,14 +9,14 @@ import {
 import { streamify } from '../libs/isObservable'
 import { mapObj } from '../libs/mapObj'
 import { withUnmount } from '../hooks/unmount'
-import { mountInstances } from '../wrapper/mountInstances'
+import { mountInstances } from './mountInstances'
 import { gatherEffect } from '../hooks/sinks'
-import { useSources } from '../hooks'
-import { IRef, Key, JSX } from './types'
+import { useSources } from '../hooks/sources'
+import { IRef, Key, JSX } from '../pragma/types'
 import { shallowEquals } from '../libs/shallowEquals'
 import { makeUsageTrackerIndexed } from '../libs/trackers/trackUsageIndexed'
 import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
-import { mountEventListeners } from '../wrapper/mountEventListeners'
+import { mountEventListeners } from './mountEventListeners'
 
 export function Ref(constructorFn?: Function): IRef {
   const destroy$ = xs.create()

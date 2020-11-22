@@ -1,7 +1,8 @@
-import { useSubject } from './subjects'
-import { registerSinks } from './sinks'
-import { useSources } from './sources'
-import { Reducer } from './types'
+import { useSubject } from '../../src/hooks/subject'
+import { registerSinks } from '../../src/hooks/sinks'
+import { useSources } from '../../src/hooks/sources'
+
+export type Reducer<T> = (x: T) => T
 
 export function useGlobalState<T>(initial: T) {
   const [reducer$, runReducer] = useSubject<Reducer<T>>()

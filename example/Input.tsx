@@ -1,4 +1,4 @@
-import { useGlobalState } from '../src/hooks/globalState'
+import { useGlobalState } from './hooks/globalState'
 import { createElement } from '../src/pragma'
 
 export function Input() {
@@ -11,7 +11,7 @@ export function Input() {
         value={state.value || ''}
         onInput={(e) => {
           setState({ value: e.target.value })
-        }
+        }}
       />
     )),
   }

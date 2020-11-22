@@ -1,7 +1,9 @@
 import { run } from '@cycle/run'
-import { useSources, useState, useProps } from '../src/hooks'
-import { createElement, withHooks } from '../src'
-import { registerSinks } from '../src/hooks/sinks'
+import { useProps } from '../../src/hooks/props'
+import { useSources } from '../../src/hooks/sources'
+import { useState } from '../../example/hooks/state'
+import { createElement, withHooks } from '../../src'
+import { registerSinks } from '../../src/hooks/sinks'
 import xs from 'xstream'
 import { makeDOMDriver, DOMSource } from '@cycle/dom'
 

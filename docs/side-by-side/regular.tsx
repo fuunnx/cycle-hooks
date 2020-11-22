@@ -1,6 +1,6 @@
 import xs, { Stream } from 'xstream'
 import { run } from '@cycle/run'
-import { createElement } from '../src/pragma'
+import { createElement } from '../../src/pragma'
 import { MainDOMSource, makeDOMDriver } from '@cycle/dom'
 
 type AppSources = {

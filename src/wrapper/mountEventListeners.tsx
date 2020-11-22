@@ -1,5 +1,5 @@
 import { Stream, Subscription } from 'xstream'
-import { useSources } from '../hooks'
+import { useSources } from '../hooks/sources'
 import { walkVTree, isVNode } from '../libs/VTree'
 import { VNode } from 'snabbdom/build/package/vnode'
 import { onUnmount } from '../hooks/unmount'

@@ -1,5 +1,5 @@
 import xs, { Stream } from 'xstream'
-import { useState } from '../src/hooks/state'
+import { useState } from './hooks/state'
 import { createElement } from '../src/pragma'
 import { useProps } from '../src/hooks/props'
 

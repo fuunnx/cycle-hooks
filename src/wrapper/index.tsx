@@ -1,5 +1,5 @@
 import { readSourcesEffect } from '../hooks/sources'
-import { Ref, readRefEffect } from '../pragma/ref'
+import { Ref, readRefEffect } from './ref'
 import { Sinks, Sources } from '../types'
 import { gatherSinks } from '../hooks/sinks'
 import { mergeSinks } from '../libs/mergeSinks'
