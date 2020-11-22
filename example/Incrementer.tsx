@@ -28,18 +28,20 @@ export const Incrementer = function Incrementer(_: Props) {
     0,
   )
 
-  return count$.map((count) => (
-    <div>
-      <button
-        onMouseDown={() => setIsDown(true)}
-        onMouseUp={() => setIsDown(false)}
-        onMouseLeave={() => setIsDown(false)}
-      >
-        {count}
-      </button>
-      <button type="button" onClick={() => setCount(0)}>
-        Reset
-      </button>
-    </div>
-  ))
+  return {
+    DOM: count$.map((count) => (
+      <div>
+        <button
+          onMouseDown={() => setIsDown(true)}
+          onMouseUp={() => setIsDown(false)}
+          onMouseLeave={() => setIsDown(false)}
+        >
+          {count}
+        </button>
+        <button type="button" onClick={() => setCount(0)}>
+          Reset
+        </button>
+      </div>
+    )),
+  }
 }

@@ -3,9 +3,14 @@ import xs, { Stream } from 'xstream'
 
 export type Reducer<T> = (x: T) => T
 
-export function useState<T>(sourceReducer$: Stream<Reducer<T>>, initial: T)
-export function useState<T>(initial: T)
-export function useState<T>(...args: any[]) {
+type SetState<T> = (val: Reducer<T> | T | Partial<T>) => void
+
+export function useState<T>(
+  sourceReducer$: Stream<Reducer<T>>,
+  initial: T,
+): [Stream<T>, SetState<T>]
+export function useState<T>(initial: T): [Stream<T>, SetState<T>]
+export function useState<T>(...args: any[]): [Stream<T>, SetState<T>] {
   let sourceReducer$: Stream<Reducer<T>>
   let initial: T
 
@@ -25,15 +30,18 @@ export function useState<T>(...args: any[]) {
     state$,
     function setState(val: Reducer<T> | T | Partial<T>) {
       if (typeof val === 'function') {
-        return runReducer(val as Reducer<T>)
+        runReducer(val as Reducer<T>)
+        return
       }
       if (val && typeof val === 'object' && !Array.isArray(val)) {
-        return runReducer((old) => ({
+        runReducer((old) => ({
           ...old,
           ...val,
         }))
+        return
       }
-      return runReducer(() => val as T)
+      runReducer(() => val as T)
+      return
     },
-  ] as const
+  ]
 }

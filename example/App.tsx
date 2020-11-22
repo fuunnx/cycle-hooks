@@ -5,11 +5,15 @@ import { useSources } from '../src/hooks/sources'
 import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
-import { JSX } from '../src/pragma/types'
 import { useProps } from '../src/hooks/props'
+import { StateSource } from '@cycle/state'
+
+type AppSources = {
+  state: StateSource<{ value?: number }>
+}
 
 export function App() {
-  const state$ = useSources().state.stream
+  const state$ = useSources<AppSources>().state.stream
 
   return {
     DOM: state$.startWith(undefined).map((state: any) => (

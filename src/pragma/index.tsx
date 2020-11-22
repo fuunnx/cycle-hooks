@@ -1,5 +1,5 @@
 import { h, VNode } from '@cycle/dom'
-import { Component, WrappedComponent, ComponentDescription, JSX } from './types'
+import { Component, ComponentDescription } from './types'
 
 type VnodeData = {
   props: { [k: string]: any }
@@ -31,7 +31,7 @@ function normalizeProps(props: { [k: string]: any }) {
 }
 
 export function createElement<T extends { [k: string]: unknown }>(
-  tagOrFunction: string | Component<T> | WrappedComponent<T>,
+  tagOrFunction: string | Component,
   props?: T,
   ...children: JSX.Element[]
 ): JSX.Element {
@@ -44,12 +44,12 @@ export function createElement<T extends { [k: string]: unknown }>(
 
   return {
     _isComponent: true,
-    _function: tagOrFunction as Component<T>,
+    _function: tagOrFunction as Component,
     data: {
       ...normalizeProps(props || {}),
       children,
     },
-  } as ComponentDescription<T>
+  } as ComponentDescription
 }
 
 export function Fragment(...children: JSX.Element[]): JSX.Element[] {
