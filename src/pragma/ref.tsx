@@ -6,15 +6,16 @@ import {
   perform,
   performOrFailSilently,
 } from 'performative-ts'
-import { mapObj, streamify } from '../helpers'
+import { streamify } from '../libs/isObservable'
+import { mapObj } from '../libs/mapObj'
 import { withUnmount } from '../hooks/unmount'
 import { mountInstances } from '../wrapper/mountInstances'
 import { gatherEffect } from '../hooks/sinks'
 import { useSources } from '../hooks'
 import { IRef, Key, JSX } from './types'
-import { shallowEquals } from '../helpers/shallowEquals'
-import { makeUsageTrackerIndexed } from '../helpers/trackers/trackUsageIndexed'
-import { makeUsageTrackerKeyed } from '../helpers/trackers/trackUsageKeyed'
+import { shallowEquals } from '../libs/shallowEquals'
+import { makeUsageTrackerIndexed } from '../libs/trackers/trackUsageIndexed'
+import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
 import { mountEventListeners } from '../wrapper/mountEventListeners'
 
 export function Ref(constructorFn?: Function): IRef {

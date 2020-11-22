@@ -2,7 +2,7 @@ import xs from 'xstream'
 import { gatherSinks, registerSinks } from './sinks'
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
 import { Sinks } from '../types'
-import { mergeSinks } from '../helpers'
+import { mergeSinks } from '../libs/mergeSinks'
 
 function assertSinksEqual(
   Time: MockTimeSource,

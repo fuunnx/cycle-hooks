@@ -2,7 +2,7 @@ import { mockTimeSource } from '@cycle/time'
 import { h } from '@cycle/dom'
 import { createElement } from './index'
 import xs from 'xstream'
-import { assertDomEqual } from '../helpers/assertDomEqual'
+import { assertDomEqual } from '../libs/assertDomEqual'
 
 // wtf or else the import is dropped
 console.log({ createElement })

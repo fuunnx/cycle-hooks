@@ -3,7 +3,7 @@ import xs from 'xstream'
 import { createElement } from '../pragma'
 import { mountInstances as mountInstances_ } from './mountInstances'
 import { onUnmount } from '../hooks/unmount'
-import { assertDomEqual } from '../helpers/assertDomEqual'
+import { assertDomEqual } from '../libs/assertDomEqual'
 import { readSourcesEffect } from '../hooks/sources'
 import { bindHandler } from 'performative-ts'
 

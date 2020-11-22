@@ -10,7 +10,7 @@ import {
   performOrFailSilently,
 } from 'performative-ts'
 import { onUnmount } from './unmount'
-import { mapObj } from '../helpers'
+import { mapObj } from '../libs/mapObj'
 
 export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
 export const gatherEffect: EffectName<Registerer> = Symbol('registerer')

@@ -1,9 +1,9 @@
 import { Stream, Subscription } from 'xstream'
 import { useSources } from '../hooks'
-import { walkVTree, isVNode } from '../helpers/VTree'
+import { walkVTree, isVNode } from '../libs/VTree'
 import { VNode } from 'snabbdom/build/package/vnode'
 import { onUnmount } from '../hooks/unmount'
-import { makeUsageTrackerKeyed } from '../helpers/trackers/trackUsageKeyed'
+import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
 import { isComponentDescription } from './mountInstances'
 
 type EventSubscription = {
