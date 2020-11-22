@@ -1,5 +1,5 @@
 import { registerSinks } from './sinks'
-import { useSubject } from '../helpers/subjects'
+import { useSubject } from './subjects'
 
 // TODO needs proper typings
 export function useLogger() {

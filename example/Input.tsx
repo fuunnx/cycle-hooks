@@ -1,4 +1,4 @@
-import { useGlobalState } from '../src/hooks/useGlobalState'
+import { useGlobalState } from '../src/hooks/globalState'
 import { createElement } from '../src/pragma'
 
 export function Input() {
@@ -9,11 +9,9 @@ export function Input() {
       <input
         type="text"
         value={state.value || ''}
-        on={{
-          input(e) {
-            setState({ value: e.target.value })
-          },
-        }}
+        onInput={(e) => {
+          setState({ value: e.target.value })
+        }
       />
     )),
   }

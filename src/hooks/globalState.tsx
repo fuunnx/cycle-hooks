@@ -1,4 +1,4 @@
-import { useSubject } from '../helpers/subjects'
+import { useSubject } from './subjects'
 import { registerSinks } from './sinks'
 import { useSources } from './sources'
 import { Reducer } from './types'

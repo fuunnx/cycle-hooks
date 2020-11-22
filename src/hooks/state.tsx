@@ -1,4 +1,4 @@
-import { useSubject } from '../helpers/subjects'
+import { useSubject } from './subjects'
 import { Reducer } from './types'
 
 export function useState<T>(initial: T) {

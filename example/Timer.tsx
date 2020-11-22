@@ -1,5 +1,5 @@
 import xs from 'xstream'
-import { useSubject } from '../src/helpers/subjects'
+import { useSubject } from '../src/hooks/subjects'
 import { createElement } from '../src'
 
 export const Timer = () => {
@@ -13,7 +13,7 @@ export const Timer = () => {
     DOM: count$.map((count) => (
       <div>
         Count: {count}
-        <button on={{ click: reset }}>Reset</button>
+        <button onClick={reset}>Reset</button>
       </div>
     )),
   }

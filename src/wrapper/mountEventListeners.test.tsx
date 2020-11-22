@@ -5,7 +5,7 @@ import sample from 'xstream-sample'
 import { mockDOMSource, h } from '@cycle/dom'
 import { createElement, Sources } from '../index'
 import xs from 'xstream'
-import { useSubject } from '../helpers/subjects'
+import { useSubject } from '../hooks/subjects'
 import { withHooks } from '.'
 
 // wtf, if not used, the import is dropped

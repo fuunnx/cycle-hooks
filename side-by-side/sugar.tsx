@@ -1,6 +1,6 @@
 import { run } from '@cycle/run'
 import { useSources, useState, useProps } from '../src/hooks'
-import { createElement, bindHooks } from '../src'
+import { createElement, withHooks } from '../src'
 import { registerSinks } from '../src/hooks/sinks'
 import xs from 'xstream'
 import { makeDOMDriver, DOMSource } from '@cycle/dom'
@@ -45,7 +45,7 @@ function Component(_: ComponentProps) {
   })
 }
 
-run(bindHooks(App, ['DOM', 'otherSink']), {
+run(withHooks(App, ['DOM', 'otherSink']), {
   DOM: makeDOMDriver('#app'),
   otherSink: (sink$) => sink$.addListener({ next: console.log }),
 })
