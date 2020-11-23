@@ -13,7 +13,7 @@ import { onUnmount } from './unmount'
 import { mapObj } from '../libs/mapObj'
 
 export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
-export const gatherEffect: EffectName<Registerer> = Symbol('registerer')
+export const provideSinksEff: EffectName<Registerer> = Symbol('provideSinksEff')
 
 type GatherableKeys = string[]
 const readGatherableEff: EffectName<() => GatherableKeys> = Symbol(
@@ -69,7 +69,7 @@ export function gatherSinks<T>(
 
   const returnValue = withHandler(
     {
-      [gatherEffect as symbol]: gatherer,
+      [provideSinksEff as symbol]: gatherer,
       [readGatherableEff as symbol]: () => gatherableKeys,
     },
     exec,
@@ -86,5 +86,5 @@ export function registerSinks(
   sinks: Sinks,
   stopSignal$: Stream<any> = onUnmount(),
 ) {
-  return perform(gatherEffect, sinks, stopSignal$)
+  return perform(provideSinksEff, sinks, stopSignal$)
 }

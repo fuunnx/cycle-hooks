@@ -10,7 +10,7 @@ import {
 
 export const readSourcesEffect: EffectName<() => Sources> = Symbol('sources')
 
-export function provideSources<T>(
+export function withSources<T>(
   sources: Sources | ((sources: Sources) => Sources),
   func: () => T,
 ) {
