@@ -7,9 +7,11 @@ import { Stream } from 'xstream'
 import { mountInstances } from './mountInstances'
 import { withHandler } from 'performative-ts'
 import { mountEventListeners } from './mountEventListeners'
+import { streamify } from '../libs/isObservable'
+import { Component } from '../pragma/types'
 
 export function withHooks<Si extends Sinks>(
-  App: (sources: Sources) => Partial<Sinks>,
+  App: Component,
   sinksNames: string[] = [],
 ): (sources: Sources) => Si {
   return function AppWithHooks(sources: Sources): Si {
@@ -22,7 +24,10 @@ export function withHooks<Si extends Sinks>(
           [readSourcesEffect, () => sources],
           [readRefEffect, () => ref],
           () => {
-            const appSinks = App(sources)
+            const result = App()
+            const appSinks = ((result as any).DOM
+              ? result
+              : { DOM: streamify(result) }) as Sinks
 
             return {
               ...appSinks,

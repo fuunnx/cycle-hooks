@@ -74,8 +74,6 @@ export function mountInstances(
   }
 }
 
-export function isComponentDescription(
-  x: any,
-): x is ComponentDescription<unknown> {
+export function isComponentDescription(x: any): x is ComponentDescription {
   return x && x._isComponent
 }

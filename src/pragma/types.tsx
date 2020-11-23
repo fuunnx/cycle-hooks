@@ -4,7 +4,14 @@ import { VNode, VNodeData } from 'snabbdom/build/package/vnode'
 
 declare global {
   namespace JSX {
-    type Element = string | null | number | VNode | ComponentDescription | Sinks
+    type Element =
+      | string
+      | null
+      | number
+      | VNode
+      | ComponentDescription
+      | Sinks
+      | Stream<JSX.Element>
 
     interface IntrinsicElements {
       [elemName: string]: VNodeData
@@ -17,25 +24,12 @@ declare global {
 }
 
 export type Key = string | number | Symbol
-export type IRef = {
-  data: {
-    instance: null | Sinks
-    unmount: () => void
-    constructorFn: Function | undefined
-    pushPropsAndChildren: (
-      props: object,
-      children: (JSX.Element | Stream<JSX.Element>)[],
-    ) => void
-  }
-  tracker: {
-    open(): void
-    close(): void
-    destroy(): void
-    track(type: Function, key?: Key): IRef
-  }
-}
+export type Props = { [key: string]: unknown }
 
-export type Component = () => Sinks
+export type Component = {
+  (props?: Record<string, unknown>): JSX.Element
+  (): Sinks | Stream<JSX.Element>
+}
 
 export type ComponentDescription = {
   _isComponent: true
