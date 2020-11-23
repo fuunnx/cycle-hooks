@@ -42,16 +42,10 @@ test(
       return {
         DOM: xs.of(
           <div>
-            {h(
-              'button',
-              { attrs: { ['data-$-button-0-0']: true }, props: {} },
-              [],
-            )}
+            {h('button', { attrs: { ['l-button-0-0']: true }, props: {} }, [])}
           </div>,
         ),
-        click$: sources.DOM.select('[data-$-button-0-0]')
-          .events('click')
-          .mapTo('x'),
+        click$: sources.DOM.select('[l-button-0-0]').events('click').mapTo('x'),
       }
     }
 
@@ -73,7 +67,7 @@ test(
       Time,
       {
         DOM: mockDOMSource({
-          '[data-$-button-0-0]': {
+          '[l-button-0-0]': {
             click: Time.diagram('--x--x--|'),
           },
         }),
@@ -95,7 +89,7 @@ test(
               'button',
               {
                 key: 'clickKey',
-                attrs: { ['data-$-key-clickKey']: true },
+                attrs: { ['l-key-clickKey']: true },
                 props: { key: 'clickKey' },
               },
               [],
@@ -103,7 +97,7 @@ test(
           </div>,
         ),
         click1$: sources.DOM.select('#clickMe').events('click').mapTo('x'),
-        click2$: sources.DOM.select('[data-$-key-clickKey]')
+        click2$: sources.DOM.select('[l-key-clickKey]')
           .events('click')
           .mapTo('x'),
       }
@@ -133,7 +127,7 @@ test(
           '#clickMe': {
             click: Time.diagram('--x--x--|'),
           },
-          '[data-$-key-clickKey]': {
+          '[l-key-clickKey]': {
             click: Time.diagram('--x--x--|'),
           },
         }),
@@ -151,9 +145,9 @@ test(
 
       return {
         DOM: count$.mapTo(
-          h('button', { attrs: { ['data-$-button-0']: true }, props: {} }, []),
+          h('button', { attrs: { ['l-button-0']: true }, props: {} }, []),
         ),
-        click$: sources.DOM.select('[data-$-button-0]')
+        click$: sources.DOM.select('[l-button-0]')
           .events('click')
           .compose(sample(count$)),
       }
@@ -177,7 +171,7 @@ test(
       Time,
       {
         DOM: mockDOMSource({
-          '[data-$-button-0]': {
+          '[l-button-0]': {
             click: Time.diagram('--x--x--|'),
           },
         }),
@@ -196,13 +190,9 @@ test(
       return {
         DOM: count$.map((count) => {
           if (count > 5) return
-          return h(
-            'button',
-            { attrs: { ['data-$-button-0']: true }, props: {} },
-            [],
-          )
+          return h('button', { attrs: { ['l-button-0']: true }, props: {} }, [])
         }),
-        click$: sources.DOM.select('[data-$-button-0]')
+        click$: sources.DOM.select('[l-button-0]')
           .events('click')
           .compose(sample(count$))
           .endWhen(count$.filter((x) => x > 5)),
@@ -228,7 +218,7 @@ test(
       Time,
       {
         DOM: mockDOMSource({
-          '[data-$-button-0]': {
+          '[l-button-0]': {
             click: Time.diagram('--x--x--|'),
           },
         }),

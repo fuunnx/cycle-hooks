@@ -82,7 +82,7 @@ function createAndAssignSelector(vNode: VNode, path): string {
   }
 
   if (vNode.key) {
-    const attribute = `data-$-key-${vNode.key}`
+    const attribute = `l-key-${vNode.key}`
 
     vNode.data.attrs = vNode.data.attrs || {}
     vNode.data.attrs[attribute] = true
@@ -91,7 +91,7 @@ function createAndAssignSelector(vNode: VNode, path): string {
   }
 
   const pathString = `0${path.length ? '-' + path.join('-') : ''}`
-  const attribute = `data-$-${vNode.sel}-${pathString}`
+  const attribute = `l-${vNode.sel}-${pathString}`
 
   vNode.data.attrs = vNode.data.attrs || {}
   vNode.data.attrs[attribute] = true
