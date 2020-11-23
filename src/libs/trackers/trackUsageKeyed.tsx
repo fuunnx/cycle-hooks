@@ -1,21 +1,27 @@
 import MultiKeyCache from 'multi-key-cache'
 
-export type TrackingLifecycle<T, Inst> = {
-  create(type: T): Inst
-  use(instance: Inst, type: T): Inst
+export type TrackingLifecycle<T, Inst, U extends Array<unknown> = []> = {
+  create(type: T, ...payload: U): Inst
+  use(instance: Inst, type: T, ...payload: U): Inst
   destroy(instance: Inst): void
 }
-export type KeyedTracker<T extends Array<unknown>, Inst> = {
+export type KeyedTracker<
+  T extends Array<unknown>,
+  Inst,
+  U extends Array<unknown> = []
+> = {
   open(): void
-  track(x: T): Inst
+  track(x: T, ...payload: U): Inst
   close(): void
   destroy(): void
   instances: MultiKeyCache<T, Inst>
 }
 
-export function makeUsageTrackerKeyed<T extends Array<unknown>, Inst>(
-  lifecycle: TrackingLifecycle<T, Inst>,
-): KeyedTracker<T, Inst> {
+export function makeUsageTrackerKeyed<
+  T extends Array<unknown>,
+  Inst,
+  U extends Array<unknown> = []
+>(lifecycle: TrackingLifecycle<T, Inst, U>): KeyedTracker<T, Inst, U> {
   let unused: MultiKeyCache<T, Inst> = new MultiKeyCache()
   let instances: MultiKeyCache<T, Inst> = new MultiKeyCache()
   let isOpen = false
@@ -30,13 +36,13 @@ export function makeUsageTrackerKeyed<T extends Array<unknown>, Inst>(
       isOpen = true
     },
 
-    track(type: T) {
+    track(type: T, ...payload: U) {
       if (!isOpen) {
         throw new Error('tracker is closed ' + type)
       }
 
       if (!unused.has(type) && !instances.has(type)) {
-        instances.set(type, lifecycle.create(type))
+        instances.set(type, lifecycle.create(type, ...payload))
       }
 
       if (unused.has(type)) {
@@ -45,7 +51,7 @@ export function makeUsageTrackerKeyed<T extends Array<unknown>, Inst>(
       }
 
       if (instances.has(type)) {
-        instances.set(type, lifecycle.use(instances.get(type), type))
+        instances.set(type, lifecycle.use(instances.get(type), type, ...payload))
       }
 
       return instances.get(type)

@@ -2,13 +2,13 @@ import { makeUsageTrackerKeyed } from './trackUsageKeyed'
 
 test('trackUsageKeyed', () => {
   let methods = []
-  const tracker = makeUsageTrackerKeyed<[string, Function], string>({
-    create([key]) {
-      methods.push(`create ${key}`)
+  const tracker = makeUsageTrackerKeyed<[string, Function], string, [string]>({
+    create([key], value) {
+      methods.push(`create ${key} with value ${value}`)
       return key
     },
-    use(inst, [key]) {
-      methods.push(`use ${key}`)
+    use(inst, [key], value) {
+      methods.push(`use ${key} with value ${value}`)
       return inst
     },
     destroy() {
@@ -19,20 +19,20 @@ test('trackUsageKeyed', () => {
   function Component() {}
 
   tracker.open()
-  tracker.track(['key1', Component])
-  tracker.track(['key2', Component])
+  tracker.track(['key1', Component], '1')
+  tracker.track(['key2', Component], '1')
   tracker.close()
 
   tracker.open()
-  tracker.track(['key1', Component])
+  tracker.track(['key1', Component], '2')
   tracker.close()
 
   expect(methods).toEqual([
-    'create key1',
-    'use key1',
-    'create key2',
-    'use key2',
-    'use key1',
+    'create key1 with value 1',
+    'use key1 with value 1',
+    'create key2 with value 1',
+    'use key2 with value 1',
+    'use key1 with value 2',
     'destroy',
   ])
 })

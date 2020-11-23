@@ -1,26 +1,26 @@
 import { TrackingLifecycle, makeUsageTracker, Tracker } from './trackUsage'
 
-export type IndexedTracker<T, Inst> = {
+export type IndexedTracker<T, Inst, U extends Array<unknown> = []> = {
   open(): void
-  track(x: T): Inst
+  track(x: T, ...payload: U): Inst
   close(): void
   destroy(): void
-  instances: Map<T, Tracker<number, Inst>>
+  instances: Map<T, Tracker<number, Inst, U>>
 }
 
-export function makeUsageTrackerIndexed<T, Inst>(
-  lifecycle: TrackingLifecycle<T, Inst>,
-): IndexedTracker<T, Inst> {
+export function makeUsageTrackerIndexed<T, Inst, U extends Array<unknown> = []>(
+  lifecycle: TrackingLifecycle<T, Inst, U>,
+): IndexedTracker<T, Inst, U> {
   let indexes: Map<T, number> = new Map()
-  const tracker = makeUsageTracker<T, Tracker<number, Inst>>({
-    create(type: T) {
+  const tracker = makeUsageTracker<T, Tracker<number, Inst, U>, U>({
+    create(type: T, ...payload: U) {
       indexes.set(type, 0)
-      const innerTracker = makeUsageTracker<number, Inst>({
+      const innerTracker = makeUsageTracker<number, Inst, U>({
         create() {
-          return lifecycle.create(type)
+          return lifecycle.create(type, ...payload)
         },
-        use(inst) {
-          return lifecycle.use(inst, type)
+        use(inst, ..._) {
+          return lifecycle.use(inst, type, ...payload)
         },
         destroy(inst: Inst) {
           return lifecycle.destroy(inst)
@@ -29,9 +29,9 @@ export function makeUsageTrackerIndexed<T, Inst>(
       innerTracker.open()
       return innerTracker
     },
-    use(instance, type) {
+    use(instance, type, ...payload) {
       const index = indexes.get(type)
-      instance.track(index)
+      instance.track(index, ...payload)
       indexes.set(type, index + 1)
       return instance
     },
@@ -63,8 +63,8 @@ export function makeUsageTrackerIndexed<T, Inst>(
       tracker.destroy()
       indexes = new Map()
     },
-    track(type) {
-      const indexed = tracker.track(type)
+    track(type: T, ...payload: U) {
+      const indexed = tracker.track(type, ...payload)
       return indexed.instances.get(indexes.get(type) - 1)
     },
     get instances() {
