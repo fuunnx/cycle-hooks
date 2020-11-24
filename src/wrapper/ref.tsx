@@ -5,84 +5,121 @@ import {
   withHandler,
   perform,
   performOrFailSilently,
+  withFrame,
 } from 'performative-ts'
 import { streamify } from '../libs/isObservable'
 import { mapObj } from '../libs/mapObj'
 import { withUnmount } from '../hooks/unmount'
 import { mountInstances } from './mountInstances'
-import { gatherEffect } from '../hooks/sinks'
+import { provideSinksEff } from '../hooks/sinks'
 import { useSources } from '../hooks/sources'
-import { IRef, Key } from '../pragma/types'
+import { Key, Props, ComponentDescription } from '../pragma/types'
 import { shallowEquals } from '../libs/shallowEquals'
 import { makeUsageTrackerIndexed } from '../libs/trackers/trackUsageIndexed'
 import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
 import { mountEventListeners } from './mountEventListeners'
+import { Sinks } from '../types'
+import { withHooks } from '.'
+import isolate from '@cycle/isolate'
+import { TrackingLifecycle } from '../libs/trackers/trackUsage'
 
-export function Ref(constructorFn?: Function): IRef {
+export type IRef = {
+  data: {
+    sinks: null | Sinks
+    unmount: () => void
+    componentDescription?: ComponentDescription
+  }
+  tracker: {
+    open(): void
+    close(): void
+    destroy(): void
+    track(
+      type: Function,
+      key?: Key,
+      componentDescription?: ComponentDescription,
+    ): IRef
+  }
+}
+
+export function Ref(componentDescription?: ComponentDescription): IRef {
+  const constructorFn = componentDescription?.$func$
+  const componentData = componentDescription?.$data$
+  const componentFrame = componentDescription?.$frame$
+
   const destroy$ = xs.create()
-  const props$: MemoryStream<Object> = xs.createWithMemory()
-  const children$: Stream<
-    (JSX.Element | Stream<JSX.Element>)[]
-  > = xs.createWithMemory()
+  const props$: Stream<Object> = xs.of(componentDescription?.$data$.props)
+  const children$: Stream<(JSX.Element | Stream<JSX.Element>)[]> = xs.of(
+    componentDescription?.$data$.children,
+  )
 
   const finalProps$ = xs
     .combine(
       props$.compose(dropRepeats(shallowEquals)),
-      children$.map(streamify).flatten().compose(dropRepeats()),
+      children$.compose(dropRepeats(shallowEquals)),
     )
     .map(([props, children]) => ({ ...props, children }))
     .remember()
 
   const ref: IRef = {
     data: {
-      constructorFn,
-      instance: {},
+      sinks: {},
       unmount() {},
-      pushPropsAndChildren(props, children) {
-        props$.shamefullySendNext(props)
-        children$.shamefullySendNext(children)
-      },
+      componentDescription,
     },
     tracker: createTracker(),
   }
 
   if (constructorFn) {
-    ref.data.instance = instanciateComponent()
+    ref.data.sinks = instanciateComponent()
   }
 
   return ref
 
   function instanciateComponent() {
-    return withRef(ref, () => {
-      const [unmount, result] = withUnmount(() => {
-        const result = constructorFn({ ...useSources, props$: finalProps$ })
-        const sinks = result.DOM ? result : { DOM: streamify(result) }
+    return withFrame(componentFrame, () =>
+      withRef(ref, () => {
+        const [unmount, result] = withUnmount(() => {
+          const sources = { ...useSources(), props$: finalProps$ }
+          return isolate(
+            withHooks(() => {
+              const result: any = constructorFn(componentData.props)
+              const sinks = result.DOM ? result : { DOM: streamify(result) }
+              const transformedSinks = mapObj(
+                (sink$: Stream<any>) => sink$.endWhen(destroy$),
+                sinks,
+              )
+              delete transformedSinks.DOM
 
-        const transformedSinks = mapObj(
-          (sink$: Stream<any>) => sink$.endWhen(destroy$),
-          sinks,
-        )
-        delete transformedSinks.DOM
+              performOrFailSilently(provideSinksEff, transformedSinks)
 
-        performOrFailSilently(gatherEffect, transformedSinks)
-
-        return {
-          ...transformedSinks,
-          DOM: sinks.DOM.compose(mountEventListeners).compose(mountInstances),
-        }
-      }, 'component')
-      ref.data.unmount = unmount
-
-      return result
-    })
+              return {
+                ...transformedSinks,
+                DOM: sinks.DOM.compose(mountEventListeners).compose(
+                  mountInstances,
+                ),
+              }
+            }),
+          )(sources) as Sinks
+        }, 'component')
+        ref.data.unmount = unmount
+        return result
+      }),
+    )
   }
 
   function createTracker() {
-    const lifecycle = {
-      create(arg: [Function, Key] | Function) {
-        return Ref(Array.isArray(arg) ? arg[0] : arg)
+    const lifecycle: TrackingLifecycle<
+      [Function, Key] | Function,
+      IRef,
+      [ComponentDescription]
+    > = {
+      create(_, componentDescription) {
+        return Ref(componentDescription)
       },
-      use(ref) {
+      use(ref, _, componentDescription) {
+        props$.shamefullySendNext(componentDescription.$data$.props)
+        children$.shamefullySendNext(componentDescription.$data$.children)
+        ref.data.componentDescription = componentDescription
         return ref
       },
       destroy(ref) {
@@ -90,8 +127,18 @@ export function Ref(constructorFn?: Function): IRef {
         destroy$.shamefullySendNext(null)
       },
     }
-    const indexedTracker = makeUsageTrackerIndexed<Function, IRef>(lifecycle)
-    const keyedTracker = makeUsageTrackerKeyed<[Function, Key], IRef>(lifecycle)
+
+    const indexedTracker = makeUsageTrackerIndexed<
+      Function,
+      IRef,
+      [ComponentDescription]
+    >(lifecycle)
+
+    const keyedTracker = makeUsageTrackerKeyed<
+      [Function, Key],
+      IRef,
+      [ComponentDescription]
+    >(lifecycle)
 
     return {
       open() {
@@ -106,11 +153,15 @@ export function Ref(constructorFn?: Function): IRef {
         indexedTracker.destroy()
         keyedTracker.destroy()
       },
-      track(type: Function, key?: Key) {
+      track(
+        type: Function,
+        key?: Key,
+        componentDescription?: ComponentDescription,
+      ) {
         if (key) {
-          return keyedTracker.track([type, key])
+          return keyedTracker.track([type, key], componentDescription)
         }
-        return indexedTracker.track(type)
+        return indexedTracker.track(type, componentDescription)
       },
     }
   }

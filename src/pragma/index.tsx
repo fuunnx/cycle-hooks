@@ -1,5 +1,6 @@
 import { h, VNode } from '@cycle/dom'
 import { Component, ComponentDescription } from './types'
+import { captureFrame } from 'performative-ts'
 
 type VnodeData = {
   props: { [k: string]: any }
@@ -43,9 +44,10 @@ export function createElement<T extends { [k: string]: unknown }>(
   }
 
   return {
-    _isComponent: true,
-    _function: tagOrFunction as Component,
-    data: {
+    $type$: 'component',
+    $func$: tagOrFunction as Component,
+    $frame$: captureFrame(),
+    $data$: {
       ...normalizeProps(props || {}),
       children,
     },

@@ -24,6 +24,7 @@
     "postinstall": "patch-package --use-yarn"
   },
   "dependencies": {
+    "@cycle/isolate": "^5.2.0",
     "@cycle/time": "^0.20.0",
     "@types/jest": "^26.0.5",
     "cyclejs-utils": "^4.0.2",

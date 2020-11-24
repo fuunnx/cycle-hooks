@@ -27,15 +27,14 @@ export function mountInstances(
         }
 
         const doms = descriptions.map(({ value, path }) => {
-          const childRef = ref.tracker.track(value._function, value.data.key)
-
-          childRef.data.pushPropsAndChildren(
-            value.data.props as object,
-            value.data.children,
+          const childRef = ref.tracker.track(
+            value.$func$,
+            value.$data$.key,
+            value,
           )
 
-          return childRef.data.instance.DOM.map(
-            (val: VNode | string) => (acc) => assocVTree(path, val, acc),
+          return childRef.data.sinks.DOM.map((val: VNode | string) => (acc) =>
+            assocVTree(path, val, acc),
           )
         })
         ref.tracker.close()
@@ -75,5 +74,5 @@ export function mountInstances(
 }
 
 export function isComponentDescription(x: any): x is ComponentDescription {
-  return x && x._isComponent
+  return x && x.$type$ === 'component'
 }

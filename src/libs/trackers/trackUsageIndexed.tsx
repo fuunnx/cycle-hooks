@@ -13,13 +13,13 @@ export function makeUsageTrackerIndexed<T, Inst, U extends Array<unknown> = []>(
 ): IndexedTracker<T, Inst, U> {
   let indexes: Map<T, number> = new Map()
   const tracker = makeUsageTracker<T, Tracker<number, Inst, U>, U>({
-    create(type: T, ...payload: U) {
+    create(type: T, ..._: U) {
       indexes.set(type, 0)
       const innerTracker = makeUsageTracker<number, Inst, U>({
-        create() {
+        create(_, ...payload) {
           return lifecycle.create(type, ...payload)
         },
-        use(inst, ..._) {
+        use(inst, _, ...payload) {
           return lifecycle.use(inst, type, ...payload)
         },
         destroy(inst: Inst) {

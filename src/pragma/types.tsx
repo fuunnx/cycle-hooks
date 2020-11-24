@@ -1,6 +1,7 @@
 import { Sinks } from '../types'
 import { Stream } from 'xstream'
 import { VNode, VNodeData } from 'snabbdom/build/package/vnode'
+import { Frame } from 'performative-ts'
 
 declare global {
   namespace JSX {
@@ -32,9 +33,10 @@ export type Component = {
 }
 
 export type ComponentDescription = {
-  _isComponent: true
-  _function: Component
-  data: {
+  $type$: 'component'
+  $func$: Component
+  $frame$: Frame
+  $data$: {
     key: Key
     props: Record<string, unknown>
     children: JSX.Element[]
