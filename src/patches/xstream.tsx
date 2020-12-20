@@ -1,6 +1,13 @@
 import { Stream, InternalProducer, NO } from 'xstream'
+import xs from 'xstream'
 import { captureFrame, withFrame } from 'performative-ts'
 import { withUnmount } from '../hooks/unmount'
+import { setAdapt } from '@cycle/run/lib/adapt'
+
+setAdapt((x) => {
+  patch(x as any)
+  return x
+})
 
 // this is a way to hook into the Stream constructor call
 Object.defineProperty(Stream.prototype, '_prod', {

@@ -84,7 +84,7 @@ const methodsTests: ToTest = {
     }),
 
   throw: () => xs.throw('error').replaceError(() => testStream()),
-  from: () => xs.from(testStream()),
+  from: () => xs.from(Promise.resolve('')),
   of: () => xs.of(''),
   fromArray: () => xs.fromArray(['a', 'b']),
   fromPromise: () => xs.fromPromise(Promise.resolve('')),
@@ -105,7 +105,7 @@ const methodsTests: ToTest = {
     setImmediate(() => {
       Time.run()
     })
-    return Time.diagram('--x--')
+    return Time.diagram('--x--') as any
   },
 }
 
@@ -113,6 +113,6 @@ function testStream() {
   return xs.fromPromise(Promise.resolve(null))
 }
 
-// Object.entries(methodsTests).forEach(([name, value]) => {
-//   testMethod(name, value)
-// })
+Object.entries(methodsTests).forEach(([name, value]) => {
+  testMethod(name, value)
+})
