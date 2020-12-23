@@ -1,43 +1,38 @@
 import xs, { Stream } from 'xstream'
-import concat from 'xstream/extra/concat'
-import { streamify, isObservable } from '../libs/isObservable'
-import { safeUseRef, Ref, withRef } from './ref'
+import { streamify } from '../libs/isObservable'
+import { safeUseRef, Ref, createRefTracker, withRef } from './ref'
 import { h, VNode } from '@cycle/dom'
 import { ComponentDescription } from '../pragma/types'
 import { indexVTree, assocVTree } from '../libs/VTree'
+import uponStop from 'xstream-upon-stop'
 
 export function mountInstances(
   stream: JSX.Element | Stream<JSX.Element>,
 ): Stream<JSX.Element> {
   const ref = safeUseRef() || Ref()
-  const END = Symbol('END')
+  let tracker = createRefTracker()
+  ref.trackers.push(tracker)
 
-  return concat<JSX.Element | typeof END>(streamify(stream), xs.of(END))
-    .map((vtree) => {
-      return withRef(ref, () => {
-        ref.tracker.open()
-        const descriptions = indexVTree(
-          vtree,
-          isComponentDescription,
-          (x) => isObservable(x) || isComponentDescription(x),
-        )
+  return withRef(ref, () => {
+    return streamify(stream)
+      .map((vtree) => {
+        const descriptions = indexVTree(vtree, isComponentDescription)
+
         if (!descriptions.length) {
-          ref.tracker.close()
-          return vtree
+          tracker.open()
+          tracker.close()
+          return xs.of(vtree)
         }
 
+        tracker.open()
         const doms = descriptions.map(({ value, path }) => {
-          const childRef = ref.tracker.track(
-            value.$func$,
-            value.$data$.key,
-            value,
-          )
+          const childRef = tracker.track(value.$func$, value.$data$.key, value)
 
           return childRef.data.sinks.DOM.map((val: VNode | string) => (acc) =>
             assocVTree(path, val, acc),
           )
         })
-        ref.tracker.close()
+        tracker.close()
 
         return xs
           .merge(...doms)
@@ -45,11 +40,16 @@ export function mountInstances(
           .drop(1)
           .map(cleanup)
       })
-    })
-    .filter((x) => x !== END)
-    .map(streamify)
-    .flatten()
-    .remember()
+      .flatten()
+      .remember()
+      .compose(
+        uponStop(() => {
+          ref.trackers = ref.trackers.filter((x) => x !== tracker)
+          tracker.destroy()
+          tracker = null
+        }),
+      )
+  })
 
   function cleanup(vnode: any) {
     if (!vnode || typeof vnode !== 'object') {

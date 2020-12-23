@@ -9,7 +9,7 @@ import {
 } from 'performative-ts'
 import { streamify } from '../libs/isObservable'
 import { mapObj } from '../libs/mapObj'
-import { withUnmount } from '../hooks/unmount'
+import { onUnmount, withUnmount } from '../hooks/unmount'
 import { mountInstances } from './mountInstances'
 import { provideSinksEff } from '../hooks/sinks'
 import { useSources } from '../hooks/sources'
@@ -23,22 +23,25 @@ import { withHooks } from '.'
 import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from '../libs/trackers/trackUsage'
 
+type RefTracker = {
+  open(): void
+  close(): void
+  destroy(): void
+  track(
+    type: Function,
+    key?: Key,
+    componentDescription?: ComponentDescription,
+  ): IRef
+}
+
 export type IRef = {
   data: {
     sinks: null | Sinks
     unmount: () => void
     componentDescription?: ComponentDescription
+    update: (newComponentDescription: ComponentDescription) => void
   }
-  tracker: {
-    open(): void
-    close(): void
-    destroy(): void
-    track(
-      type: Function,
-      key?: Key,
-      componentDescription?: ComponentDescription,
-    ): IRef
-  }
+  trackers: RefTracker[]
 }
 
 export function Ref(componentDescription?: ComponentDescription): IRef {
@@ -46,7 +49,6 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
   const componentData = componentDescription?.$data$
   const componentFrame = componentDescription?.$frame$
 
-  const destroy$ = xs.create()
   const props$: Stream<Object> = xs.of(componentDescription?.$data$.props)
   const children$: Stream<(JSX.Element | Stream<JSX.Element>)[]> = xs.of(
     componentDescription?.$data$.children,
@@ -63,10 +65,17 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
   const ref: IRef = {
     data: {
       sinks: {},
-      unmount() {},
+      unmount() {
+        ref.trackers.forEach((x) => x.destroy())
+      },
       componentDescription,
+      update(newComponentDescription) {
+        this.componentDescription = newComponentDescription
+        props$.shamefullySendNext(componentDescription.$data$.props)
+        children$.shamefullySendNext(componentDescription.$data$.children)
+      },
     },
-    tracker: createTracker(),
+    trackers: [],
   }
 
   if (constructorFn) {
@@ -85,7 +94,7 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
               const result: any = constructorFn(componentData.props)
               const sinks = result.DOM ? result : { DOM: streamify(result) }
               const transformedSinks = mapObj(
-                (sink$: Stream<any>) => sink$.endWhen(destroy$),
+                (sink$: Stream<any>) => sink$.endWhen(onUnmount()),
                 sinks,
               )
               delete transformedSinks.DOM
@@ -101,69 +110,69 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
             }),
           )(sources) as Sinks
         }, 'component')
-        ref.data.unmount = unmount
+        ref.data.unmount = () => {
+          ref.trackers.forEach((x) => x.destroy())
+          unmount()
+        }
         return result
       }),
     )
   }
+}
 
-  function createTracker() {
-    const lifecycle: TrackingLifecycle<
-      [Function, Key] | Function,
-      IRef,
-      [ComponentDescription]
-    > = {
-      create(_, componentDescription) {
-        return Ref(componentDescription)
-      },
-      use(ref, _, componentDescription) {
-        props$.shamefullySendNext(componentDescription.$data$.props)
-        children$.shamefullySendNext(componentDescription.$data$.children)
-        ref.data.componentDescription = componentDescription
-        return ref
-      },
-      destroy(ref) {
-        ref.data.unmount()
-        destroy$.shamefullySendNext(null)
-      },
-    }
+export function createRefTracker() {
+  const lifecycle: TrackingLifecycle<
+    [Function, Key] | Function,
+    IRef,
+    [ComponentDescription]
+  > = {
+    create(_, componentDescription) {
+      return Ref(componentDescription)
+    },
+    use(ref, _, componentDescription) {
+      ref.data.update(componentDescription)
+      return ref
+    },
+    destroy(ref) {
+      ref.data.unmount()
+    },
+  }
 
-    const indexedTracker = makeUsageTrackerIndexed<
-      Function,
-      IRef,
-      [ComponentDescription]
-    >(lifecycle)
+  const indexedTracker = makeUsageTrackerIndexed<
+    Function,
+    IRef,
+    [ComponentDescription]
+  >(lifecycle)
 
-    const keyedTracker = makeUsageTrackerKeyed<
-      [Function, Key],
-      IRef,
-      [ComponentDescription]
-    >(lifecycle)
+  const keyedTracker = makeUsageTrackerKeyed<
+    [Function, Key],
+    IRef,
+    [ComponentDescription]
+  >(lifecycle)
 
-    return {
-      open() {
-        indexedTracker.open()
-        keyedTracker.open()
-      },
-      close() {
-        indexedTracker.close()
-        keyedTracker.close()
-      },
-      destroy() {
-        indexedTracker.destroy()
-        keyedTracker.destroy()
-      },
-      track(
-        type: Function,
-        key?: Key,
-        componentDescription?: ComponentDescription,
-      ) {
-        if (key) {
-          return keyedTracker.track([type, key], componentDescription)
-        }
-        return indexedTracker.track(type, componentDescription)
-      },
-    }
+  return {
+    open() {
+      indexedTracker.open()
+      keyedTracker.open()
+    },
+    close() {
+      indexedTracker.close()
+      keyedTracker.close()
+    },
+    destroy() {
+      indexedTracker.destroy()
+      keyedTracker.destroy()
+    },
+    track(
+      type: Function,
+      key: Key,
+      componentDescription?: ComponentDescription,
+    ) {
+      if (key) {
+        return keyedTracker.track([type, key], componentDescription)
+      }
+      return indexedTracker.track(type, componentDescription)
+    },
   }
 }
 

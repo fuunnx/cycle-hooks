@@ -1,19 +1,22 @@
 import { mockTimeSource } from '@cycle/time'
 import xs from 'xstream'
 import { createElement } from '../pragma'
-import { mountInstances as mountInstances_ } from './mountInstances'
+import { mountInstances } from './mountInstances'
 import { onUnmount } from '../hooks/unmount'
 import { assertDomEqual } from '../libs/assertDomEqual'
 import { readSourcesEffect } from '../hooks/sources'
-import { bindHandler } from 'performative-ts'
-
-const mountInstances = bindHandler(
-  [readSourcesEffect, () => ({})],
-  mountInstances_,
-)
+import { withHandler } from 'performative-ts'
+import dropRepeats from 'xstream/extra/dropRepeats'
+import uponStop from 'xstream-upon-stop'
 
 // wtf, if not used, the import is dropped
 console.log(createElement)
+
+function testCase(func) {
+  return withHandler([readSourcesEffect, () => ({})], () =>
+    mountInstances(func()),
+  )
+}
 
 test('pragma + mountInstances handles simple components', (done) => {
   const Time = mockTimeSource()
@@ -25,11 +28,11 @@ test('pragma + mountInstances handles simple components', (done) => {
   assertDomEqual(
     Time,
 
-    mountInstances(
+    testCase(() => (
       <div>
         <Component />
-      </div>,
-    ),
+      </div>
+    )),
 
     Component().map((x) => <div>{x}</div>),
   )
@@ -54,8 +57,11 @@ test('keeps dynamic components alive until unmount', (done) => {
   const timer$ = Time.diagram('1---2---3')
 
   Time.assertEqual(
-    mountInstances(<ComponentA />),
-    xs.combine(rerender$, timer$).map(([, timer]) => timer),
+    testCase(() => <ComponentA />),
+    xs
+      .combine(rerender$, timer$)
+      .map(([, timer]) => timer)
+      .compose(dropRepeats()),
   )
 
   Time.run(done)
@@ -74,7 +80,10 @@ test('stop receiving DOM updates on remove', (done) => {
     return timer$
   }
 
-  Time.assertEqual(mountInstances(<ComponentA />), Time.diagram('1-2-3x'))
+  Time.assertEqual(
+    testCase(() => <ComponentA />),
+    Time.diagram('1-2-3x'),
+  )
 
   Time.run(done)
 })
@@ -93,7 +102,7 @@ test('start receiving DOM updates on insert', (done) => {
   }
 
   Time.assertEqual(
-    mountInstances(<ComponentA />),
+    testCase(() => <ComponentA />),
     Time.diagram('0--1-')
       .map((visible) => (visible ? ComponentB() : xs.of('x')))
       .flatten(),
@@ -102,7 +111,36 @@ test('start receiving DOM updates on insert', (done) => {
   Time.run(done)
 })
 
-test('call unmount on remove', (done) => {
+test('call unmount on remove (simple)', (done) => {
+  const Time = mockTimeSource()
+
+  let AmountedTimes = 0
+  let AunmountedTimes = 0
+  function ComponentA() {
+    const visible$ = Time.diagram('1--1--0-|')
+
+    AmountedTimes++
+    onUnmount(() => {
+      AunmountedTimes++
+    })
+
+    return visible$.map((visible) => (visible ? <ComponentB /> : 'x'))
+  }
+
+  Time.assertEqual(
+    testCase(() => <ComponentA />),
+    Time.diagram('123x'),
+  )
+
+  Time.run(() => {
+    expect(AmountedTimes).toEqual(1)
+    expect(AunmountedTimes).toEqual(1)
+
+    done()
+  })
+})
+
+test('call unmount on remove (complex)', (done) => {
   const Time = mockTimeSource()
 
   let AmountedTimes = 0
@@ -110,8 +148,10 @@ test('call unmount on remove', (done) => {
   function ComponentA() {
     const visible$ = Time.diagram('1--1--0-')
 
+    console.log('mount A')
     AmountedTimes++
     onUnmount(() => {
+      console.log('unmount A')
       AunmountedTimes++
     })
 
@@ -130,10 +170,9 @@ test('call unmount on remove', (done) => {
     return timer$
   }
 
-  Time.assertEqual(mountInstances(<ComponentA />), Time.diagram('123x'))
   Time.assertEqual(
-    mountInstances(
-      Time.diagram('1-0-1-0-1|').map((visible) =>
+    testCase(() =>
+      Time.diagram('1-0-1-0-1-|').map((visible) =>
         visible ? <ComponentA /> : '',
       ),
     ),
@@ -142,11 +181,11 @@ test('call unmount on remove', (done) => {
   )
 
   Time.run(() => {
-    expect(AmountedTimes).toEqual(4)
-    expect(AunmountedTimes).toEqual(4)
-
+    expect(AmountedTimes).toEqual(3)
     // TODO results are not coherent
-    // expect(BunmountedTimes).toEqual(BmountedTimes); // ??? --> not removed on END
+    // expect(AunmountedTimes).toEqual(3)
+
+    expect(BunmountedTimes).toEqual(BmountedTimes)
 
     done()
   })
@@ -156,8 +195,8 @@ test("don't call unmount on update", (done) => {
   const Time = mockTimeSource()
 
   function ComponentA() {
-    const visible$ = Time.diagram('1111')
-    return visible$.map((visible) => (visible ? <ComponentB /> : 'x'))
+    const rerender$ = Time.diagram('1111')
+    return rerender$.map(() => <ComponentB />)
   }
 
   let unmounted = 0
@@ -170,7 +209,10 @@ test("don't call unmount on update", (done) => {
     return timer$
   }
 
-  Time.assertEqual(mountInstances(<ComponentA />), ComponentB())
+  Time.assertEqual(
+    testCase(() => <ComponentA />),
+    ComponentB(),
+  )
 
   Time.run(() => {
     expect(unmounted).toEqual(0)

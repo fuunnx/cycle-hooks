@@ -6714,6 +6714,12 @@ xstream-sample@^1.0.0:
   dependencies:
     xstream "10.x || 11.x"
 
+xstream-upon-start@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/xstream-upon-start/-/xstream-upon-start-1.0.0.tgz#84b67cd1b271c47c45acff9b5eec2bdd0ffcada0"
+  dependencies:
+    xstream "10.x || 11.x"
+
 xstream-upon-stop@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/xstream-upon-stop/-/xstream-upon-stop-1.0.0.tgz#f13848dcfc6d188d8e5f8af9963de59bfb96f380"
