@@ -148,10 +148,8 @@ test('call unmount on remove (complex)', (done) => {
   function ComponentA() {
     const visible$ = Time.diagram('1--1--0-')
 
-    console.log('mount A')
     AmountedTimes++
     onUnmount(() => {
-      console.log('unmount A')
       AunmountedTimes++
     })
 

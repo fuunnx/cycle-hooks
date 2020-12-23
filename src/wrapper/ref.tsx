@@ -1,5 +1,5 @@
 import dropRepeats from 'xstream/extra/dropRepeats'
-import xs, { Stream, MemoryStream } from 'xstream'
+import xs, { Stream } from 'xstream'
 import {
   EffectName,
   withHandler,
@@ -13,7 +13,7 @@ import { onUnmount, withUnmount } from '../hooks/unmount'
 import { mountInstances } from './mountInstances'
 import { provideSinksEff } from '../hooks/sinks'
 import { useSources } from '../hooks/sources'
-import { Key, Props, ComponentDescription } from '../pragma/types'
+import { Key, ComponentDescription } from '../pragma/types'
 import { shallowEquals } from '../libs/shallowEquals'
 import { makeUsageTrackerIndexed } from '../libs/trackers/trackUsageIndexed'
 import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'

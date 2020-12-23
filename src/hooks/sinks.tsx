@@ -68,10 +68,8 @@ export function gatherSinks<T>(
   }
 
   const returnValue = withHandler(
-    {
-      [provideSinksEff as symbol]: gatherer,
-      [readGatherableEff as symbol]: () => gatherableKeys,
-    },
+    [provideSinksEff as symbol, gatherer],
+    [readGatherableEff as symbol, () => gatherableKeys],
     exec,
   )
 
