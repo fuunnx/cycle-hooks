@@ -4,15 +4,13 @@ import { createElement } from '../src/pragma'
 export function Input() {
   const [state$, setState] = useGlobalState({})
 
-  return {
-    DOM: state$.map((state) => (
-      <input
-        type="text"
-        value={state.value || ''}
-        onInput={(e) => {
-          setState({ value: e.target.value })
-        }}
-      />
-    )),
-  }
+  return state$.map((state) => (
+    <input
+      type="text"
+      value={state.value || ''}
+      onInput={(e) => {
+        setState({ value: e.target.value })
+      }}
+    />
+  ))
 }

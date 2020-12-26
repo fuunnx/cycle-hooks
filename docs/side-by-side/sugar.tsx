@@ -1,5 +1,5 @@
 import { run } from '@cycle/run'
-import { useProps } from '../../src/hooks/props'
+import { useProps$ } from '../../src/hooks/props'
 import { useSources } from '../../src/hooks/sources'
 import { useState } from '../../example/hooks/state'
 import { createElement, withHooks } from '../../src'
@@ -34,7 +34,7 @@ type ComponentProps = {
 
 function Component(_: ComponentProps) {
   const sources = useSources<AppSources>()
-  const props$ = useProps<ComponentProps>()
+  const props$ = useProps$<ComponentProps>()
 
   registerSinks({
     otherSink: xs.of('thing'),

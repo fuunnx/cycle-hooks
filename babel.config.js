@@ -1,3 +1,5 @@
+const path = require('path')
+
 module.exports = {
   presets: [
     [
@@ -5,8 +7,8 @@ module.exports = {
       {
         pragma: 'createElement',
         pragmaFrag: 'Fragment',
-        // runtime: "automatic",
-        importSource: './lib/pragma/index.tsx',
+        runtime: 'classic',
+        // importSource: path.resolve('./lib/pragma'),
       },
     ],
     ['@babel/preset-env', { targets: { node: 'current' } }],

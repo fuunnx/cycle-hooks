@@ -1,14 +1,14 @@
 import xs, { Stream } from 'xstream'
 import { useState } from './hooks/state'
 import { createElement } from '../src/pragma'
-import { useProps } from '../src/hooks/props'
+import { useProps$ } from '../src/hooks/props'
 
 type Props = {
   value$: Stream<number>
 }
 
 export const Incrementer = function Incrementer(_: Props) {
-  const props$ = useProps<Props>()
+  const props$ = useProps$<Props>()
 
   const [isDown$, setIsDown] = useState(false)
 
@@ -28,20 +28,18 @@ export const Incrementer = function Incrementer(_: Props) {
     0,
   )
 
-  return {
-    DOM: count$.map((count) => (
-      <div>
-        <button
-          onMouseDown={() => setIsDown(true)}
-          onMouseUp={() => setIsDown(false)}
-          onMouseLeave={() => setIsDown(false)}
-        >
-          {count}
-        </button>
-        <button type="button" onClick={() => setCount(0)}>
-          Reset
-        </button>
-      </div>
-    )),
-  }
+  return count$.map((count) => (
+    <div>
+      <button
+        onMouseDown={() => setIsDown(true)}
+        onMouseUp={() => setIsDown(false)}
+        onMouseLeave={() => setIsDown(false)}
+      >
+        {count}
+      </button>
+      <button type="button" onClick={() => setCount(0)}>
+        Reset
+      </button>
+    </div>
+  ))
 }

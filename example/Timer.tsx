@@ -9,12 +9,10 @@ export const Timer = () => {
     .map(() => xs.periodic(500).startWith(0))
     .flatten()
 
-  return {
-    DOM: count$.map((count) => (
-      <div>
-        Count: {count}
-        <button onClick={reset}>Reset</button>
-      </div>
-    )),
-  }
+  return count$.map((count) => (
+    <div>
+      Count: {count}
+      <button onClick={reset}>Reset</button>
+    </div>
+  ))
 }

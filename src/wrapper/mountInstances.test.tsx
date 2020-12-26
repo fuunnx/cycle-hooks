@@ -5,9 +5,9 @@ import { mountInstances } from './mountInstances'
 import { onUnmount } from '../hooks/unmount'
 import { assertDomEqual } from '../libs/assertDomEqual'
 import { readSourcesEffect } from '../hooks/sources'
+import { useProps$ } from '../hooks/props'
 import { withHandler } from 'performative-ts'
 import dropRepeats from 'xstream/extra/dropRepeats'
-import uponStop from 'xstream-upon-stop'
 
 // wtf, if not used, the import is dropped
 console.log(createElement)
@@ -117,14 +117,12 @@ test('call unmount on remove (simple)', (done) => {
   let AmountedTimes = 0
   let AunmountedTimes = 0
   function ComponentA() {
-    const visible$ = Time.diagram('1--1--0-|')
-
     AmountedTimes++
     onUnmount(() => {
       AunmountedTimes++
     })
 
-    return visible$.map((visible) => (visible ? <ComponentB /> : 'x'))
+    return xs.of('ComponentA')
   }
 
   Time.assertEqual(
