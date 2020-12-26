@@ -215,3 +215,26 @@ test("don't call unmount on update", (done) => {
     done()
   })
 })
+
+test('mounts children components', (done) => {
+  const Time = mockTimeSource()
+
+  function Parent() {
+    return useProps$<{ children: JSX.Element }>().map((props) => props.children)
+  }
+
+  function Child() {
+    return xs.of(<p>Child</p>)
+  }
+
+  Time.assertEqual(
+    testCase(() => (
+      <Parent>
+        <Child />
+      </Parent>
+    )),
+    Child().map((x) => [x]),
+  )
+
+  Time.run(done)
+})

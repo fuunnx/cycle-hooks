@@ -2,6 +2,7 @@ import { VNode } from 'snabbdom/build/package/vnode'
 
 type VTree<T> =
   | T
+  | T[]
   | {
       children?: VTree<T>[]
     }
@@ -38,12 +39,22 @@ export function walkVTree<T>(
     const canContinue = callback(value, path)
     if (canContinue === false) return
     if (typeof value !== 'object') return
-    if (!('children' in value)) return
-    if (!Array.isArray(value.children)) return
 
-    value.children.forEach((child, index) => {
-      return walk(child, [...path, index])
-    })
+    if (Array.isArray(value)) {
+      value.forEach((child, index) => {
+        return walk(child, [...path, index])
+      })
+
+      return
+    }
+
+    if ('children' in value && Array.isArray(value.children)) {
+      value.children.forEach((child, index) => {
+        return walk(child, [...path, index])
+      })
+
+      return
+    }
   }
 
   walk(vTree, [])
@@ -53,7 +64,11 @@ export function isVNode(vnode: any): vnode is VNode {
   return vnode && (vnode.sel !== undefined || vnode.text !== undefined)
 }
 
-export function assocVTree(path: number[], value: string | VNode, host: VNode) {
+export function assocVTree(
+  path: number[],
+  value: string | VNode,
+  host: VNode | any[],
+) {
   if (!path.length) {
     return value
   }
@@ -63,10 +78,16 @@ export function assocVTree(path: number[], value: string | VNode, host: VNode) {
     return assocChild(index, value, host)
   }
 
-  if (!host.children) host.children = []
-  const childTarget = host.children[index]
+  let childTarget
+  if (Array.isArray(host)) {
+    childTarget = host[index]
+  } else {
+    host.children = host.children ?? []
+    childTarget = host.children[index]
+  }
+
   if (!isVNode(childTarget)) {
-    console.warn("can't assoc to a string")
+    console.warn("can't assoc to this type")
     return host
   }
 
@@ -76,29 +97,34 @@ export function assocVTree(path: number[], value: string | VNode, host: VNode) {
 export function assocChild(
   index: number,
   value: number | string | null | undefined | boolean | VNode,
-  host: VNode,
-): VNode {
+  host: VNode | any[],
+): VNode | VNode[] {
   // prettier-ignore
   const node: VNode | null = 
     isEmptyNode(value) ? null
     : isVNode(value) ? value
     : TextNode(value)
 
-  let children: (string | VNode)[] = [node]
-
-  if (host.children) {
-    children = host.children.slice(0, index)
-    children.push(node, ...host.children.slice(index + 1))
+  if (Array.isArray(host)) {
+    let children = host.slice(0, index)
+    children.push(node, ...host.slice(index + 1))
+    return children
   }
 
-  return { ...host, children }
+  if (host.children) {
+    let children = host.children.slice(0, index)
+    children.push(node, ...host.children.slice(index + 1))
+    return { ...host, children }
+  }
+
+  return { ...host, children: [node] }
 }
 
 function isEmptyNode(value: any) {
   return value === undefined || value === null || value === false
 }
 
-function TextNode(content: string | number | boolean): VNode {
+export function TextNode(content: string | number | boolean): VNode {
   return {
     text: String(content),
     children: undefined,
