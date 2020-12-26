@@ -105,7 +105,7 @@ const methodsTests: ToTest = {
     setImmediate(() => {
       Time.run()
     })
-    return Time.diagram('--x--') as any
+    return Time.diagram('--x--')
   },
 }
 

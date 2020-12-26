@@ -29,8 +29,8 @@ function compareComponents(
 
   Object.keys(expectedSinks).forEach((key) => {
     Time.assertEqual(
-      xs.merge(expectedSinks[key], xs.never()) as any,
-      xs.merge(actualSinks[key], xs.never()) as any,
+      xs.merge(expectedSinks[key], xs.never()),
+      xs.merge(actualSinks[key], xs.never()),
     )
   })
 }
@@ -158,9 +158,11 @@ test(
       const count$ = Time.periodic(10).take(10).startWith(0)
 
       return {
-        DOM: (count$.map((count) => {
-          return <button onClick={() => onClick(count)} />
-        }) as any).compose(mountEventListeners),
+        DOM: count$
+          .map((count) => {
+            return <button onClick={() => onClick(count)} />
+          })
+          .compose(mountEventListeners),
         click$: click$,
       }
     })
@@ -202,10 +204,12 @@ test(
       const count$ = Time.periodic(10).take(10).startWith(0)
 
       return {
-        DOM: (count$.map((count) => {
-          if (count > 5) return
-          return <button onClick={() => onClick(count)} />
-        }) as any).compose(mountEventListeners),
+        DOM: count$
+          .map((count) => {
+            if (count > 5) return
+            return <button onClick={() => onClick(count)} />
+          })
+          .compose(mountEventListeners),
         click$: click$,
       }
     })

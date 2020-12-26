@@ -4,7 +4,7 @@ import { withUnmount } from '../hooks/unmount'
 import { setAdapt } from '@cycle/run/lib/adapt'
 
 setAdapt((x) => {
-  patch(x as any)
+  patch(x)
   return x
 })
 

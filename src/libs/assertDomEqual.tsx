@@ -9,7 +9,7 @@ export function assertDomEqual(
   expected$: Stream<any>,
 ) {
   Time.assertEqual(
-    actual$.map(toHTML).map(prettify) as any,
-    expected$.map(toHTML).map(prettify) as any,
+    actual$.map(toHTML).map(prettify),
+    expected$.map(toHTML).map(prettify),
   )
 }

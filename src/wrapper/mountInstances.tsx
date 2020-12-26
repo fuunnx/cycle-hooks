@@ -47,9 +47,9 @@ export function mountInstances(
           ref.trackers = ref.trackers.filter((x) => x !== tracker)
           tracker.destroy()
           tracker = null
-        }) as any,
+        }),
       )
-  }) as any
+  })
 
   function cleanup(vnode: any) {
     if (!vnode || typeof vnode !== 'object') {
