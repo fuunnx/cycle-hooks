@@ -86,8 +86,8 @@ export function assocVTree(
     childTarget = host.children[index]
   }
 
-  if (!isVNode(childTarget)) {
-    console.warn("can't assoc to this type")
+  if (!isVNode(childTarget) && !Array.isArray(childTarget)) {
+    console.warn("can't assoc to this type", childTarget)
     return host
   }
 
@@ -96,13 +96,14 @@ export function assocVTree(
 
 export function assocChild(
   index: number,
-  value: number | string | null | undefined | boolean | VNode,
+  value: number | string | null | undefined | boolean | VNode | any[],
   host: VNode | any[],
 ): VNode | VNode[] {
   // prettier-ignore
-  const node: VNode | null = 
+  const node: (VNode | null | any[]) = 
     isEmptyNode(value) ? null
     : isVNode(value) ? value
+    : Array.isArray(value) ? value
     : TextNode(value)
 
   if (Array.isArray(host)) {
@@ -113,11 +114,11 @@ export function assocChild(
 
   if (host.children) {
     let children = host.children.slice(0, index)
-    children.push(node, ...host.children.slice(index + 1))
+    children.push(node as any, ...host.children.slice(index + 1))
     return { ...host, children }
   }
 
-  return { ...host, children: [node] }
+  return { ...host, children: Array.isArray(node) ? node : [node] }
 }
 
 function isEmptyNode(value: any) {
