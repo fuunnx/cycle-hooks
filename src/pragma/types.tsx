@@ -13,7 +13,6 @@ declare global {
       | ComponentDescription
       | Sinks
       | Stream<JSX.Element>
-      | any // waiting for https://github.com/staltz/xstream/pull/317
 
     interface IntrinsicElements {
       [elemName: string]: VNodeData

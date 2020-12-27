@@ -16,7 +16,7 @@ export function mountInstances(
   return withRef(ref, () => {
     return streamify(stream)
       .map((vtree) => {
-        const descriptions = indexVTree(vtree, isComponentDescription)
+        const descriptions = indexVTree(vtree as any, isComponentDescription)
 
         if (!descriptions.length) {
           tracker.open()
