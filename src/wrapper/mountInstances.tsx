@@ -69,6 +69,10 @@ export function mountInstances(
           .filter(Boolean),
       )
     }
+    if (isComponentDescription(vnode)) {
+      return null
+    }
+
     return vnode
   }
 }

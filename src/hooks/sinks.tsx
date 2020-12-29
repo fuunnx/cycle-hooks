@@ -57,12 +57,9 @@ export function gatherSinks<T>(
     }
 
     let dispose = () => {}
+    const disposal$ = stopSignal$.debug(() => Promise.resolve().then(dispose))
     dispose = replicateMany(
-      mapObj(
-        (x$: Stream<any>) =>
-          x$.endWhen(stopSignal$.debug(() => Promise.resolve().then(dispose))),
-        sinks,
-      ),
+      mapObj((x$: Stream<any>) => x$.endWhen(disposal$), sinks),
       sinksProxy,
     )
   }
