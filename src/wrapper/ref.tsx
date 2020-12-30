@@ -46,12 +46,12 @@ export type IRef = {
 
 export function Ref(componentDescription?: ComponentDescription): IRef {
   const constructorFn = componentDescription?.$func$
-  const componentData = componentDescription?.$data$
+  const componentData = componentDescription?.data
   const componentFrame = componentDescription?.$frame$
 
-  const props$: Stream<Object> = xs.of(componentDescription?.$data$.props)
+  const props$: Stream<Object> = xs.of(componentDescription?.data.props)
   const children$: Stream<(JSX.Element | Stream<JSX.Element>)[]> = xs.of(
-    componentDescription?.$data$.children,
+    componentDescription?.data.children,
   )
 
   const finalProps$ = xs
@@ -71,8 +71,8 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
       componentDescription,
       update(newComponentDescription) {
         this.componentDescription = newComponentDescription
-        props$.shamefullySendNext(componentDescription.$data$.props)
-        children$.shamefullySendNext(componentDescription.$data$.children)
+        props$.shamefullySendNext(componentDescription.data.props)
+        children$.shamefullySendNext(componentDescription.data.children)
       },
     },
     trackers: [],
@@ -89,7 +89,7 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
       withRef(ref, () => {
         const [unmount, result] = withUnmount(() => {
           const sources = { ...useSources(), props$: finalProps$ }
-          return isolate(
+          const sinks = isolate(
             withHooks(() => {
               const result: any = constructorFn(componentData.props)
               const sinks = result.DOM ? result : { DOM: streamify(result) }
@@ -97,9 +97,6 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
                 (sink$: Stream<any>) => sink$.endWhen(onUnmount()),
                 sinks,
               )
-              delete transformedSinks.DOM
-
-              performOrFailSilently(provideSinksEff, transformedSinks)
 
               return {
                 ...transformedSinks,
@@ -109,7 +106,16 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
               }
             }),
           )(sources) as Sinks
+
+          const { DOM, props$, ...otherSinks } = sinks
+
+          if (Object.keys(otherSinks).length) {
+            performOrFailSilently(provideSinksEff, otherSinks)
+          }
+
+          return sinks
         }, 'component')
+
         ref.data.unmount = () => {
           ref.trackers.forEach((x) => x.destroy())
           unmount()

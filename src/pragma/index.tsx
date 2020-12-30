@@ -47,7 +47,7 @@ export function createElement<T extends { [k: string]: unknown }>(
     $type$: 'component',
     $func$: tagOrFunction as Component,
     $frame$: captureFrame(),
-    $data$: {
+    data: {
       ...normalizeProps(props || {}),
       children,
     },

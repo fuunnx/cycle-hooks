@@ -26,11 +26,11 @@ export function mountInstances(
 
         tracker.open()
         const doms = descriptions.map(({ value, path }) => {
-          const childRef = tracker.track(value.$func$, value.$data$.key, value)
+          const childRef = tracker.track(value.$func$, value.data.key, value)
 
-          return childRef.data.sinks.DOM.map((val: VNode | string) => (acc) =>
-            assocVTree(path, val, acc),
-          )
+          return childRef.data.sinks.DOM.map((val: VNode | string) => (acc) => {
+            return assocVTree(path, val, acc)
+          })
         })
         tracker.close()
 

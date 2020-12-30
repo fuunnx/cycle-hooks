@@ -36,7 +36,7 @@ export type ComponentDescription = {
   $type$: 'component'
   $func$: Component
   $frame$: Frame
-  $data$: {
+  data: {
     key: Key
     props: Record<string, unknown>
     children: JSX.Element[]
