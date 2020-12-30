@@ -22,6 +22,7 @@ import { Sinks } from '../types'
 import { withHooks } from '.'
 import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from '../libs/trackers/trackUsage'
+import { VNode } from 'snabbdom/build/package/vnode'
 
 type RefTracker = {
   open(): void
@@ -40,6 +41,8 @@ export type IRef = {
     unmount: () => void
     componentDescription?: ComponentDescription
     update: (newComponentDescription: ComponentDescription) => void
+    currentVTree?: VNode
+    domCallback?: (dom: VNode) => void
   }
   trackers: RefTracker[]
 }
@@ -105,6 +108,7 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
                 ),
               }
             }),
+            { state: null },
           )(sources) as Sinks
 
           const { DOM, props$, ...otherSinks } = sinks
@@ -116,7 +120,15 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
           return sinks
         }, 'component')
 
+        let domSubscription = result.DOM?.subscribe({
+          next(dom: any) {
+            ref.data.currentVTree = dom
+            ref.data.domCallback?.(dom)
+          },
+        })
+
         ref.data.unmount = () => {
+          domSubscription?.unsubscribe()
           ref.trackers.forEach((x) => x.destroy())
           unmount()
         }

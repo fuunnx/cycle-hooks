@@ -1,10 +1,9 @@
-import xs, { Stream } from 'xstream'
+import xs, { Stream, Subscription } from 'xstream'
 import { streamify } from '../libs/isObservable'
 import { safeUseRef, Ref, createRefTracker, withRef } from './ref'
 import { h, VNode } from '@cycle/dom'
 import { ComponentDescription } from '../pragma/types'
 import { indexVTree, assocVTree } from '../libs/VTree'
-import uponStop from 'xstream-upon-stop'
 
 export function mountInstances(
   stream: JSX.Element | Stream<JSX.Element>,
@@ -13,68 +12,81 @@ export function mountInstances(
   let tracker = createRefTracker()
   ref.trackers.push(tracker)
 
+  let subscription: Subscription
+
   return withRef(ref, () => {
-    return streamify(stream)
-      .map((vtree) => {
-        const descriptions = indexVTree(vtree as any, isComponentDescription)
+    return xs.createWithMemory({
+      start(listener) {
+        let currentVTree
 
-        if (!descriptions.length) {
-          tracker.open()
-          tracker.close()
-          return xs.of(vtree)
-        }
+        subscription = streamify(stream).subscribe({
+          next: (vtree) => {
+            currentVTree = vtree
+            const descriptions = indexVTree(
+              vtree as any,
+              isComponentDescription,
+            )
 
-        tracker.open()
-        const doms = descriptions.map(({ value, path }) => {
-          const childRef = tracker.track(value.$func$, value.data.key, value)
+            tracker.open()
+            descriptions.forEach(({ value, path }) => {
+              const childRef = tracker.track(
+                value.$func$,
+                value.data.key,
+                value,
+              )
 
-          return childRef.data.sinks.DOM.map((val: VNode | string) => (acc) => {
-            return assocVTree(path, val, acc)
-          })
+              currentVTree = assocVTree(
+                path,
+                childRef.data.currentVTree,
+                currentVTree,
+              )
+
+              childRef.data.domCallback = (val: VNode | string) => {
+                currentVTree = assocVTree(path, val, currentVTree)
+                listener.next(cleanup(currentVTree))
+              }
+            })
+            tracker.close()
+
+            listener.next(cleanup(currentVTree))
+          },
         })
-        tracker.close()
+      },
+      stop() {
+        subscription.unsubscribe()
 
-        return xs
-          .merge(...doms)
-          .fold((acc, func) => func(acc), vtree)
-          .drop(1)
-          .map(cleanup)
-      })
-      .flatten()
-      .remember()
-      .compose(
-        uponStop(() => {
-          ref.trackers = ref.trackers.filter((x) => x !== tracker)
-          tracker.destroy()
-          tracker = null
-        }),
-      )
+        ref.trackers = ref.trackers.filter((x) => x !== tracker)
+        tracker.destroy()
+        tracker = null
+      },
+    })
   })
+}
 
-  function cleanup(vnode: any) {
-    if (!vnode || typeof vnode !== 'object') {
-      return vnode
-    }
-
-    if (Array.isArray(vnode)) {
-      return vnode.map(cleanup).flat(Infinity).filter(Boolean)
-    }
-
-    if (vnode.children) {
-      return h(
-        vnode.sel,
-        vnode.data,
-        cleanup(vnode.children as any)
-          .flat(Infinity)
-          .filter(Boolean),
-      )
-    }
-    if (isComponentDescription(vnode)) {
-      return null
-    }
-
+function cleanup(vnode: any) {
+  if (!vnode || typeof vnode !== 'object') {
     return vnode
   }
+
+  if (Array.isArray(vnode)) {
+    return vnode.map(cleanup).flat(Infinity).filter(Boolean)
+  }
+
+  if (vnode.children) {
+    return h(
+      vnode.sel,
+      vnode.data,
+      cleanup(vnode.children as any)
+        .flat(Infinity)
+        .filter(Boolean),
+    )
+  }
+
+  if (isComponentDescription(vnode)) {
+    return null
+  }
+
+  return vnode
 }
 
 export function isComponentDescription(x: any): x is ComponentDescription {
