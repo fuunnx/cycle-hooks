@@ -21,9 +21,17 @@ type Sinks = {
   state: Stream<Reducer<any>>
 }
 
-run(
-  withState(
-    withHooks<Sinks>(App, [...Object.keys(drivers), 'state']),
-  ),
-  drivers,
-)
+function Main(sources) {
+  sources.state.stream.debug('state').addListener({
+    error(e) {
+      throw e
+    },
+  })
+  const sinks = withHooks<Sinks>(App, [...Object.keys(drivers), 'state'])(
+    sources,
+  )
+
+  return { ...sinks, DOM: sinks.DOM }
+}
+
+run(withState(Main), drivers)

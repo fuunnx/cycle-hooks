@@ -186,7 +186,7 @@ test('gather components sinks', (done) => {
   }
 
   function App() {
-    return xs.of(<Child />)
+    return Time.diagram('x').map(() => <Child />)
   }
 
   function Child() {

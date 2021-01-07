@@ -28,27 +28,35 @@ export function mountInstances(
             )
 
             tracker.open()
-            descriptions.forEach(({ value, path }) => {
+            const childRefs = descriptions.map(({ value, path }) => {
               const childRef = tracker.track(
                 value.$func$,
                 value.data.key,
                 value,
               )
 
-              currentVTree = assocVTree(
-                path,
-                childRef.data.currentVTree,
-                currentVTree,
-              )
+              if (childRef.data.currentVTree) {
+                currentVTree = assocVTree(
+                  path,
+                  childRef.data.currentVTree,
+                  currentVTree,
+                )
+              }
 
               childRef.data.domCallback = (val: VNode | string) => {
                 currentVTree = assocVTree(path, val, currentVTree)
-                listener.next(cleanup(currentVTree))
+                if (childRefs.every((x) => x.data.currentVTree)) {
+                  listener.next(cleanup(currentVTree))
+                }
               }
+
+              return childRef
             })
             tracker.close()
 
-            listener.next(cleanup(currentVTree))
+            if (childRefs.every((x) => x.data.currentVTree)) {
+              listener.next(cleanup(currentVTree))
+            }
           },
         })
       },

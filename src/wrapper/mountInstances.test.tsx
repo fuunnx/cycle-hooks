@@ -22,17 +22,19 @@ test('pragma + mountInstances handles simple components', (done) => {
   const Time = mockTimeSource()
 
   function Component() {
-    return xs.of(<div>Hello</div>)
+    return Time.diagram('x').map(() => <div>Hello</div>)
   }
 
   assertDomEqual(
     Time,
 
-    testCase(() => (
-      <div>
-        <Component />
-      </div>
-    )),
+    testCase(() =>
+      Time.diagram('x').map(() => (
+        <div>
+          <Component />
+        </div>
+      )),
+    ),
 
     Component().map((x) => <div>{x}</div>),
   )
@@ -53,15 +55,9 @@ test('keeps dynamic components alive until unmount', (done) => {
     return timer$
   }
 
-  const rerender$ = Time.diagram('1-1---1--')
-  const timer$ = Time.diagram('1---2---3')
-
   Time.assertEqual(
     testCase(() => <ComponentA />),
-    xs
-      .combine(rerender$, timer$)
-      .map(([, timer]) => timer)
-      .compose(dropRepeats()),
+    Time.diagram('1-1-2-2-3'),
   )
 
   Time.run(done)
@@ -88,24 +84,24 @@ test('stop receiving DOM updates on remove', (done) => {
   Time.run(done)
 })
 
-test('start receiving DOM updates on insert', (done) => {
+test('starts receiving DOM updates on insert', (done) => {
   const Time = mockTimeSource()
 
   function ComponentA() {
     const visible$ = Time.diagram('0--1-')
-    return visible$.map((visible) => (visible ? <ComponentB /> : 'x'))
+    return visible$
+      .map(Number)
+      .map((visible) => (visible ? <ComponentB /> : 'x'))
   }
 
   function ComponentB() {
-    const timer$ = Time.diagram('123456')
+    const timer$ = Time.diagram('---123456')
     return timer$
   }
 
   Time.assertEqual(
-    testCase(() => <ComponentA />),
-    Time.diagram('0--1-')
-      .map((visible) => (visible ? ComponentB() : xs.of('x')))
-      .flatten(),
+    testCase(() => Time.diagram('x').map(() => <ComponentA />)),
+    Time.diagram('x--123456'),
   )
 
   Time.run(done)
@@ -122,12 +118,12 @@ test('call unmount on remove (simple)', (done) => {
       AunmountedTimes++
     })
 
-    return xs.of('ComponentA')
+    return Time.diagram('x')
   }
 
   Time.assertEqual(
-    testCase(() => <ComponentA />),
-    Time.diagram('123x'),
+    testCase(() => xs.fromArray([<ComponentA />, null])),
+    Time.diagram('x'),
   )
 
   Time.run(() => {
@@ -224,7 +220,7 @@ test('mounts children components', (done) => {
   }
 
   function Child() {
-    return xs.of(<p>Child</p>)
+    return Time.diagram('x').map(() => <p>x</p>)
   }
 
   Time.assertEqual(

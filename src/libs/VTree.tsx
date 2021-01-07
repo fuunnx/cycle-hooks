@@ -38,7 +38,7 @@ export function walkVTree<T>(
   function walk(value: VTree<T>, path: number[]) {
     const canContinue = callback(value, path)
     if (canContinue === false) return
-    if (typeof value !== 'object') return
+    if (!value || typeof value !== 'object') return
 
     if (Array.isArray(value)) {
       value.forEach((child, index) => {

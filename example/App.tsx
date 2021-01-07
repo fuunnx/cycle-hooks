@@ -18,6 +18,7 @@ export function App() {
   return state$.startWith(undefined).map((state: any) => (
     <div>
       <h1>Examples</h1>
+      <Input />
       <Togglable title="Serialized global state">
         <code>{JSON.stringify(state, null, '  ')}</code>
       </Togglable>
