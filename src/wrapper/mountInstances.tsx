@@ -19,6 +19,16 @@ export function mountInstances(
       start(listener) {
         let currentVTree
 
+        let scheduled = false
+        function scheduleNext() {
+          if (scheduled) return
+          scheduled = true
+          Promise.resolve().then(() => {
+            listener.next(cleanup(currentVTree))
+            scheduled = false
+          })
+        }
+
         subscription = streamify(stream).subscribe({
           next: (vtree) => {
             currentVTree = vtree
@@ -46,7 +56,7 @@ export function mountInstances(
               childRef.data.domCallback = (val: VNode | string) => {
                 currentVTree = assocVTree(path, val, currentVTree)
                 if (childRefs.every((x) => x.data.currentVTree)) {
-                  listener.next(cleanup(currentVTree))
+                  scheduleNext()
                 }
               }
 
@@ -55,7 +65,7 @@ export function mountInstances(
             tracker.close()
 
             if (childRefs.every((x) => x.data.currentVTree)) {
-              listener.next(cleanup(currentVTree))
+              scheduleNext()
             }
           },
         })
