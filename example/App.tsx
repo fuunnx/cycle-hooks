@@ -5,6 +5,7 @@ import { useSources } from '../src/hooks/sources'
 import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
+import { Request } from './Request'
 import { useProps$ } from '../src/hooks/props'
 import { StateSource } from '@cycle/state'
 
@@ -15,26 +16,31 @@ type AppSources = {
 export function App() {
   const state$ = useSources<AppSources>().state.stream
 
-  return state$.startWith(undefined).map((state: any) => (
-    <div>
-      <h1>Examples</h1>
-      <Input />
-      <Togglable title="Serialized global state">
-        <code>{JSON.stringify(state, null, '  ')}</code>
-      </Togglable>
-      <Togglable title="Incrementer">
-        <Incrementer value$={xs.periodic(1000)} />
-        <Incrementer value$={xs.periodic(1000)} />
-        <Incrementer value$={xs.periodic(1000)} />
-      </Togglable>
-      <Togglable title="Input">
+  return state$.startWith(undefined).map((state: any) => {
+    return (
+      <div>
+        <h1>Examples</h1>
         <Input />
-      </Togglable>
-      <Togglable title="Timer">
-        <Timer />
-      </Togglable>
-    </div>
-  ))
+        <Togglable title="Serialized global state">
+          <code>{JSON.stringify(state, null, '  ')}</code>
+        </Togglable>
+        <Togglable title="Incrementer">
+          <Incrementer value$={xs.periodic(1000)} />
+          <Incrementer value$={xs.periodic(1000)} />
+          <Incrementer value$={xs.periodic(1000)} />
+        </Togglable>
+        <Togglable title="Input">
+          <Input />
+        </Togglable>
+        <Togglable title="Timer">
+          <Timer />
+        </Togglable>
+        <Togglable title="Request">
+          <Request userId={state?.value} />
+        </Togglable>
+      </div>
+    )
+  })
 }
 
 type Props = {
