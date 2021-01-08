@@ -1,16 +1,17 @@
 import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/dom'
-import modules from '@cycle/dom/lib/es6/modules'
+import { makeHTTPDriver } from '@cycle/http'
 import { withHooks } from '../src'
-import { eventListenersModule } from 'snabbdom/build/package/modules/eventlisteners'
+import toHTML from 'snabbdom-to-html'
+import { diffHtml } from '@markedjs/html-differ'
+import logger from '@markedjs/html-differ/lib/logger'
 import { withState, Reducer } from '@cycle/state'
 import { App } from './App'
 import { Stream } from 'xstream'
 
 const drivers = {
-  DOM: makeDOMDriver('#app', {
-    modules: [...modules, eventListenersModule],
-  }),
+  DOM: makeDOMDriver('#app'),
+  HTTP: makeHTTPDriver(),
   log: (sink$: Stream<any>) =>
     sink$.addListener({ next: (x) => console.log(x) }),
 }
@@ -22,16 +23,11 @@ type Sinks = {
 }
 
 function Main(sources) {
-  sources.state.stream.debug('state').addListener({
-    error(e) {
-      throw e
-    },
-  })
   const sinks = withHooks<Sinks>(App, [...Object.keys(drivers), 'state'])(
     sources,
   )
 
-  return { ...sinks, DOM: sinks.DOM }
+  return sinks
 }
 
 run(withState(Main), drivers)
