@@ -77,8 +77,8 @@ export function gatherSinks<T>(
   }
 }
 
-export function registerSinks(
-  sinks: Sinks,
+export function registerSinks<T extends Sinks = Sinks>(
+  sinks: T,
   stopSignal$: Stream<any> = onUnmount(),
 ) {
   return perform(provideSinksEff, sinks, stopSignal$)
