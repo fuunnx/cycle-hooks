@@ -23,6 +23,7 @@ import { withHooks } from '.'
 import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from '../libs/trackers/trackUsage'
 import { VNode } from 'snabbdom/build/package/vnode'
+import { useMemorySubject } from '../hooks/subject'
 
 type RefTracker = {
   open(): void
@@ -52,8 +53,8 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
   const componentData = componentDescription?.data
   const componentFrame = componentDescription?.$frame$
 
-  const props$: Stream<Object> = xs.of(componentDescription?.data.props)
-  const children$: Stream<(JSX.Element | Stream<JSX.Element>)[]> = xs.of(
+  const [props$, setProps] = useMemorySubject(componentDescription?.data.props)
+  const [children$, setChildren] = useMemorySubject(
     componentDescription?.data.children,
   )
 
@@ -74,8 +75,8 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
       componentDescription,
       update(newComponentDescription) {
         this.componentDescription = newComponentDescription
-        props$.shamefullySendNext(componentDescription.data.props)
-        children$.shamefullySendNext(componentDescription.data.children)
+        setProps(newComponentDescription.data.props)
+        setChildren(newComponentDescription.data.children)
       },
     },
     trackers: [],
@@ -91,7 +92,10 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
     return withFrame(componentFrame, () =>
       withRef(ref, () => {
         const [unmount, result] = withUnmount(() => {
-          const sources = { ...useSources(), props$: finalProps$ }
+          const sources = {
+            ...useSources(),
+            props$: finalProps$,
+          }
           const sinks = isolate(
             withHooks(() => {
               const result: any = constructorFn(componentData.props)
