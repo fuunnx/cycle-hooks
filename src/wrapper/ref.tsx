@@ -11,7 +11,7 @@ import { streamify } from '../libs/isObservable'
 import { mapObj } from '../libs/mapObj'
 import { onUnmount, withUnmount } from '../hooks/unmount'
 import { mountInstances } from './mountInstances'
-import { provideSinksEff } from '../hooks/sinks'
+import { provideSinksEff, readGatherableEff } from '../hooks/sinks'
 import { useSources } from '../hooks/sources'
 import { Key, ComponentDescription } from '../pragma/types'
 import { shallowEquals } from '../libs/shallowEquals'
@@ -96,6 +96,14 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
             ...useSources(),
             props$: finalProps$,
           }
+
+          const keys = performOrFailSilently(readGatherableEff) || []
+          const isolateParams = keys.reduce((acc, k) => {
+            if (k !== 'DOM') {
+              acc[k] = null
+            }
+            return acc
+          }, {})
           const sinks = isolate(
             withHooks(() => {
               const result: any = constructorFn(componentData.props)
@@ -112,7 +120,7 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
                 ),
               }
             }),
-            { state: null },
+            isolateParams,
           )(sources) as Sinks
 
           const { DOM, props$, ...otherSinks } = sinks
