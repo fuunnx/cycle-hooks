@@ -16,7 +16,7 @@ export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
 export const provideSinksEff: EffectName<Registerer> = Symbol('provideSinksEff')
 
 type GatherableKeys = string[]
-const readGatherableEff: EffectName<() => GatherableKeys> = Symbol(
+export const readGatherableEff: EffectName<() => GatherableKeys> = Symbol(
   'gatherableKeys',
 )
 

@@ -1,0 +1,30 @@
+diff --git a/node_modules/@cycle/time/lib/cjs/src/assert-equal.js b/node_modules/@cycle/time/lib/cjs/src/assert-equal.js
+index 465a394..31cabcc 100644
+--- a/node_modules/@cycle/time/lib/cjs/src/assert-equal.js
++++ b/node_modules/@cycle/time/lib/cjs/src/assert-equal.js
+@@ -175,10 +175,8 @@ function diagramString(entries, interval) {
+             diagram[characterIndex] = characterString(chunk[0]);
+         }
+         else {
+-            var characters = ['('].concat(chunk.map(characterString), [')']);
+-            characters.forEach(function (character, subIndex) {
+-                diagram[characterIndex + subIndex] = character;
+-            });
++            var characters = ['('].concat(chunk.map(characterString), [')']).join('');
++            diagram[characterIndex]  = characters
+         }
+     });
+     return diagram.join('');
+diff --git a/node_modules/@cycle/time/lib/cjs/src/diagram.js b/node_modules/@cycle/time/lib/cjs/src/diagram.js
+index 5b85f75..05705c6 100644
+--- a/node_modules/@cycle/time/lib/cjs/src/diagram.js
++++ b/node_modules/@cycle/time/lib/cjs/src/diagram.js
+@@ -25,7 +25,7 @@ function makeDiagram(schedule, currentTime, interval, setMaxTime) {
+             if (character === '-') {
+                 return;
+             }
+-            var timeToSchedule = index * interval;
++            var timeToSchedule = currentTime() + index * interval;
+             if (character === '(') {
+                 multipleValueFrame = timeToSchedule;
+                 return;

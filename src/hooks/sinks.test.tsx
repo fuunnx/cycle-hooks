@@ -75,13 +75,13 @@ test('stop gathered sinks on next', (done) => {
 
   const events = () => Time.diagram('---a-----b-----c')
   const repeatEvent = (char) => {
-    return Time.diagram('-' + String(char).repeat(10))
+    return Time.diagram(String(char).repeat(10))
   }
   function App() {
     return {
       a: events().map((char) => {
         registerSinks({
-          b: repeatEvent(char),
+          b: repeatEvent(char).debug((x) => console.log(char, x)),
         })
         return char
       }),

@@ -15,7 +15,8 @@ export function withSources<T>(
   func: () => T,
 ) {
   if (typeof sources === 'function') {
-    return withHandler([readSourcesEffect, sources(useSources())], func)
+    const newSources = sources(useSources())
+    return withHandler([readSourcesEffect, () => newSources], func)
   }
 
   return withHandler([readSourcesEffect, () => sources], func)

@@ -1,5 +1,5 @@
 import { Stream, InternalProducer, NO } from 'xstream'
-import { captureFrame, withFrame } from 'performative-ts'
+import { bindFrame, captureFrame, withFrame } from 'performative-ts'
 import { withUnmount } from '../hooks/unmount'
 import { setAdapt } from '@cycle/run/lib/adapt'
 
@@ -30,6 +30,13 @@ function patch(stream: Stream<any>): void {
   let _n = stream._n.bind(stream)
   let _c = stream._c.bind(stream)
   let _e = stream._e.bind(stream)
+
+  if ((stream._prod as any).f) {
+    ;(stream._prod as any).f = bindFrame(
+      frame,
+      (stream._prod as any).f.bind(stream._prod),
+    )
+  }
 
   Object.assign(stream, {
     _e(e) {

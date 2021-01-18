@@ -6,6 +6,7 @@ import {
   withHandler,
   EffectName,
   performOrFailSilently,
+  captureFrame,
 } from 'performative-ts'
 
 const CTX: EffectName<() => number> = Symbol('test-ctx')
@@ -40,7 +41,9 @@ function testMethod(methodName: string, initObservable: () => Stream<any>) {
     const handler = () => 1
     const App = () => {
       return {
-        a: initObservable().map(() => performOrFailSilently(CTX)),
+        a: initObservable().map(() => {
+          return performOrFailSilently(CTX)
+        }),
       }
     }
     const sinks = withHandler([CTX, handler], () => App())
@@ -92,7 +95,7 @@ const methodsTests: ToTest = {
   periodic: () => xs.periodic(10).take(1),
   merge: () => xs.merge(testStream(), testStream()),
   combine: () => xs.combine(testStream(), testStream()),
-  compose: () => testStream().compose(() => testStream()),
+  compose: () => externalStream$.compose(() => testStream()),
   'create + push': () => {
     const stream = xs.create()
     setTimeout(() => {
@@ -107,7 +110,12 @@ const methodsTests: ToTest = {
     })
     return Time.diagram('--x--')
   },
+  externalRef: () => {
+    return externalStream$
+  },
 }
+
+const externalStream$ = testStream()
 
 function testStream() {
   return xs.fromPromise(Promise.resolve(null))
