@@ -29,6 +29,7 @@
     "@cycle/isolate": "^5.2.0",
     "@cycle/time": "^0.20.0",
     "@types/jest": "^26.0.16",
+    "cuid": "^2.1.8",
     "cyclejs-utils": "^4.0.2",
     "multi-key-cache": "^1.0.2",
     "performative-ts": "^2.0.0",

@@ -10,6 +10,7 @@ import { useProps$ } from '../src/hooks/props'
 import { StateSource } from '@cycle/state'
 import { HandlerFunction, HandlerTuple, withHandler } from 'performative-ts'
 import { withHTTPCache } from './hooks/useRequest'
+import { useRef } from '../src/hooks/ref'
 
 type AppSources = {
   state: StateSource<{ value?: number }>
@@ -90,17 +91,20 @@ type TogglableProps = {
   children?: JSX.Element | JSX.Element[]
 }
 const Togglable = function Togglable(_: TogglableProps) {
-  const [open$, setOpen] = useState(false)
+  // const [open$, setOpen] = useState(false)
   // here useSources() and useProps$() are an APi problem : if someone wants to use hooks without pragma, a lot of things would work differently
   const props$ = useProps$<TogglableProps>()
+  const header = useRef()
+  const open$ = header.DOM.events('click').fold((isOpen) => !isOpen, false)
 
   return xs.combine(open$, props$).map(([open, props]) => (
     <section className="togglable-section" class={{ '-open': open }}>
       <header
+        ref={header}
         className="header"
         tabIndex={0}
         attrs={{ 'aria-role': 'button' }}
-        onClick={() => setOpen((x) => !x)}
+        // onClick={() => setOpen((x) => !x)}
       >
         <h2>{props.title}</h2>
       </header>

@@ -2,6 +2,7 @@ import { Sinks } from '../types'
 import { Stream } from 'xstream'
 import { VNode, VNodeData } from 'snabbdom/build/package/vnode'
 import { Frame } from 'performative-ts'
+import { Ref } from '../hooks/ref'
 
 declare global {
   namespace JSX {
@@ -16,6 +17,7 @@ declare global {
 
     interface IntrinsicElements {
       [elemName: string]: VNodeData
+      ref: Ref
     }
 
     interface ElementChildrenAttribute {

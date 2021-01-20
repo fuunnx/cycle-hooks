@@ -1,7 +1,7 @@
 import { Stream, Subscription } from 'xstream'
 import { useSources } from '../hooks/sources'
 import { walkVTree, isVNode } from '../libs/VTree'
-import { VNode } from 'snabbdom/build/package/vnode'
+import { vnode, VNode } from 'snabbdom/build/package/vnode'
 import { onUnmount } from '../hooks/unmount'
 import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
 import { isComponentDescription } from './mountInstances'
@@ -57,9 +57,13 @@ export function mountEventListeners(dom$: Stream<VNode>) {
 
   function mountListeners(vnode: VNode, path: number[]) {
     if (isComponentDescription(vnode)) return
+    let selector: string
+
+    if (vnode.data?.ref) {
+      selector = selector || createAndAssignSelector(vnode, path)
+    }
     if (!vnode.data?.props) return
 
-    let selector: string
     Object.keys(vnode.data.props).forEach((prop) => {
       const isEventHandler = prop.startsWith('on') && isUpperCase(prop[2])
       if (!isEventHandler) return
@@ -76,9 +80,11 @@ export function mountEventListeners(dom$: Stream<VNode>) {
 
 // this function mutates the provided vnode
 function createAndAssignSelector(vNode: VNode, path): string {
-  const id = vNode.data.attrs?.id || vNode.data.props?.id
-  if (id) {
-    return `#${id}`
+  if (vNode.data?.ref) {
+    vNode.data.attrs = vNode.data.attrs || {}
+    vNode.data.attrs[vNode.data.ref.selector] = true
+
+    return vNode.data.ref.selector
   }
 
   if (vNode.key) {
@@ -88,6 +94,12 @@ function createAndAssignSelector(vNode: VNode, path): string {
     vNode.data.attrs[attribute] = true
 
     return `[${attribute}]`
+  }
+
+  const id = vNode.data.attrs?.id || vNode.data.props?.id
+
+  if (id) {
+    return `#${id}`
   }
 
   const pathString = `0${path.length ? '-' + path.join('-') : ''}`
