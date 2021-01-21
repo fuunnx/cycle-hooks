@@ -24,6 +24,7 @@ import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from '../libs/trackers/trackUsage'
 import { VNode } from 'snabbdom/build/package/vnode'
 import { useMemorySubject } from '../hooks/subject'
+import { useID } from '../hooks/id'
 
 type RefTracker = {
   open(): void
@@ -97,13 +98,6 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
             props$: finalProps$,
           }
 
-          const keys = performOrFailSilently(readGatherableEff) || []
-          const isolateParams = keys.reduce((acc, k) => {
-            if (k !== 'DOM') {
-              acc[k] = null
-            }
-            return acc
-          }, {})
           const sinks = isolate(
             withHooks(() => {
               const result: any = constructorFn(componentData.props)
@@ -120,7 +114,7 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
                 ),
               }
             }),
-            isolateParams,
+            { DOM: useID(), '*': null },
           )(sources) as Sinks
 
           const { DOM, props$, ...otherSinks } = sinks

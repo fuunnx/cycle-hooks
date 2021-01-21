@@ -1,9 +1,55 @@
 import xs, { Stream, Subscription } from 'xstream'
-import { streamify } from '../libs/isObservable'
+import { isObservable, streamify } from '../libs/isObservable'
 import { safeUseRef, Ref, createRefTracker, withRef } from './ref'
 import { h, VNode } from '@cycle/dom'
 import { ComponentDescription } from '../pragma/types'
 import { indexVTree, assocVTree } from '../libs/VTree'
+import { readSourcesEffect } from '../hooks/sources'
+import { provideSinksEff } from '../hooks/sinks'
+import { withFrame, withHandler } from 'performative-ts'
+
+const knownTypes = new Map<Function, 'functionnal' | 'cyclic'>()
+
+function componentType(
+  component: Function,
+  props: any,
+): 'functionnal' | 'cyclic' {
+  if (knownTypes.has(component)) {
+    return knownTypes.get(component)
+  }
+
+  const type = guess()
+  knownTypes.set(component, type)
+  return type
+
+  function guess(): 'functionnal' | 'cyclic' {
+    try {
+      const result = withHandler(
+        [
+          readSourcesEffect,
+          () => {
+            throw '$IS_CYCLIC_COMPONENT'
+          },
+        ],
+        [
+          provideSinksEff,
+          () => {
+            throw '$IS_CYCLIC_COMPONENT'
+          },
+        ],
+        () => component(props),
+      )
+      if (isObservable(result)) {
+        return 'cyclic'
+      }
+
+      return 'functionnal'
+    } catch (e) {
+      if (e === '$IS_CYCLIC_COMPONENT') return 'cyclic'
+      else throw e
+    }
+  }
+}
 
 export function mountInstances(
   stream: JSX.Element | Stream<JSX.Element>,
@@ -39,6 +85,26 @@ export function mountInstances(
 
             tracker.open()
             const childRefs = descriptions.map(({ value, path }) => {
+              const props = {
+                ...value.data.props,
+                children: value.data.children,
+              }
+              const type = componentType(value.$func$, props)
+
+              if (type === 'functionnal') {
+                const vtree = withFrame(value.$frame$, () =>
+                  value.$func$(props),
+                )
+
+                currentVTree = assocVTree(path, vtree as VNode, currentVTree)
+
+                return {
+                  data: {
+                    currentVTree: vtree,
+                  },
+                }
+              }
+
               const childRef = tracker.track(
                 value.$func$,
                 value.data.key,
@@ -55,7 +121,7 @@ export function mountInstances(
 
               childRef.data.domCallback = (val: VNode | string) => {
                 currentVTree = assocVTree(path, val, currentVTree)
-                if (childRefs.every((x) => x.data.currentVTree)) {
+                if (childRefs.every((child) => child.data.currentVTree)) {
                   scheduleNext()
                 }
               }
@@ -64,7 +130,7 @@ export function mountInstances(
             })
             tracker.close()
 
-            if (childRefs.every((x) => x.data.currentVTree)) {
+            if (childRefs.every((child) => child.data.currentVTree)) {
               scheduleNext()
             }
           },

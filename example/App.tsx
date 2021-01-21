@@ -11,6 +11,7 @@ import { StateSource } from '@cycle/state'
 import { HandlerFunction, HandlerTuple, withHandler } from 'performative-ts'
 import { withHTTPCache } from './hooks/useRequest'
 import { useRef } from '../src/hooks/ref'
+import { ButtonTest } from './ButtonTest'
 
 type AppSources = {
   state: StateSource<{ value?: number }>
@@ -43,7 +44,7 @@ export function App() {
           <h1>Examples</h1>
           <Input />
           <Togglable title="Serialized global state">
-            <code>{JSON.stringify(state, null, '  ')}</code>
+            <CodePreview state={state} />
           </Togglable>
           <Togglable title="Incrementer">
             <Incrementer value$={xs.periodic(1000)} />
@@ -59,10 +60,17 @@ export function App() {
           <Togglable title="Request">
             <Request userId={state?.value} />
           </Togglable>
+          <Togglable title="Button">
+            <ButtonTest />
+          </Togglable>
         </div>
       )
     })
   })
+}
+
+function CodePreview(props: { state: any }) {
+  return <code>{JSON.stringify(props.state, null, '  ')}</code>
 }
 
 type WrapProps<T extends HandlerFunction> = {
