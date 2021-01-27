@@ -9,23 +9,25 @@ import {
   perform,
   performOrFailSilently,
 } from 'performative-ts'
-import { onUnmount } from './unmount'
+import { onUnmount } from '../wrapper/unmount'
 import { mapObj } from '../libs/mapObj'
 
 export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
-export const provideSinksEff: EffectName<Registerer> = Symbol('provideSinksEff')
-
-type GatherableKeys = string[]
-export const readGatherableEff: EffectName<() => GatherableKeys> = Symbol(
-  'gatherableKeys',
+export const performEffectsSymbol: EffectName<Registerer> = Symbol(
+  'performEffects',
 )
 
-export function gatherSinks<T>(exec: () => T): [Sinks, T]
-export function gatherSinks<T>(
+type EffectsNames = string[]
+export const getEffectsNamesSymbol: EffectName<() => EffectsNames> = Symbol(
+  'getEffectsNames',
+)
+
+export function collectEffects<T>(exec: () => T): [Sinks, T]
+export function collectEffects<T>(
   gatherableKeys: string[],
   exec: () => T,
 ): [Sinks, T]
-export function gatherSinks<T>(
+export function collectEffects<T>(
   keys_: string[] | (() => T),
   exec_?: () => T,
 ): [Sinks, T] {
@@ -41,7 +43,7 @@ export function gatherSinks<T>(
   }
 
   // implementation
-  const scopeKeys = performOrFailSilently(readGatherableEff) ?? []
+  const scopeKeys = performOrFailSilently(getEffectsNamesSymbol) ?? []
   const gatherableKeys = [...scopeKeys, ...keys]
 
   let sinksProxy = initSinksProxy()
@@ -65,8 +67,8 @@ export function gatherSinks<T>(
   }
 
   const returnValue = withHandler(
-    [provideSinksEff, gatherer],
-    [readGatherableEff, () => gatherableKeys],
+    [performEffectsSymbol, gatherer],
+    [getEffectsNamesSymbol, () => gatherableKeys],
     exec,
   )
 
@@ -77,9 +79,9 @@ export function gatherSinks<T>(
   }
 }
 
-export function registerSinks<T extends Sinks = Sinks>(
+export function performEffects<T extends Sinks = Sinks>(
   sinks: T,
   stopSignal$: Stream<any> = onUnmount(),
 ) {
-  return perform(provideSinksEff, sinks, stopSignal$)
+  return perform(performEffectsSymbol, sinks, stopSignal$)
 }

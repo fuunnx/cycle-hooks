@@ -1,7 +1,7 @@
-import { readSourcesEffect } from '../hooks/sources'
-import { Ref, readRefEffect } from './ref'
+import { useSourcesSymbol } from '../hooks/sources'
+import { Instance, getInstanceSymbol } from './instance'
 import { Sinks, Sources } from '../types'
-import { gatherSinks } from '../hooks/sinks'
+import { collectEffects } from '../hooks/sinks'
 import { mergeSinks } from '../libs/mergeSinks'
 import { Stream } from 'xstream'
 import { mountInstances } from './mountInstances'
@@ -15,14 +15,14 @@ export function withHooks<Si extends Sinks>(
   sinksNames: string[] = [],
 ): (sources: Sources) => Si {
   return function AppWithHooks(sources: Sources): Si {
-    const [gathered, sinks] = gatherSinks(
+    const [gathered, sinks] = collectEffects(
       [...sinksNames, ...Object.keys(sources)],
       () => {
-        const ref = Ref()
+        const instance = Instance()
 
         return withHandler(
-          [readSourcesEffect, () => sources],
-          [readRefEffect, () => ref],
+          [useSourcesSymbol, () => sources],
+          [getInstanceSymbol, () => instance],
           () => {
             const result = App()
             const appSinks = ((result as any).DOM

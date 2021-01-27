@@ -5,8 +5,17 @@ import sample from 'xstream-sample'
 import { mockDOMSource, h } from '@cycle/dom'
 import { createElement, Sources } from '../index'
 import xs from 'xstream'
-import { useSubject } from '../hooks/subject'
 import { withHooks } from '.'
+
+function useSubject<T>() {
+  const subject$ = xs.create<T>()
+  return [
+    subject$,
+    function next(x: T): void {
+      subject$.shamefullySendNext(x)
+    },
+  ] as const
+}
 
 // wtf, if not used, the import is dropped
 console.log(createElement)

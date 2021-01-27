@@ -1,5 +1,5 @@
 import { useSubject } from '../../src/hooks/subject'
-import { registerSinks } from '../../src/hooks/sinks'
+import { performEffects } from '../../src/hooks/sinks'
 import { useSources } from '../../src/hooks/sources'
 import xs from 'xstream'
 
@@ -9,7 +9,7 @@ export function useGlobalState<T>(initial: T) {
   const [reducer$, runReducer] = useSubject<Reducer<T>>()
   const state$ = useSources().state.stream
 
-  registerSinks({
+  performEffects({
     state: reducer$.startWith((state) => {
       return state === undefined ? initial : state
     }),

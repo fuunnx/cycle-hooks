@@ -1,19 +1,19 @@
 import { mockTimeSource } from '@cycle/time'
-import xs from 'xstream'
+import xs, { Stream } from 'xstream'
 import { createElement } from '../pragma'
 import { mountInstances } from './mountInstances'
-import { onUnmount } from '../hooks/unmount'
+import { onUnmount } from './unmount'
 import { assertDomEqual } from '../libs/assertDomEqual'
-import { readSourcesEffect } from '../hooks/sources'
-import { useProps$ } from '../hooks/props'
+import { useSourcesSymbol } from '../hooks/sources'
 import { withHandler } from 'performative-ts'
 import dropRepeats from 'xstream/extra/dropRepeats'
+import { streamify } from '../libs/isObservable'
 
 // wtf, if not used, the import is dropped
 console.log(createElement)
 
 function testCase(func) {
-  return withHandler([readSourcesEffect, () => ({})], () =>
+  return withHandler([useSourcesSymbol, () => ({})], () =>
     mountInstances(func()),
   )
 }
@@ -215,8 +215,10 @@ test("don't call unmount on update", (done) => {
 test('mounts children components', (done) => {
   const Time = mockTimeSource()
 
-  function Parent() {
-    return useProps$<{ children: JSX.Element }>().map((props) => props.children)
+  function Parent(
+    props$: { children: JSX.Element } | Stream<{ children: JSX.Element }>,
+  ) {
+    return streamify(props$).map((props) => props.children)
   }
 
   function Child() {

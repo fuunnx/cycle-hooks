@@ -3,49 +3,119 @@ import { useProps$ } from '../../src/hooks/props'
 import { useSources } from '../../src/hooks/sources'
 import { useState } from '../../example/hooks/state'
 import { createElement, withHooks } from '../../src'
-import { registerSinks } from '../../src/hooks/sinks'
-import xs from 'xstream'
-import { makeDOMDriver, DOMSource } from '@cycle/dom'
+import { performEffects } from '../../src/hooks/sinks'
+import xs, { Stream } from 'xstream'
+import { makeDOMDriver, DOMSource, MainDOMSource } from '@cycle/dom'
+import { useRef } from '../../src/hooks/ref'
+import { streamify } from '../../src/libs/isObservable'
+
+type Ref<T extends Cycle.EC<{}>> = {
+  DOM: MainDOMSource
+  selector: string
+  sinks: ReturnType<T>
+}
+
+type DOMSinks = JSX.Element | any
+namespace Cycle {
+  export type EC<Props, Sinks = DOMSinks> = {
+    (props$: Stream<Props> | Props): Sinks extends DOMSinks
+      ? Sinks
+      : {
+          [P in keyof ComponentSinks]: Stream<ComponentSinks[P]>
+        }
+  }
+  export type FC<Props = undefined> = (props: Props) => DOMSinks
+}
+
+// for proper typings in JSX
+function EC<ComponentProps, ComponentSinks = DOMSinks>(
+  Component: (
+    props$: Stream<ComponentProps>,
+  ) => ReturnType<Cycle.EC<ComponentProps, ComponentSinks>>,
+): Cycle.EC<ComponentProps, ComponentSinks> {
+  return function name(props$) {
+    return Component(streamify(props$))
+  }
+}
 
 type AppSources = {
-  DOM: DOMSource
+  DOM: MainDOMSource
 }
 
 function App() {
-  const [count$, setCount] = useState(0)
+  const componentRef = useRef<Component>()
+  const count$ = componentRef.sinks.click$.fold((x) => x + 1, 0)
 
-  return count$.map((count) => {
+  return count$
+    .fold((x) => x + 1, 0)
+    .map((count) => {
+      return (
+        <div>
+          <Component ref={componentRef} name="World" />
+          {count}
+        </div>
+      )
+    })
+}
+
+function App2() {
+  const component = Component(xs.of({ name: 'world' }))
+  const count$ = component.click$.fold((x) => x + 1, 0)
+
+  return xs.combine(component.DOM, count$).map(([component, count]) => {
     return (
       <div>
-        <Component
-          name="World"
-          onClick={() => setCount((state) => state + 1)}
-        />
+        {component}
         {count}
       </div>
     )
   })
 }
 
+function App3() {
+  const component = Component(xs.of({ name: 'world' }))
+  const count$ = component.click$.fold((x) => x + 1, 0)
+
+  return count$
+    .fold((x) => x + 1, 0)
+    .map((count) => {
+      return (
+        <div>
+          <Component.DOM name="World" />
+          {count}
+        </div>
+      )
+    })
+}
+
 type ComponentProps = {
   name: string
-  onClick: (event: Event) => unknown
 }
 
-function Component(_: ComponentProps) {
+type ComponentSinks = {
+  DOM: DOMSinks
+  click$: MouseEvent
+}
+
+const Component = EC<ComponentProps, ComponentSinks>(function Component(
+  props$,
+) {
+  const buttonRef = useRef()
   const sources = useSources<AppSources>()
-  const props$ = useProps$<ComponentProps>()
 
-  registerSinks({
-    otherSink: xs.of('thing'),
+  returnEffects({
+    HTTP: sources.DOM.events('click').mapTo('url'),
   })
 
-  return props$.map((props) => {
-    const { name, onClick } = props
+  return {
+    click$: buttonRef.DOM.events('click'),
+    DOM: props$.map((props) => {
+      const { name } = props
 
-    return <button onClick={onClick}>Hello {name}!</button>
-  })
-}
+      return <button>Hello {name}!</button>
+    }),
+  }
+})
 
 run(withHooks(App, ['DOM', 'otherSink']), {
   DOM: makeDOMDriver('#app'),

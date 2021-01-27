@@ -30,7 +30,9 @@ export type Key = string | number | Symbol
 export type Props = { [key: string]: unknown }
 
 export type Component = {
-  (props?: Record<string, unknown>): JSX.Element
+  (
+    props?: Record<string, unknown> | Stream<Record<string, unknown>>,
+  ): JSX.Element
   (): Sinks | Stream<JSX.Element>
 }
 

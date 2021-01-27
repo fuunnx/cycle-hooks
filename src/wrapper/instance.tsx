@@ -9,9 +9,8 @@ import {
 } from 'performative-ts'
 import { streamify } from '../libs/isObservable'
 import { mapObj } from '../libs/mapObj'
-import { onUnmount, withUnmount } from '../hooks/unmount'
+import { onUnmount, withUnmount } from './unmount'
 import { mountInstances } from './mountInstances'
-import { provideSinksEff, readGatherableEff } from '../hooks/sinks'
 import { useSources } from '../hooks/sources'
 import { Key, ComponentDescription } from '../pragma/types'
 import { shallowEquals } from '../libs/shallowEquals'
@@ -23,7 +22,6 @@ import { withHooks } from '.'
 import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from '../libs/trackers/trackUsage'
 import { VNode } from 'snabbdom/build/package/vnode'
-import { useMemorySubject } from '../hooks/subject'
 import { useID } from '../hooks/id'
 
 type RefTracker = {
@@ -34,10 +32,10 @@ type RefTracker = {
     type: Function,
     key?: Key,
     componentDescription?: ComponentDescription,
-  ): IRef
+  ): IInstance
 }
 
-export type IRef = {
+export type IInstance = {
   data: {
     sinks: null | Sinks
     unmount: () => void
@@ -49,58 +47,51 @@ export type IRef = {
   trackers: RefTracker[]
 }
 
-export function Ref(componentDescription?: ComponentDescription): IRef {
-  const constructorFn = componentDescription?.$func$
-  const componentData = componentDescription?.data
-  const componentFrame = componentDescription?.$frame$
+export function Instance(
+  componentDescription?: ComponentDescription,
+): IInstance {
+  const component = componentDescription?.$func$
+  const data = componentDescription?.data
+  const frame = componentDescription?.$frame$
 
-  const [props$, setProps] = useMemorySubject(componentDescription?.data.props)
-  const [children$, setChildren] = useMemorySubject(
-    componentDescription?.data.children,
-  )
+  const props$ = xs.create().startWith({
+    ...data.props,
+    children: data.children,
+  })
 
-  const finalProps$ = xs
-    .combine(
-      props$.compose(dropRepeats(shallowEquals)),
-      children$.compose(dropRepeats(shallowEquals)),
-    )
-    .map(([props, children]) => ({ ...props, children }))
-    .remember()
+  const finalProps$ = props$.compose(dropRepeats(shallowEquals)).remember()
 
-  const ref: IRef = {
+  const instance: IInstance = {
     data: {
       sinks: {},
       unmount() {
-        ref.trackers.forEach((x) => x.destroy())
+        instance.trackers.forEach((x) => x.destroy())
       },
       componentDescription,
       update(newComponentDescription) {
         this.componentDescription = newComponentDescription
-        setProps(newComponentDescription.data.props)
-        setChildren(newComponentDescription.data.children)
+        props$.shamefullySendNext({
+          ...componentDescription?.data.props,
+          children: componentDescription?.data.children,
+        })
       },
     },
     trackers: [],
   }
 
-  if (constructorFn) {
-    ref.data.sinks = instanciateComponent()
+  if (component) {
+    instance.data.sinks = instanciateComponent()
   }
 
-  return ref
+  return instance
 
   function instanciateComponent() {
-    return withFrame(componentFrame, () =>
-      withRef(ref, () => {
+    return withFrame(frame, () =>
+      withInstance(instance, () => {
         const [unmount, result] = withUnmount(() => {
-          const sources = {
-            ...useSources(),
-            props$: finalProps$,
-          }
-
-          const sinks = isolate(
+          return isolate(
             withHooks(() => {
-              const result: any = constructorFn(componentData.props)
+              const result: any = component(finalProps$ as any)
               const sinks = result.DOM ? result : { DOM: streamify(result) }
               const transformedSinks = mapObj(
                 (sink$: Stream<any>) => sink$.endWhen(onUnmount()),
@@ -115,29 +106,22 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
               }
             }),
             { DOM: useID(), '*': null },
-          )(sources) as Sinks
-
-          const { DOM, props$, ...otherSinks } = sinks
-
-          if (Object.keys(otherSinks).length) {
-            performOrFailSilently(provideSinksEff, otherSinks)
-          }
-
-          return sinks
+          )(useSources()) as Sinks
         }, 'component')
 
         let domSubscription = result.DOM?.subscribe({
           next(dom: any) {
-            ref.data.currentVTree = dom
-            ref.data.domCallback?.(dom)
+            instance.data.currentVTree = dom
+            instance.data.domCallback?.(dom)
           },
         })
 
-        ref.data.unmount = () => {
+        instance.data.unmount = () => {
           domSubscription?.unsubscribe()
-          ref.trackers.forEach((x) => x.destroy())
+          instance.trackers.forEach((x) => x.destroy())
           unmount()
         }
+
         return result
       }),
     )
@@ -147,11 +131,11 @@ export function Ref(componentDescription?: ComponentDescription): IRef {
 export function createRefTracker() {
   const lifecycle: TrackingLifecycle<
     [Function, Key] | Function,
-    IRef,
+    IInstance,
     [ComponentDescription]
   > = {
     create(_, componentDescription) {
-      return Ref(componentDescription)
+      return Instance(componentDescription)
     },
     use(ref, _, componentDescription) {
       ref.data.update(componentDescription)
@@ -164,13 +148,13 @@ export function createRefTracker() {
 
   const indexedTracker = makeUsageTrackerIndexed<
     Function,
-    IRef,
+    IInstance,
     [ComponentDescription]
   >(lifecycle)
 
   const keyedTracker = makeUsageTrackerKeyed<
     [Function, Key],
-    IRef,
+    IInstance,
     [ComponentDescription]
   >(lifecycle)
 
@@ -200,15 +184,17 @@ export function createRefTracker() {
   }
 }
 
-export const readRefEffect: EffectName<() => IRef> = Symbol('ref')
+export const getInstanceSymbol: EffectName<() => IInstance> = Symbol(
+  'getInstance',
+)
 
-export function withRef<T>(ref: IRef, exec: () => T): T {
-  return withHandler([readRefEffect, () => ref], exec)
+export function withInstance<T>(instance: IInstance, exec: () => T): T {
+  return withHandler([getInstanceSymbol, () => instance], exec)
 }
 
-export function useRef(): IRef {
-  return perform(readRefEffect)
+export function getInstance(): IInstance {
+  return perform(getInstanceSymbol)
 }
-export function safeUseRef(): IRef {
-  return performOrFailSilently(readRefEffect)
+export function safeGetInstance(): IInstance | undefined {
+  return performOrFailSilently(getInstanceSymbol)
 }

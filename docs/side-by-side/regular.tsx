@@ -9,9 +9,7 @@ type AppSources = {
 
 function App(sources: AppSources) {
   const component = Component({ ...sources, props$: xs.of({ name: 'World' }) })
-  const count$ = component.click$
-    .map(() => (state) => state + 1)
-    .fold((x) => x + 1, 0)
+  const count$ = component.click$.fold((x) => x + 1, 0)
 
   return {
     otherSink: component.otherSink,

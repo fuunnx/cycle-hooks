@@ -1,7 +1,7 @@
 import { ResponseStream, HTTPSource, RequestInput, Response } from '@cycle/http'
 import xs, { Stream, MemoryStream } from 'xstream'
 import sample from 'xstream-sample'
-import { registerSinks } from '../../src/hooks/sinks'
+import { performEffects } from '../../src/hooks/sinks'
 import { useSources, withSources } from '../../src/hooks/sources'
 import { replay } from '../libs/xstream-replay'
 
@@ -30,14 +30,14 @@ export function useRequest(request: RequestInput): Stream<Response> {
 
   if (!cache$) {
     const category = (Symbol('category') as unknown) as string
-    registerSinks<{ HTTP: Stream<RequestInput> }>({
+    performEffects<{ HTTP: Stream<RequestInput> }>({
       HTTP: xs.of({ ...normalized, category }),
     })
 
     return HTTP.select(category).flatten()
   }
 
-  registerSinks<{ HTTP: Stream<RequestInput> }>({
+  performEffects<{ HTTP: Stream<RequestInput> }>({
     HTTP: xs
       .of(null)
       .compose(sample(cache$))

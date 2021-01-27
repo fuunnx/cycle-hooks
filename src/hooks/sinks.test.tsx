@@ -1,5 +1,5 @@
 import xs from 'xstream'
-import { gatherSinks, registerSinks } from './sinks'
+import { collectEffects, performEffects } from './sinks'
 import { mockTimeSource } from '@cycle/time'
 import { mergeSinks } from 'cyclejs-utils'
 import { createElement } from '../pragma'
@@ -19,10 +19,10 @@ test('gather sinks 1 level deep', (done) => {
   const Time = mockTimeSource()
   const makeSinks = () => ({ a: Time.diagram('-x'), b: Time.diagram('-x') })
   function App() {
-    registerSinks(makeSinks())
+    performEffects(makeSinks())
     return {}
   }
-  const [gathered] = gatherSinks(['a', 'b'], () => App())
+  const [gathered] = collectEffects(['a', 'b'], () => App())
   assertSinksEqual(Time, gathered, makeSinks())
 
   Time.run(done)
@@ -33,16 +33,16 @@ test('gather sinks 2 levels deep', (done) => {
   const sinksA = () => ({ a: Time.diagram('-x'), b: Time.diagram('-x') })
   const sinksB = () => ({ a: Time.diagram('--x-x'), b: Time.diagram('-x') })
   function App() {
-    registerSinks(sinksA())
+    performEffects(sinksA())
     Component()
     return {}
   }
   function Component() {
-    registerSinks(sinksB())
+    performEffects(sinksB())
     return {}
   }
 
-  const [gathered] = gatherSinks(['a', 'b'], () => App())
+  const [gathered] = collectEffects(['a', 'b'], () => App())
   assertSinksEqual(Time, gathered, mergeSinks([sinksA(), sinksB()]))
 
   Time.run(done)
@@ -55,13 +55,13 @@ test('gather sinks inside streams', (done) => {
   function App() {
     return {
       c: c$().map(() => {
-        registerSinks(sinks())
+        performEffects(sinks())
         return 'y'
       }),
     }
   }
 
-  const [gathered, appSinks] = gatherSinks(['d'], () => App())
+  const [gathered, appSinks] = collectEffects(['d'], () => App())
   assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
     ...sinks(),
     c: c$().mapTo('y'),
@@ -80,7 +80,7 @@ test('stop gathered sinks on next', (done) => {
   function App() {
     return {
       a: events().map((char) => {
-        registerSinks({
+        performEffects({
           b: repeatEvent(char).debug((x) => console.log(char, x)),
         })
         return char
@@ -88,7 +88,7 @@ test('stop gathered sinks on next', (done) => {
     }
   }
 
-  const [gathered, appSinks] = gatherSinks(['b'], () => App())
+  const [gathered, appSinks] = collectEffects(['b'], () => App())
   assertSinksEqual(Time, gathered, {
     b: events().map(repeatEvent).flatten(),
   })
@@ -107,7 +107,7 @@ test('stop gathered sinks on next (2)', (done) => {
   function App() {
     return {
       a: events().map((char) => {
-        registerSinks({
+        performEffects({
           b: repeatEvent(char),
         })
         return char
@@ -115,7 +115,7 @@ test('stop gathered sinks on next (2)', (done) => {
     }
   }
 
-  const [gathered, appSinks] = gatherSinks(['b'], () => App())
+  const [gathered, appSinks] = collectEffects(['b'], () => App())
 
   const actual = []
   const expected = []
@@ -160,14 +160,14 @@ test('gather sinks inside streams, multiple times', (done) => {
   function App() {
     return {
       c: c$().map(() => {
-        registerSinks({ d: sinksA() })
-        registerSinks({ d: sinksB() })
+        performEffects({ d: sinksA() })
+        performEffects({ d: sinksB() })
         return 'y'
       }),
     }
   }
 
-  const [gathered, appSinks] = gatherSinks(['d'], () => App())
+  const [gathered, appSinks] = collectEffects(['d'], () => App())
   assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
     d: xs.merge(sinksA(), sinksB()),
     c: c$().mapTo('y'),
@@ -180,7 +180,7 @@ test('gather components sinks', (done) => {
   const Time = mockTimeSource()
 
   function wrap(func) {
-    return gatherSinks(['test'], () => {
+    return collectEffects(['test'], () => {
       return withSources({}, () => mountInstances(func()))
     })
   }
@@ -190,7 +190,7 @@ test('gather components sinks', (done) => {
   }
 
   function Child() {
-    registerSinks({
+    performEffects({
       test: Time.diagram('--x'),
     })
     return Time.diagram('--x').map(() => <p>Child</p>)

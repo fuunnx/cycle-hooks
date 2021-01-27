@@ -1,9 +1,4 @@
-import {
-  EffectName,
-  perform,
-  performOrFailSilently,
-  withHandler,
-} from 'performative-ts'
+import { EffectName, performOrFailSilently, withHandler } from 'performative-ts'
 import cuid from 'cuid'
 
 const ID_GEN: EffectName<() => string> = Symbol('ID_GEN')

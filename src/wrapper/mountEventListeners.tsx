@@ -2,7 +2,7 @@ import { Stream, Subscription } from 'xstream'
 import { useSources } from '../hooks/sources'
 import { walkVTree, isVNode } from '../libs/VTree'
 import { vnode, VNode } from 'snabbdom/build/package/vnode'
-import { onUnmount } from '../hooks/unmount'
+import { onUnmount } from './unmount'
 import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
 import { isComponentDescription } from './mountInstances'
 

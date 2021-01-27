@@ -1,19 +1,24 @@
 import xs, { Stream, Subscription } from 'xstream'
 import { isObservable, streamify } from '../libs/isObservable'
-import { safeUseRef, Ref, createRefTracker, withRef } from './ref'
+import {
+  safeGetInstance,
+  Instance,
+  createRefTracker,
+  withInstance,
+} from './instance'
 import { h, VNode } from '@cycle/dom'
 import { ComponentDescription } from '../pragma/types'
 import { indexVTree, assocVTree } from '../libs/VTree'
-import { readSourcesEffect } from '../hooks/sources'
-import { provideSinksEff } from '../hooks/sinks'
+import { useSourcesSymbol } from '../hooks/sources'
+import { performEffectsSymbol } from '../hooks/sinks'
 import { withFrame, withHandler } from 'performative-ts'
 
-const knownTypes = new Map<Function, 'functionnal' | 'cyclic'>()
+const knownTypes = new WeakMap<Function, 'stateless' | 'stateful'>()
 
 function componentType(
   component: Function,
   props: any,
-): 'functionnal' | 'cyclic' {
+): 'stateless' | 'stateful' {
   if (knownTypes.has(component)) {
     return knownTypes.get(component)
   }
@@ -22,17 +27,17 @@ function componentType(
   knownTypes.set(component, type)
   return type
 
-  function guess(): 'functionnal' | 'cyclic' {
+  function guess(): 'stateless' | 'stateful' {
     try {
       const result = withHandler(
         [
-          readSourcesEffect,
+          useSourcesSymbol,
           () => {
             throw '$IS_CYCLIC_COMPONENT'
           },
         ],
         [
-          provideSinksEff,
+          performEffectsSymbol,
           () => {
             throw '$IS_CYCLIC_COMPONENT'
           },
@@ -40,12 +45,12 @@ function componentType(
         () => component(props),
       )
       if (isObservable(result)) {
-        return 'cyclic'
+        return 'stateful'
       }
 
-      return 'functionnal'
+      return 'stateless'
     } catch (e) {
-      if (e === '$IS_CYCLIC_COMPONENT') return 'cyclic'
+      if (e === '$IS_CYCLIC_COMPONENT') return 'stateful'
       else throw e
     }
   }
@@ -54,13 +59,13 @@ function componentType(
 export function mountInstances(
   stream: JSX.Element | Stream<JSX.Element>,
 ): Stream<JSX.Element> {
-  const ref = safeUseRef() || Ref()
+  const ref = safeGetInstance() || Instance()
   let tracker = createRefTracker()
   ref.trackers.push(tracker)
 
   let subscription: Subscription
 
-  return withRef(ref, () => {
+  return withInstance(ref, () => {
     return xs.createWithMemory({
       start(listener) {
         let currentVTree
@@ -91,7 +96,7 @@ export function mountInstances(
               }
               const type = componentType(value.$func$, props)
 
-              if (type === 'functionnal') {
+              if (type === 'stateless') {
                 const vtree = withFrame(value.$frame$, () =>
                   value.$func$(props),
                 )

@@ -1,14 +1,9 @@
 import '../patches/xstream'
 
 import { Sources } from '../types'
-import {
-  EffectName,
-  withHandler,
-  perform,
-  performOrFailSilently,
-} from 'performative-ts'
+import { EffectName, withHandler, perform } from 'performative-ts'
 
-export const readSourcesEffect: EffectName<() => Sources> = Symbol('sources')
+export const useSourcesSymbol: EffectName<() => Sources> = Symbol('useSources')
 
 export function withSources<T>(
   sources: Sources | ((sources: Sources) => Sources),
@@ -16,16 +11,12 @@ export function withSources<T>(
 ) {
   if (typeof sources === 'function') {
     const newSources = sources(useSources())
-    return withHandler([readSourcesEffect, () => newSources], func)
+    return withHandler([useSourcesSymbol, () => newSources], func)
   }
 
-  return withHandler([readSourcesEffect, () => sources], func)
+  return withHandler([useSourcesSymbol, () => sources], func)
 }
 
 export function useSources<So extends Sources>(): So {
-  return perform(readSourcesEffect) as So
-}
-
-export function safeUseSources<So extends Sources>(): So {
-  return performOrFailSilently(readSourcesEffect) as So
+  return perform(useSourcesSymbol) as So
 }

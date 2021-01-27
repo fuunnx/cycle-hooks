@@ -1,7 +1,7 @@
 import xs, { MemoryStream, Stream, Subscription } from 'xstream'
 import sample from 'xstream-sample'
 import { createElement } from '../src'
-import { registerSinks } from '../src/hooks/sinks'
+import { performEffects } from '../src/hooks/sinks'
 import { HTTPSource, RequestInput, ResponseStream, Response } from '@cycle/http'
 import { useSources, withSources } from '../src/hooks/sources'
 import { useProps$ } from '../src/hooks/props'

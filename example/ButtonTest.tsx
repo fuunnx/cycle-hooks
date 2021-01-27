@@ -3,14 +3,14 @@ import xs, { Stream } from 'xstream'
 import { createElement } from '../src'
 import { useProps$ } from '../src/hooks/props'
 import { useRef } from '../src/hooks/ref'
-import { gatherSinks, registerSinks } from '../src/hooks/sinks'
+import { collectEffects, performEffects } from '../src/hooks/sinks'
 import { useSources, withSources } from '../src/hooks/sources'
 
 type Props = {}
 
 export function ButtonTest(_: Props) {
   const [sinks, Button] = makeButton()
-  const [sinks2, Button2Node] = gatherSinks(['click$'], () => {
+  const [sinks2, Button2Node] = collectEffects(['click$'], () => {
     return <Button2 />
   })
 
@@ -55,7 +55,7 @@ function Button2() {
   const props$ = useProps$<Button2Props>()
   const click$ = useSources().DOM.events('click')
 
-  registerSinks({
+  performEffects({
     click$,
   })
 
