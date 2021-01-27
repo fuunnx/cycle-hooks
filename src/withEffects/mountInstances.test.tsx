@@ -1,6 +1,6 @@
 import { mockTimeSource } from '@cycle/time'
 import xs, { Stream } from 'xstream'
-import { createElement } from '../pragma'
+import { createElement } from '../jsx'
 import { mountInstances } from './mountInstances'
 import { onUnmount } from './unmount'
 import { assertDomEqual } from '../libs/assertDomEqual'

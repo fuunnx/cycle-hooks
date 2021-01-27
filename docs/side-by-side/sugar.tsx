@@ -1,7 +1,5 @@
 import { run } from '@cycle/run'
-import { useProps$ } from '../../src/hooks/props'
 import { useSources } from '../../src/hooks/sources'
-import { useState } from '../../example/hooks/state'
 import { createElement, withHooks } from '../../src'
 import { performEffects } from '../../src/hooks/sinks'
 import xs, { Stream } from 'xstream'
@@ -103,7 +101,7 @@ const Component = EC<ComponentProps, ComponentSinks>(function Component(
   const buttonRef = useRef()
   const sources = useSources<AppSources>()
 
-  returnEffects({
+  performEffects({
     HTTP: sources.DOM.events('click').mapTo('url'),
   })
 

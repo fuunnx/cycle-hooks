@@ -8,7 +8,7 @@ import { mountInstances } from './mountInstances'
 import { withHandler } from 'performative-ts'
 import { mountEventListeners } from './mountEventListeners'
 import { streamify } from '../libs/isObservable'
-import { Component } from '../pragma/types'
+import { Component } from '../jsx/types'
 
 export function withHooks<Si extends Sinks>(
   App: Component,

@@ -1,5 +1,5 @@
 import { useGlobalState } from './hooks/globalState'
-import { createElement } from '../src/pragma'
+import { createElement } from '../src/jsx'
 
 export function Input() {
   const [state$, setState] = useGlobalState({})

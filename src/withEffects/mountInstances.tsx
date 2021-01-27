@@ -7,7 +7,7 @@ import {
   withInstance,
 } from './instance'
 import { h, VNode } from '@cycle/dom'
-import { ComponentDescription } from '../pragma/types'
+import { ComponentDescription } from '../jsx/types'
 import { indexVTree, assocVTree } from '../libs/VTree'
 import { useSourcesSymbol } from '../hooks/sources'
 import { performEffectsSymbol } from '../hooks/sinks'

@@ -1,6 +1,6 @@
 import { Stream, InternalProducer, NO } from 'xstream'
 import { captureFrame, withFrame } from 'performative-ts'
-import { withUnmount } from '../wrapper/unmount'
+import { withUnmount } from '../withEffects/unmount'
 import { setAdapt } from '@cycle/run/lib/adapt'
 
 setAdapt((x) => {

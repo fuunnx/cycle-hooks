@@ -9,7 +9,7 @@ import {
   perform,
   performOrFailSilently,
 } from 'performative-ts'
-import { onUnmount } from '../wrapper/unmount'
+import { onUnmount } from '../withEffects/unmount'
 import { mapObj } from '../libs/mapObj'
 
 export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void

@@ -2,9 +2,9 @@ import xs from 'xstream'
 import { collectEffects, performEffects } from './sinks'
 import { mockTimeSource } from '@cycle/time'
 import { mergeSinks } from 'cyclejs-utils'
-import { createElement } from '../pragma'
+import { createElement } from '../jsx'
 import { withSources } from './sources'
-import { mountInstances } from '../wrapper/mountInstances'
+import { mountInstances } from '../withEffects/mountInstances'
 
 console.log({ createElement })
 
