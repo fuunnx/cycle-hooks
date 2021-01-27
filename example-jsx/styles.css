@@ -1,0 +1,54 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1.25;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+body {
+  padding: 40px;
+}
+
+h1 {
+  font-size: 3rem;
+  line-height: 40px;
+}
+
+h2 {
+  font-size: 2.1rem;
+  line-height: 40px;
+}
+
+.togglable-section {
+}
+
+.togglable-section > .header {
+  display: block;
+  border-top: 1px solid #000;
+  display: flex;
+  align-items: center;
+}
+
+.togglable-section > .header::after {
+  content: '▼';
+  margin-left: auto;
+  transition: transform 0.4s ease-out;
+}
+
+.togglable-section:not(.-open) > .header::after {
+  transform: rotate(-90deg);
+}
+
+.togglable-section > .content {
+  display: block;
+  margin-bottom: 40px;
+}

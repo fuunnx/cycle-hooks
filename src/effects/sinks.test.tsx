@@ -4,7 +4,7 @@ import { mockTimeSource } from '@cycle/time'
 import { mergeSinks } from 'cyclejs-utils'
 import { createElement } from '../jsx'
 import { withSources } from './sources'
-import { mountInstances } from '../withEffects/mountInstances'
+import { mountInstances } from '../jsx/mountInstances'
 
 console.log({ createElement })
 

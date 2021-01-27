@@ -1,10 +1,11 @@
 import { run } from '@cycle/run'
-import { makeDOMDriver } from '@cycle/dom'
-import { makeHTTPDriver } from '@cycle/http'
-import { withHooks } from '../src'
-import { withState, Reducer } from '@cycle/state'
+import { MainDOMSource, makeDOMDriver } from '@cycle/dom'
+import { HTTPSource, makeHTTPDriver } from '@cycle/http'
+import { withEffects } from '../src'
+import { withState, Reducer, StateSource } from '@cycle/state'
 import { App } from './App'
 import { Stream } from 'xstream'
+import { useSources } from '../src/effects/sources'
 
 const drivers = {
   DOM: makeDOMDriver('#app'),
@@ -13,18 +14,22 @@ const drivers = {
     sink$.addListener({ next: (x) => console.log(x) }),
 }
 
+export type AppState = { value: string }
+
+type Sources = {
+  DOM: MainDOMSource
+  HTTP: HTTPSource
+  state: StateSource<AppState>
+}
+
 type Sinks = {
   DOM: Stream<any>
   log: Stream<any>
   state: Stream<Reducer<any>>
 }
 
-function Main(sources) {
-  const sinks = withHooks<Sinks>(App, [...Object.keys(drivers), 'state'])(
-    sources,
-  )
-
-  return sinks
+export function useAppSources() {
+  return useSources<Sources>()
 }
 
-run(withState(Main), drivers)
+run(withState(withEffects<Sources, Sinks>(App)), drivers)

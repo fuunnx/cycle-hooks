@@ -1,13 +1,13 @@
 import { mockTimeSource } from '@cycle/time'
 import xs, { Stream } from 'xstream'
-import { createElement } from '../jsx'
+import { createElement } from '.'
 import { mountInstances } from './mountInstances'
-import { onUnmount } from './unmount'
-import { assertDomEqual } from '../libs/assertDomEqual'
-import { useSourcesSymbol } from '../hooks/sources'
+import { onUnmount } from '../withEffects/unmount'
+import { assertDomEqual } from './libs/assertDomEqual'
+import { useSourcesSymbol } from '../effects/sources'
 import { withHandler } from 'performative-ts'
 import dropRepeats from 'xstream/extra/dropRepeats'
-import { streamify } from '../libs/isObservable'
+import { streamify } from './libs/isObservable'
 
 // wtf, if not used, the import is dropped
 console.log(createElement)

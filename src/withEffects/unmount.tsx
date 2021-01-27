@@ -1,37 +1,34 @@
 import { EffectName, performOrFailSilently, withHandler } from 'performative-ts'
 import xs from 'xstream'
 
-type RegisterUnmountCallback = (callback: () => void) => void
+export type RegisterUnmountCallback = (callback: () => void) => void
 
-const registerUnmountEff: EffectName<RegisterUnmountCallback> = Symbol(
-  'registerUnmountEff',
+const registerUnmountSymbol: EffectName<RegisterUnmountCallback> = Symbol(
+  'registerUnmount',
 )
-const registerComponentUnmountEff: EffectName<RegisterUnmountCallback> = Symbol(
-  'registerComponentUnmountEff',
-)
-const registerStreamUnmountEff: EffectName<RegisterUnmountCallback> = Symbol(
-  'registerStreamUnmountEff',
+
+const registerStreamUnmountSymbol: EffectName<RegisterUnmountCallback> = Symbol(
+  'registerStreamUnmount',
 )
 
 export function withUnmount<T>(
   exec: () => T,
-  type: 'component' | 'stream' = 'stream',
+  registerOwnChannelSymbol: EffectName<
+    RegisterUnmountCallback
+  > = registerStreamUnmountSymbol,
 ) {
   let callbacks = []
   function addListener(callback) {
     callbacks.push(callback)
   }
 
-  const registerOwnChannelEff: EffectName<RegisterUnmountCallback> =
-    type === 'stream' ? registerStreamUnmountEff : registerComponentUnmountEff
-
   const returnValue = withHandler(
-    [registerUnmountEff, addListener],
-    [registerOwnChannelEff, addListener],
+    [registerUnmountSymbol, addListener],
+    [registerOwnChannelSymbol, addListener],
     exec,
   )
 
-  performOrFailSilently(registerOwnChannelEff, triggerUnmount)
+  performOrFailSilently(registerOwnChannelSymbol, triggerUnmount)
 
   return [triggerUnmount, returnValue] as const
 
@@ -43,21 +40,7 @@ export function withUnmount<T>(
 export function onUnmount(callback: () => void = () => {}) {
   const unmount$ = xs.create()
   let unmounted = false
-  performOrFailSilently(registerUnmountEff, () => {
-    if (unmounted) return
-
-    callback()
-    unmount$.shamefullySendNext(null)
-
-    unmounted = true
-  })
-  return unmount$
-}
-
-export function onComponentUnmount(callback: () => void = () => {}) {
-  const unmount$ = xs.create()
-  let unmounted = false
-  performOrFailSilently(registerComponentUnmountEff, () => {
+  performOrFailSilently(registerUnmountSymbol, () => {
     if (unmounted) return
 
     callback()

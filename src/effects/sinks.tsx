@@ -1,6 +1,6 @@
 import '../patches/xstream'
 
-import { Sinks } from '../types'
+import { AnySinks } from '../types'
 import xs, { Stream } from 'xstream'
 import { replicateMany } from '@cycle/run/lib/cjs/internals'
 import {
@@ -12,7 +12,7 @@ import {
 import { onUnmount } from '../withEffects/unmount'
 import { mapObj } from '../libs/mapObj'
 
-export type Registerer = (sinks: Sinks, stopSignal$?: Stream<any>) => void
+export type Registerer = (sinks: AnySinks, stopSignal$?: Stream<any>) => void
 export const performEffectsSymbol: EffectName<Registerer> = Symbol(
   'performEffects',
 )
@@ -22,15 +22,15 @@ export const getEffectsNamesSymbol: EffectName<() => EffectsNames> = Symbol(
   'getEffectsNames',
 )
 
-export function collectEffects<T>(exec: () => T): [Sinks, T]
+export function collectEffects<T>(exec: () => T): [AnySinks, T]
 export function collectEffects<T>(
   gatherableKeys: string[],
   exec: () => T,
-): [Sinks, T]
+): [AnySinks, T]
 export function collectEffects<T>(
   keys_: string[] | (() => T),
   exec_?: () => T,
-): [Sinks, T] {
+): [AnySinks, T] {
   // type arguments
   let exec: () => T
   let keys: string[]
@@ -47,7 +47,7 @@ export function collectEffects<T>(
   const gatherableKeys = [...scopeKeys, ...keys]
 
   let sinksProxy = initSinksProxy()
-  function gatherer(sinks: Sinks, stopSignal$: Stream<any> = onUnmount()) {
+  function gatherer(sinks: AnySinks, stopSignal$: Stream<any> = onUnmount()) {
     if (process.env.NODE_ENV !== 'production') {
       Object.keys(sinks).forEach((key) => {
         if (!gatherableKeys.includes(key)) {
@@ -79,7 +79,7 @@ export function collectEffects<T>(
   }
 }
 
-export function performEffects<T extends Sinks = Sinks>(
+export function performEffects<T extends AnySinks>(
   sinks: T,
   stopSignal$: Stream<any> = onUnmount(),
 ) {

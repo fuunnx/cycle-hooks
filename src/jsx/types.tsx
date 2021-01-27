@@ -1,8 +1,8 @@
-import { Sinks } from '../types'
+import { AnySinks } from '../types'
 import { Stream } from 'xstream'
 import { VNode, VNodeData } from 'snabbdom/build/package/vnode'
 import { Frame } from 'performative-ts'
-import { Ref } from '../hooks/ref'
+import { Ref } from './ref'
 
 declare global {
   namespace JSX {
@@ -12,7 +12,7 @@ declare global {
       | number
       | VNode
       | ComponentDescription
-      | Sinks
+      | AnySinks
       | Stream<JSX.Element>
 
     interface IntrinsicElements {
@@ -33,7 +33,7 @@ export type Component = {
   (
     props?: Record<string, unknown> | Stream<Record<string, unknown>>,
   ): JSX.Element
-  (): Sinks | Stream<JSX.Element>
+  (): AnySinks | Stream<JSX.Element>
 }
 
 export type ComponentDescription = {

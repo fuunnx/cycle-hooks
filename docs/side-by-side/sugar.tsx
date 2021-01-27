@@ -1,11 +1,11 @@
 import { run } from '@cycle/run'
-import { useSources } from '../../src/hooks/sources'
-import { createElement, withHooks } from '../../src'
-import { performEffects } from '../../src/hooks/sinks'
+import { useSources } from '../../src/effects/sources'
+import { createElement, withEffects } from '../../src'
+import { performEffects } from '../../src/effects/sinks'
 import xs, { Stream } from 'xstream'
 import { makeDOMDriver, DOMSource, MainDOMSource } from '@cycle/dom'
-import { useRef } from '../../src/hooks/ref'
-import { streamify } from '../../src/libs/isObservable'
+import { useRef } from '../../src/jsx/ref'
+import { streamify } from '../../src/jsx/libs/isObservable'
 
 type Ref<T extends Cycle.EC<{}>> = {
   DOM: MainDOMSource
@@ -115,7 +115,7 @@ const Component = EC<ComponentProps, ComponentSinks>(function Component(
   }
 })
 
-run(withHooks(App, ['DOM', 'otherSink']), {
+run(withEffects(App, ['DOM', 'otherSink']), {
   DOM: makeDOMDriver('#app'),
   otherSink: (sink$) => sink$.addListener({ next: console.log }),
 })

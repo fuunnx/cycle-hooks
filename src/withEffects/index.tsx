@@ -1,48 +1,40 @@
-import { useSourcesSymbol } from '../hooks/sources'
-import { Instance, getInstanceSymbol } from './instance'
-import { Sinks, Sources } from '../types'
-import { collectEffects } from '../hooks/sinks'
+import { withSources } from '../effects/sources'
+import { AnySinks, AnySources, MainFn } from '../types'
+import { collectEffects } from '../effects/sinks'
 import { mergeSinks } from '../libs/mergeSinks'
-import { Stream } from 'xstream'
-import { mountInstances } from './mountInstances'
-import { withHandler } from 'performative-ts'
-import { mountEventListeners } from './mountEventListeners'
-import { streamify } from '../libs/isObservable'
-import { Component } from '../jsx/types'
 
-export function withHooks<Si extends Sinks>(
-  App: Component,
-  sinksNames: string[] = [],
-): (sources: Sources) => Si {
-  return function AppWithHooks(sources: Sources): Si {
-    const [gathered, sinks] = collectEffects(
-      [...sinksNames, ...Object.keys(sources)],
+export function withEffects<So extends AnySources, Si extends AnySinks>(
+  App: () => Partial<Si>,
+): MainFn<So, Si>
+export function withEffects<So extends AnySources, Si extends AnySinks>(
+  effectsNames: string[],
+  App: () => Partial<Si>,
+): MainFn<So, Si>
+export function withEffects<So extends AnySources, Si extends AnySinks>(
+  ...args: [any] | [any, any]
+): MainFn<So, Si> {
+  let App: () => Si
+  let effectsNames: string[] = []
+
+  if (args.length === 2) {
+    ;[effectsNames, App] = args
+  }
+  if (args.length === 1) {
+    ;[App] = args
+  }
+
+  return function AppWithEffects(sources: AnySources): Si {
+    const [appEffects, appSinks] = collectEffects(
+      [...effectsNames, ...Object.keys(sources)],
       () => {
-        const instance = Instance()
-
-        return withHandler(
-          [useSourcesSymbol, () => sources],
-          [getInstanceSymbol, () => instance],
-          () => {
-            const result = App()
-            const appSinks = ((result as any).DOM
-              ? result
-              : { DOM: streamify(result) }) as Sinks
-
-            return {
-              ...appSinks,
-              DOM: (appSinks.DOM as Stream<any>)
-                .compose(mountEventListeners)
-                .compose(mountInstances),
-            }
-          },
-        )
+        return withSources(sources, () => {
+          return App()
+        })
       },
     )
 
-    return ({
-      ...mergeSinks([gathered, sinks]),
-      DOM: sinks.DOM,
-    } as unknown) as Si
+    return mergeSinks([appEffects, appSinks], {
+      DOM: () => appSinks.DOM,
+    }) as Si
   }
 }

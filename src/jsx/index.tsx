@@ -1,5 +1,5 @@
 import { h, VNode } from '@cycle/dom'
-import { Ref } from '../hooks/ref'
+import { Ref } from './ref'
 import { Component, ComponentDescription } from './types'
 import { captureFrame } from 'performative-ts'
 

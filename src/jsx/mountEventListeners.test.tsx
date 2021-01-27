@@ -3,9 +3,9 @@ import { mountEventListeners } from './mountEventListeners'
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
 import sample from 'xstream-sample'
 import { mockDOMSource, h } from '@cycle/dom'
-import { createElement, Sources } from '../index'
+import { createElement, AnySources } from '../index'
 import xs from 'xstream'
-import { withHooks } from '.'
+import { withEffects } from '../withEffects'
 
 function useSubject<T>() {
   const subject$ = xs.create<T>()
@@ -30,7 +30,7 @@ function testTime(impl: (Time: MockTimeSource) => void) {
 
 function compareComponents(
   Time: MockTimeSource,
-  sources: Sources,
+  sources: AnySources,
   [Actual, Expected],
 ) {
   const expectedSinks = Expected(sources)
@@ -47,7 +47,7 @@ function compareComponents(
 test(
   'mounts listeners on simple DOM element',
   testTime((Time) => {
-    function Expected(sources: Sources) {
+    function Expected(sources: AnySources) {
       return {
         DOM: xs.of(
           <div>
@@ -58,7 +58,7 @@ test(
       }
     }
 
-    const Actual = withHooks(function Sugar() {
+    const Actual = withEffects(function Sugar() {
       const [click$, onClick] = useSubject()
       return {
         DOM: xs
@@ -89,7 +89,7 @@ test(
 test(
   'has nice selectors',
   testTime((Time) => {
-    function Expected(sources: Sources) {
+    function Expected(sources: AnySources) {
       return {
         DOM: xs.of(
           <div>
@@ -112,7 +112,7 @@ test(
       }
     }
 
-    const Actual = withHooks(function Sugar() {
+    const Actual = withEffects(function Sugar() {
       const [click1$, onClick1] = useSubject()
       const [click2$, onClick2] = useSubject()
       return {
@@ -149,7 +149,7 @@ test(
 test(
   'mounted listeners can be updated',
   testTime((Time) => {
-    function Expected(sources: Sources) {
+    function Expected(sources: AnySources) {
       const count$ = Time.periodic(10).take(10).startWith(0)
 
       return {
@@ -162,7 +162,7 @@ test(
       }
     }
 
-    const Actual = withHooks(function Sugar() {
+    const Actual = withEffects(function Sugar() {
       const [click$, onClick] = useSubject()
       const count$ = Time.periodic(10).take(10).startWith(0)
 
@@ -193,7 +193,7 @@ test(
 test(
   'mounted listeners can be updated',
   testTime((Time) => {
-    function Expected(sources: Sources) {
+    function Expected(sources: AnySources) {
       const count$ = Time.periodic(10).take(10).startWith(0)
 
       return {
@@ -208,7 +208,7 @@ test(
       }
     }
 
-    const Actual = withHooks(function Sugar() {
+    const Actual = withEffects(function Sugar() {
       const [click$, onClick] = useSubject()
       const count$ = Time.periodic(10).take(10).startWith(0)
 

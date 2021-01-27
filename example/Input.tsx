@@ -1,16 +1,20 @@
 import { useGlobalState } from './hooks/globalState'
-import { createElement } from '../src/jsx'
+import { AppState, useAppSources } from '.'
+import { input } from '@cycle/dom'
 
 export function Input() {
-  const [state$, setState] = useGlobalState({})
+  const { DOM } = useAppSources()
 
-  return state$.map((state) => (
-    <input
-      type="text"
-      value={state.value || ''}
-      onInput={(e) => {
-        setState({ value: e.target.value })
-      }}
-    />
-  ))
+  const value$ = DOM.select('#input')
+    .events('input')
+    .map((event) => (event.target as any).value)
+    .startWith('')
+
+  const state$ = useGlobalState<AppState>(value$)
+
+  return {
+    DOM: state$.map((state) =>
+      input({ props: { id: 'input', type: 'text', value: state.value || '' } }),
+    ),
+  }
 }

@@ -1,6 +1,6 @@
 import { MainDOMSource } from '@cycle/dom'
-import { useID } from './id'
-import { useSources } from './sources'
+import { useID } from './effects/id'
+import { useSources } from '../effects/sources'
 
 export type Ref = {
   selector: string

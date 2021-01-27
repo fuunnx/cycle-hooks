@@ -1,14 +1,13 @@
 import { Stream } from 'xstream'
 
-export type Sources = {
+export type AnySources = {
   [key: string]: any
 }
 
-export type Sinks = {
+export type AnySinks = {
   [key: string]: Stream<unknown>
-  DOM?: Stream<JSX.Element>
 }
 
-export type MainFn<So extends Sources, Si extends Sinks> = {
+export type MainFn<So extends AnySources, Si extends AnySinks> = {
   (sources?: So): Si
 }

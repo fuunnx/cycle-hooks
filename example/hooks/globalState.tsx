@@ -1,34 +1,20 @@
-import { useSubject } from '../../src/hooks/subject'
-import { performEffects } from '../../src/hooks/sinks'
-import { useSources } from '../../src/hooks/sources'
-import xs from 'xstream'
+import { performEffects } from '../../src/effects/sinks'
+import { useSources } from '../../src/effects/sources'
+import xs, { Stream } from 'xstream'
+import { StateSource } from '@cycle/state'
 
 export type Reducer<T> = (x: T) => T
 
-export function useGlobalState<T>(initial: T) {
-  const [reducer$, runReducer] = useSubject<Reducer<T>>()
-  const state$ = useSources().state.stream
+export function useGlobalState<T>(reducer$: Stream<Reducer<T>> = xs.empty()) {
+  const { state } = useSources<{ state: StateSource<T> }>()
+
+  if (!state) {
+    throw new Error('Expected `state` source, got undefined')
+  }
 
   performEffects({
-    state: reducer$.startWith((state) => {
-      return state === undefined ? initial : state
-    }),
-    log: xs.of('hellor !'),
+    state: reducer$,
   })
 
-  return [
-    state$,
-    function setState(val: Reducer<T> | T | Partial<T>) {
-      if (typeof val === 'function') {
-        return runReducer(val as Reducer<T>)
-      }
-      if (val && typeof val === 'object' && !Array.isArray(val)) {
-        return runReducer((old) => ({
-          ...old,
-          ...val,
-        }))
-      }
-      return runReducer(() => val as T)
-    },
-  ] as const
+  return state.stream
 }

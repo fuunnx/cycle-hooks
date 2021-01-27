@@ -1,5 +1,5 @@
 import xs, { Stream, Subscription } from 'xstream'
-import { isObservable, streamify } from '../libs/isObservable'
+import { isObservable, streamify } from './libs/isObservable'
 import {
   safeGetInstance,
   Instance,
@@ -7,27 +7,25 @@ import {
   withInstance,
 } from './instance'
 import { h, VNode } from '@cycle/dom'
-import { ComponentDescription } from '../jsx/types'
-import { indexVTree, assocVTree } from '../libs/VTree'
-import { useSourcesSymbol } from '../hooks/sources'
-import { performEffectsSymbol } from '../hooks/sinks'
+import { ComponentDescription } from './types'
+import { indexVTree, assocVTree } from './libs/VTree'
+import { useSourcesSymbol } from '../effects/sources'
+import { performEffectsSymbol } from '../effects/sinks'
 import { withFrame, withHandler } from 'performative-ts'
 
-const knownTypes = new WeakMap<Function, 'stateless' | 'stateful'>()
+type ComponentTypes = 'stateless' | 'stateful'
+const knownTypes = new WeakMap<Function, ComponentTypes>()
 
-function componentType(
-  component: Function,
-  props: any,
-): 'stateless' | 'stateful' {
+function componentType(component: Function, props: any): ComponentTypes {
   if (knownTypes.has(component)) {
     return knownTypes.get(component)
   }
 
-  const type = guess()
+  const type = inspect()
   knownTypes.set(component, type)
   return type
 
-  function guess(): 'stateless' | 'stateful' {
+  function inspect(): ComponentTypes {
     try {
       const result = withHandler(
         [

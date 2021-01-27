@@ -7,22 +7,30 @@ import {
   performOrFailSilently,
   withFrame,
 } from 'performative-ts'
-import { streamify } from '../libs/isObservable'
+import { streamify } from './libs/isObservable'
 import { mapObj } from '../libs/mapObj'
-import { onUnmount, withUnmount } from './unmount'
+import {
+  onUnmount,
+  RegisterUnmountCallback,
+  withUnmount,
+} from '../withEffects/unmount'
 import { mountInstances } from './mountInstances'
-import { useSources } from '../hooks/sources'
-import { Key, ComponentDescription } from '../jsx/types'
-import { shallowEquals } from '../libs/shallowEquals'
-import { makeUsageTrackerIndexed } from '../libs/trackers/trackUsageIndexed'
-import { makeUsageTrackerKeyed } from '../libs/trackers/trackUsageKeyed'
+import { useSources } from '../effects/sources'
+import { Key, ComponentDescription } from './types'
+import { shallowEquals } from './libs/shallowEquals'
+import { makeUsageTrackerIndexed } from './libs/trackers/trackUsageIndexed'
+import { makeUsageTrackerKeyed } from './libs/trackers/trackUsageKeyed'
 import { mountEventListeners } from './mountEventListeners'
-import { Sinks } from '../types'
-import { withHooks } from '.'
+import { AnySinks } from '../types'
+import { withEffects } from '../withEffects'
 import isolate from '@cycle/isolate'
-import { TrackingLifecycle } from '../libs/trackers/trackUsage'
+import { TrackingLifecycle } from './libs/trackers/trackUsage'
 import { VNode } from 'snabbdom/build/package/vnode'
-import { useID } from '../hooks/id'
+import { useID } from './effects/id'
+
+const registerComponentUnmountSymbol: EffectName<RegisterUnmountCallback> = Symbol(
+  'registerComponentUnmount',
+)
 
 type RefTracker = {
   open(): void
@@ -37,7 +45,7 @@ type RefTracker = {
 
 export type IInstance = {
   data: {
-    sinks: null | Sinks
+    sinks: null | AnySinks
     unmount: () => void
     componentDescription?: ComponentDescription
     update: (newComponentDescription: ComponentDescription) => void
@@ -90,7 +98,7 @@ export function Instance(
       withInstance(instance, () => {
         const [unmount, result] = withUnmount(() => {
           return isolate(
-            withHooks(() => {
+            withEffects(() => {
               const result: any = component(finalProps$ as any)
               const sinks = result.DOM ? result : { DOM: streamify(result) }
               const transformedSinks = mapObj(
@@ -106,8 +114,8 @@ export function Instance(
               }
             }),
             { DOM: useID(), '*': null },
-          )(useSources()) as Sinks
-        }, 'component')
+          )(useSources()) as AnySinks
+        }, registerComponentUnmountSymbol)
 
         let domSubscription = result.DOM?.subscribe({
           next(dom: any) {
@@ -197,4 +205,18 @@ export function getInstance(): IInstance {
 }
 export function safeGetInstance(): IInstance | undefined {
   return performOrFailSilently(getInstanceSymbol)
+}
+
+export function onComponentUnmount(callback: () => void = () => {}) {
+  const unmount$ = xs.create()
+  let unmounted = false
+  performOrFailSilently(registerComponentUnmountSymbol, () => {
+    if (unmounted) return
+
+    callback()
+    unmount$.shamefullySendNext(null)
+
+    unmounted = true
+  })
+  return unmount$
 }
