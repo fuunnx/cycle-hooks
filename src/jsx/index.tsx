@@ -1,5 +1,5 @@
 import { h, VNode } from '@cycle/dom'
-import { Ref } from './ref'
+import { Ref } from './effects/ref'
 import { Component, ComponentDescription } from './types'
 import { captureFrame } from 'performative-ts'
 
@@ -9,7 +9,7 @@ type VnodeData = {
   on?: { [k: string]: EventListener }
   class?: { [k: string]: boolean }
   key?: string
-  ref?: Ref
+  ref?: Ref<any>
 }
 
 function normalizeProps(props: { [k: string]: any }) {

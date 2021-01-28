@@ -3,8 +3,8 @@ import { useSources } from '../../src/effects/sources'
 import { createElement, withEffects } from '../../src'
 import { performEffects } from '../../src/effects/sinks'
 import xs, { Stream } from 'xstream'
-import { makeDOMDriver, DOMSource, MainDOMSource } from '@cycle/dom'
-import { useRef } from '../../src/jsx/ref'
+import { makeDOMDriver, MainDOMSource } from '@cycle/dom'
+import { useRef } from '../../src/jsx/effects/ref'
 import { streamify } from '../../src/jsx/libs/isObservable'
 
 type Ref<T extends Cycle.EC<{}>> = {
@@ -41,7 +41,7 @@ type AppSources = {
 }
 
 function App() {
-  const componentRef = useRef<Component>()
+  const componentRef = useRef<typeof Component>()
   const count$ = componentRef.sinks.click$.fold((x) => x + 1, 0)
 
   return count$
@@ -91,8 +91,8 @@ type ComponentProps = {
 }
 
 type ComponentSinks = {
-  DOM: DOMSinks
-  click$: MouseEvent
+  DOM: Stream<DOMSinks>
+  click$: Stream<MouseEvent>
 }
 
 const Component = EC<ComponentProps, ComponentSinks>(function Component(
@@ -115,7 +115,7 @@ const Component = EC<ComponentProps, ComponentSinks>(function Component(
   }
 })
 
-run(withEffects(App, ['DOM', 'otherSink']), {
+run(withEffects(['DOM', 'otherSink'], App), {
   DOM: makeDOMDriver('#app'),
   otherSink: (sink$) => sink$.addListener({ next: console.log }),
 })

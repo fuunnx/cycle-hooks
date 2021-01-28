@@ -5,36 +5,44 @@ import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'
 import { Request } from './Request'
-import { StateSource } from '@cycle/state'
 import { withHTTPCache } from './hooks/useRequest'
-import { ButtonTest } from './ButtonTest'
 import { div, h1 } from '@cycle/dom'
 import { isolate } from '../src/withEffects/isolate'
 import { useAppSources } from '.'
 
 export const App = withHTTPCache(function App() {
   const { state } = useAppSources()
-  const state$ = state.stream.startWith({})
+  const state$ = state.stream.startWith({ value: '' })
   const input1 = isolate(Input)()
-  const togglable1 = isolate(Togglable)(
+  const serializedToggle = isolate(Togglable)(
     state$.map((state) => ({
       title: 'Serialized global state',
       children: CodePreview({ state: state }),
     })),
   )
 
+  const incrementers = Array(3).map(() =>
+    isolate(Incrementer)(xs.of({ value$: xs.periodic(1000) })),
+  )
+  const incrementersToggle = isolate(Togglable)(
+    xs.combine(...incrementers.map((x) => x.DOM)).map((children) => ({
+      title: 'Incrementers',
+      children,
+    })),
+  )
+
   return {
     DOM: xs
-      .combine(state$, input1.DOM, togglable1.DOM)
-      .map(([state, Input1, Togglable1]) => {
-        return div([h1('Examples'), Input1, Togglable1])
+      .combine(input1.DOM, serializedToggle.DOM, incrementersToggle.DOM)
+      .map(([Input1, SerializedToggle, IncrementersToggle]) => {
+        return div([
+          h1('Examples'),
+          Input1,
+          SerializedToggle,
+          IncrementersToggle,
+        ])
         // (
         //   <div>
-        //     <h1>Examples</h1>
-        //     <Input />
-        //     <Togglable title="Serialized global state">
-        //       <CodePreview state={state} />
-        //     </Togglable>
         //     <Togglable title="Incrementer">
         //       <Incrementer value$={xs.periodic(1000)} />
         //       <Incrementer value$={xs.periodic(1000)} />

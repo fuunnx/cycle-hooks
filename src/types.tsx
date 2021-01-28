@@ -11,3 +11,5 @@ export type AnySinks = {
 export type MainFn<So extends AnySources, Si extends AnySinks> = {
   (sources?: So): Si
 }
+
+export type AnyFunction = (...args: any[]) => any

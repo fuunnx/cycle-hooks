@@ -1,13 +1,10 @@
+import xs from 'xstream'
 import { performEffects } from '../../src/effects/sinks'
-import { useSubject } from '../../src/hooks/subject'
 
-// TODO needs proper typings
-export function useLogger() {
-  const [event$, log] = useSubject()
-
+export function log(value: any) {
   performEffects({
-    Log: event$,
+    Log: xs.of(value),
   })
 
-  return log
+  return value
 }

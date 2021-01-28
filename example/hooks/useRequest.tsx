@@ -2,7 +2,7 @@ import { ResponseStream, HTTPSource, RequestInput, Response } from '@cycle/http'
 import xs, { Stream, MemoryStream } from 'xstream'
 import sample from 'xstream-sample'
 import { performEffects } from '../../src/effects/sinks'
-import { useSources, withSources } from '../../src/effects/sources'
+import { bindSources, useSources } from '../../src/effects/sources'
 import { replay } from '../libs/xstream-replay'
 
 type Cache$ = Stream<{
@@ -10,18 +10,19 @@ type Cache$ = Stream<{
 }>
 
 export function withHTTPCache<T>(func: () => T) {
-  const init = {}
-  const cache$: Cache$ = useSources<{ HTTP: HTTPSource }>()
-    .HTTP.select()
-    .fold((cache, res$) => {
-      return {
-        ...cache,
-        [res$.request.url]: xs.merge(xs.never(), res$.compose(replay)),
-      }
-    }, init)
-    .compose(replay)
+  return bindSources((sources) => {
+    const cache$: Cache$ = useSources<{ HTTP: HTTPSource }>()
+      .HTTP.select()
+      .fold((cache, res$) => {
+        return {
+          ...cache,
+          [res$.request.url]: xs.merge(xs.never(), res$.compose(replay)),
+        }
+      }, {})
+      .compose(replay)
 
-  return withSources((sources) => ({ ...sources, cache$ }), func)
+    return { ...sources, cache$ }
+  }, func)
 }
 
 export function useRequest(request: RequestInput): Stream<Response> {

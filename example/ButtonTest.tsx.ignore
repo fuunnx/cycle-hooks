@@ -1,8 +1,7 @@
 import { button } from '@cycle/dom'
 import xs, { Stream } from 'xstream'
+import { useAppSources } from '.'
 import { createElement } from '../src'
-import { useProps$ } from '../src/hooks/props'
-import { useRef } from '../src/jsx/ref'
 import { collectEffects, performEffects } from '../src/effects/sinks'
 import { useSources, withSources } from '../src/effects/sources'
 
@@ -51,15 +50,11 @@ type Button2Props = {
   label: string
 }
 
-function Button2() {
-  const props$ = useProps$<Button2Props>()
-  const click$ = useSources().DOM.events('click')
+function Button2(props$: Stream<Button2Props>) {
+  const click$ = useAppSources().DOM.select('#button').events('click')
 
-  performEffects({
+  return {
     click$,
-  })
-
-  return props$
-    .startWith({ label: '' })
-    .map((props) => <button>{props.label}</button>)
+    DOM: props$.startWith({ label: '' }).map((props) => button([props.label])),
+  }
 }

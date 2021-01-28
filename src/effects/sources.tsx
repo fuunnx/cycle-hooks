@@ -1,7 +1,7 @@
 import '../patches/xstream'
 
-import { AnySources } from '../types'
-import { EffectName, withHandler, perform } from 'performative-ts'
+import { AnyFunction, AnySources } from '../types'
+import { EffectName, withHandler, bindHandler, perform } from 'performative-ts'
 
 export const useSourcesSymbol: EffectName<() => AnySources> = Symbol(
   'useSources',
@@ -12,11 +12,21 @@ export function withSources<T>(
   func: () => T,
 ) {
   if (typeof sources === 'function') {
-    const newSources = sources(useSources())
-    return withHandler([useSourcesSymbol, () => newSources], func)
+    return withHandler([useSourcesSymbol, () => sources(useSources())], func)
   }
 
   return withHandler([useSourcesSymbol, () => sources], func)
+}
+
+export function bindSources<T extends AnyFunction>(
+  sources: AnySources | ((sources: AnySources) => AnySources),
+  func: T,
+) {
+  if (typeof sources === 'function') {
+    return bindHandler([useSourcesSymbol, () => sources(useSources())], func)
+  }
+
+  return bindHandler([useSourcesSymbol, () => sources], func)
 }
 
 export function useSources<So extends AnySources>(): So {
