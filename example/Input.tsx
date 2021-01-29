@@ -1,11 +1,12 @@
 import { useGlobalState } from './hooks/globalState'
-import { AppState, useAppSources } from '.'
+import { AppState } from '.'
 import { input } from '@cycle/dom'
+import { useSel } from '../src/effects/sel'
 
 export function Input() {
-  const { DOM } = useAppSources()
+  const [inputSel, inputDOM] = useSel()
 
-  const value$ = DOM.select('#input')
+  const value$ = inputDOM
     .events('input')
     .map((event) => (event.target as any).value)
     .startWith('')
@@ -14,7 +15,7 @@ export function Input() {
 
   return {
     DOM: state$.map((state) =>
-      input({ props: { id: 'input', type: 'text', value: state.value || '' } }),
+      input(inputSel, { props: { type: 'text', value: state.value || '' } }),
     ),
   }
 }

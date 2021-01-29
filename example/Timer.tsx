@@ -1,16 +1,16 @@
 import { button, div } from '@cycle/dom'
 import xs from 'xstream'
-import { useAppSources } from '.'
+import { useSel } from '../src/effects/sel'
 
 export const Timer = () => {
-  const { DOM } = useAppSources()
-  const reset$ = DOM.select('#reset').events('click').mapTo(null)
+  const [resetSel, resetDOM] = useSel()
+  const reset$ = resetDOM.events('click').mapTo(null)
   const count$ = reset$
     .startWith(null)
     .map(() => xs.periodic(500).startWith(0))
     .flatten()
 
   return count$.map((count) =>
-    div([`Count: ${count}`, button('#reset', ['Reset'])]),
+    div([`Count: ${count}`, button(resetSel, ['Reset'])]),
   )
 }
