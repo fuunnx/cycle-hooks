@@ -8,10 +8,10 @@ export function Input() {
 
   const value$ = inputDOM
     .events('input')
-    .map((event) => (event.target as any).value)
+    .map((event) => (event.target as any).value as string)
     .startWith('')
 
-  const state$ = useGlobalState<AppState>(value$)
+  const state$ = useGlobalState<AppState>(value$.map((value) => ({ value })))
 
   return {
     DOM: state$.map((state) =>

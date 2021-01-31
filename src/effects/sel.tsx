@@ -1,8 +1,10 @@
 import { MainDOMSource } from '@cycle/dom'
-import { useID } from '../jsx/effects/id'
+import { useID } from './id'
 import { useSources } from './sources'
 
-type Selector = `[data-cycle-sel-${string}]`
+
+// TODO use data attributes — this selector is not supported by cycle/dom
+type Selector = `#data-cycle-sel-${string}`
 
 export type Ref = [
   Selector,
@@ -10,7 +12,7 @@ export type Ref = [
 ]
 
 export function useSel(sel?: string): Ref {
-  const selector = `[data-cycle-sel-${sel || useID()}]` as const
+  const selector = `#data-cycle-sel-${sel || useID()}` as const
 
   return [
     selector,

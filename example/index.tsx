@@ -6,6 +6,8 @@ import { withState, Reducer, StateSource } from '@cycle/state'
 import { App } from './App'
 import { Stream } from 'xstream'
 import { useSources } from '../src/effects/sources'
+import { performEffects } from '../src/effects/sinks'
+import { withID } from '../src/effects/id'
 
 const drivers = {
   DOM: makeDOMDriver('#app'),
@@ -16,20 +18,32 @@ const drivers = {
 
 export type AppState = { value: string }
 
-type Sources = {
+type Sources<S> = {
   DOM: MainDOMSource
   HTTP: HTTPSource
-  state: StateSource<AppState>
+  state: StateSource<S>
 }
 
-type Sinks = {
+type Sinks<S> = EffectsSinks<S> & {
   DOM: Stream<any>
+}
+
+type EffectsSinks<S> = {
   log: Stream<any>
-  state: Stream<Reducer<any>>
+  state: Stream<Reducer<S>>
 }
 
-export function useAppSources() {
-  return useSources<Sources>()
+export function useAppSources<State = AppState>() {
+  return useSources<Sources<State>>()
 }
 
-run(withState(withEffects<Sources, Sinks>(App)), drivers)
+export function performAppEffects<State = AppState>(
+  effects: Partial<EffectsSinks<State>>,
+) {
+  return performEffects(effects)
+}
+
+run(
+  withState(withEffects<Sources<AppState>, Sinks<AppState>>(withID(App))),
+  drivers,
+)

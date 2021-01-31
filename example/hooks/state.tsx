@@ -26,7 +26,7 @@ export function stateReducer<T>(...args: any[]): Stream<T> {
   return state$
 }
 
-function transformReducers<T>(val: Reducer<T> | T | Partial<T>) {
+export function transformReducers<T>(val: Reducer<T> | T | Partial<T>) {
   if (typeof val === 'function') {
     return val as Reducer<T>
   }

@@ -32,12 +32,13 @@ function patch(stream: Stream<any>): void {
   let _e = stream._e.bind(stream)
 
   if ((stream._prod as any).f) {
+    const f = (stream._prod as any).f.bind(stream._prod)
     ;(stream._prod as any).f = (...args) => {
       unmountPrevious()
-      withFrame(frame, () => {
-        ;[unmountPrevious] = withUnmount(() =>
-          (stream._prod as any).f.bind(stream._prod)(...args),
-        )
+      return withFrame(frame, () => {
+        const result = withUnmount(() => f(...args))
+        unmountPrevious = result[0]
+        return result[1]
       })
     }
   }

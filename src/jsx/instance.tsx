@@ -26,7 +26,7 @@ import { withEffects } from '../withEffects'
 import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from './libs/trackers/trackUsage'
 import { VNode } from 'snabbdom/build/package/vnode'
-import { useID } from './effects/id'
+import { useID } from '../effects/id'
 
 const registerComponentUnmountSymbol: EffectName<RegisterUnmountCallback> = Symbol(
   'registerComponentUnmount',

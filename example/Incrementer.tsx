@@ -1,6 +1,6 @@
 import { button, div } from '@cycle/dom'
 import xs, { Stream } from 'xstream'
-import { useAppSources } from '.'
+import { useSel } from '../src/effects/sel'
 import { stateReducer } from './hooks/state'
 
 type Props = {
@@ -8,9 +8,7 @@ type Props = {
 }
 
 export const Incrementer = function Incrementer(props$: Stream<Props>) {
-  const { DOM } = useAppSources()
-
-  const incrementer = DOM.select('#increment')
+  const [incSel, incrementer] = useSel()
   const isDown$ = xs
     .merge(
       incrementer.events('mousedown').mapTo(true),
@@ -24,13 +22,17 @@ export const Incrementer = function Incrementer(props$: Stream<Props>) {
     .flatten()
     .mapTo((x: number) => x + 1)
 
+  const [resetSel, resetter] = useSel()
+  const reset$ = resetter.events('click').mapTo(() => 0)
+
   const count$ = stateReducer(
     xs.merge(
+      increment$,
+      reset$,
       props$
         .map((x) => x.value$)
         .flatten()
         .map((value) => () => value),
-      increment$,
     ),
     0,
   )
@@ -38,8 +40,8 @@ export const Incrementer = function Incrementer(props$: Stream<Props>) {
   return {
     DOM: count$.map((count) =>
       div([
-        button('#increment', { props: { type: 'button' } }, [String(count)]),
-        button('#reset', { props: { type: 'button' } }, ['Reset']),
+        button(incSel, { props: { type: 'button' } }, [String(count)]),
+        button(resetSel, { props: { type: 'button' } }, ['Reset']),
       ]),
     ),
   }

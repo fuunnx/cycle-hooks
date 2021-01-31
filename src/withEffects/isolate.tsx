@@ -11,9 +11,24 @@ import {
   OuterSo,
 } from '../patches/isolate'
 
+// There is any issue with isolate :
+
+/**
+ * const child = Child()
+ * isolate(Parent)(child.DOM.map(children => ({children})))
+ *
+ * --> the child component will be isolated with the scope of its parent
+ *
+ * But doing :
+ * const child = isolate(Child)()
+ *
+ * fixes the problem
+ * however it's not always what we want
+ */
+
 export function isolate<Args extends any[], InnerSo, InnerSi>(
   effectfulComponent: (...args: Args) => InnerSi,
-  scope?: any,
+  scope: any = newScope(),
 ): (...args: Args) => OuterSi<InnerSo, InnerSi> {
   checkIsolateArgs(effectfulComponent as any, scope)
 
