@@ -6,9 +6,11 @@ import { Timer } from './Timer'
 import { Request } from './Request'
 import { withHTTPCache } from './hooks/useRequest'
 import { div, h, h1, h2, header, section } from '@cycle/dom'
-import { useAppSources } from '.'
+import { AppState } from '.'
 import { useSel } from '../src/effects/sel'
 import { autorun } from './libs/autorun'
+import { Atom } from './libs/Atom'
+import { debug } from './libs/debug'
 
 type AnyRecord = Record<string, any>
 
@@ -34,9 +36,13 @@ function makeTogglable<T extends AnyRecord, U>(
 }
 
 export const App = withHTTPCache(function App() {
-  const { state } = useAppSources()
+  const state = Atom<AppState>()
+
+  const valueAtom = state.lens<string>('value')
+
   const state$ = state.stream.startWith({ value: '' })
-  const input1 = Input()
+  const input1 = Input(valueAtom)
+
   const serializedToggle = Togglable(
     state$.map((state) => ({
       title: 'Serialized global state',
@@ -59,11 +65,7 @@ export const App = withHTTPCache(function App() {
     }),
   )
 
-  const inputToggle = makeTogglable(Input)(
-    xs.of({
-      title: 'input',
-    }),
-  )
+  const inputToggle = Input(valueAtom)
 
   const timerToggle = makeTogglable(Timer)(
     xs.of({
