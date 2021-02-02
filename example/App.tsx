@@ -41,7 +41,7 @@ export const App = withHTTPCache(function App() {
   const valueAtom = state.lens<string>('value')
 
   const state$ = state.stream.startWith({ value: '' })
-  const input1 = Input(valueAtom)
+  const input1 = Input(xs.of({ state: valueAtom }))
 
   const serializedToggle = Togglable(
     state$.map((state) => ({
@@ -65,7 +65,9 @@ export const App = withHTTPCache(function App() {
     }),
   )
 
-  const inputToggle = Input(valueAtom)
+  const inputToggle = makeTogglable(Input)(
+    xs.of({ state: valueAtom, title: 'Input' }),
+  )
 
   const timerToggle = makeTogglable(Timer)(
     xs.of({

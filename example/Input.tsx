@@ -4,16 +4,20 @@ import { Atom } from './libs/Atom'
 import xs, { Stream } from 'xstream'
 
 // it's painful to wrap/unwrap the atomSource in an observable
-export function Input(state: Atom<string>) {
+export function Input(props$: Stream<{ state: Atom<string> }>) {
   const [inputSel, inputDOM] = useSel()
 
-  const state$ = state.modify(
-    inputDOM
-      .events('input')
-      .map((event) => (event.target as any).value as string)
-      .startWith('')
-      .map((value) => (_) => value),
-  )
+  const state$ = props$
+    .map((x) =>
+      x.state.modify(
+        inputDOM
+          .events('input')
+          .map((event) => (event.target as any).value as string)
+          .startWith('')
+          .map((value) => (_) => value),
+      ),
+    )
+    .flatten()
 
   return {
     DOM: state$.map((state) =>
