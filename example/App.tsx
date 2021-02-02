@@ -10,7 +10,7 @@ import { AppState } from '.'
 import { useSel } from '../src/effects/sel'
 import { autorun } from './libs/autorun'
 import { Atom } from './libs/Atom'
-import { debug } from './libs/debug'
+import { ButtonTest } from './ButtonTest'
 
 type AnyRecord = Record<string, any>
 
@@ -79,6 +79,10 @@ export const App = withHTTPCache(function App() {
     state.stream.map((x) => ({ userId: x.value, title: 'Request' })),
   )
 
+  const buttonsToggle = makeTogglable(ButtonTest)(
+    xs.of({ title: 'Buttons patterns' }),
+  )
+
   return {
     DOM: autorun((ex) => {
       return div([
@@ -89,6 +93,7 @@ export const App = withHTTPCache(function App() {
         ex(inputToggle.DOM),
         ex(timerToggle.DOM),
         ex(requestToggle.DOM),
+        ex(buttonsToggle.DOM),
       ])
     }),
   }
