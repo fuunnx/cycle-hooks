@@ -1,5 +1,6 @@
 import { div } from '@cycle/dom'
 import { Stream } from 'xstream'
+import dropRepeats from 'xstream/extra/dropRepeats'
 import { useRequest } from './hooks/useRequest'
 
 type Props = {
@@ -9,8 +10,9 @@ type Props = {
 export const Request = (props$: Stream<Props>) => {
   return {
     DOM: props$
-      .map((props) => {
-        const { userId } = props
+      .map((x) => x.userId)
+      .compose(dropRepeats())
+      .map((userId) => {
         return useRequest({
           url: userId
             ? `http://jsonplaceholder.typicode.com/albums?userId=${userId}`
