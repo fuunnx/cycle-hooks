@@ -6,11 +6,13 @@ import { Timer } from './Timer'
 import { Request } from './Request'
 import { withHTTPCache } from './hooks/useRequest'
 import { div, h, h1, h2, header, section } from '@cycle/dom'
-import { AppState } from '.'
+import { AppState, useAppSources } from '.'
 import { useSel } from '../src/effects/sel'
 import { autorun } from './libs/autorun'
 import { Atom } from './libs/Atom'
 import { ButtonTest } from './ButtonTest'
+import { collectEffects, performEffects } from '../src/effects/sinks'
+import { RequestInput } from '@cycle/http'
 
 type AnyRecord = Record<string, any>
 
@@ -35,69 +37,89 @@ function makeTogglable<T extends AnyRecord, U>(
   }
 }
 
-export const App = withHTTPCache(function App() {
-  const state = Atom<AppState>()
+function withRequestsCount<T>(func: () => T) {
+  return function (): T {
+    const [effects, result] = collectEffects<{ HTTP: Stream<RequestInput> }, T>(
+      func,
+    )
 
-  const valueAtom = state.lens<string>('value')
+    performEffects(effects)
+    performEffects({
+      state: effects.HTTP.mapTo((state) => ({
+        ...state,
+        requestsCount: (state.count || 0) + 1,
+      })),
+    })
 
-  const state$ = state.stream.startWith({ value: '' })
-  const input1 = Input(xs.of({ state: valueAtom }))
+    return result
+  }
+}
 
-  const serializedToggle = Togglable(
-    state$.map((state) => ({
-      title: 'Serialized global state',
-      children: [CodePreview({ state: state })],
-    })),
-  )
+export const App = withRequestsCount(
+  withHTTPCache(function App() {
+    const state = Atom<AppState>()
 
-  function Incrementers() {
-    return {
-      DOM: xs.combine(
-        ...Array.from(Array(3)).map(
-          () => Incrementer(xs.of({ value$: xs.periodic(1000) })).DOM,
+    const valueAtom = state.lens<string>('value')
+
+    const input1 = Input(xs.of({ state: valueAtom }))
+
+    const globalState = useAppSources().state
+    const serializedToggle = Togglable(
+      globalState.stream.map((state) => ({
+        title: 'Serialized global state',
+        children: [CodePreview({ state: state })],
+      })),
+    )
+
+    function Incrementers() {
+      return {
+        DOM: xs.combine(
+          ...Array.from(Array(3)).map(
+            () => Incrementer(xs.of({ value$: xs.periodic(1000) })).DOM,
+          ),
         ),
-      ),
+      }
     }
-  }
-  const incrementersToggle = makeTogglable(Incrementers)(
-    xs.of({
-      title: 'Incrementers',
-    }),
-  )
+    const incrementersToggle = makeTogglable(Incrementers)(
+      xs.of({
+        title: 'Incrementers',
+      }),
+    )
 
-  const inputToggle = makeTogglable(Input)(
-    xs.of({ state: valueAtom, title: 'Input' }),
-  )
+    const inputToggle = makeTogglable(Input)(
+      xs.of({ state: valueAtom, title: 'Input' }),
+    )
 
-  const timerToggle = makeTogglable(Timer)(
-    xs.of({
-      title: 'Timer',
-    }),
-  )
+    const timerToggle = makeTogglable(Timer)(
+      xs.of({
+        title: 'Timer',
+      }),
+    )
 
-  const requestToggle = makeTogglable(Request)(
-    state.stream.map((x) => ({ userId: x.value, title: 'Request' })),
-  )
+    const requestToggle = makeTogglable(Request)(
+      state.stream.map((x) => ({ userId: x.value, title: 'Request' })),
+    )
 
-  const buttonsToggle = makeTogglable(ButtonTest)(
-    xs.of({ title: 'Buttons patterns' }),
-  )
+    const buttonsToggle = makeTogglable(ButtonTest)(
+      xs.of({ title: 'Buttons patterns' }),
+    )
 
-  return {
-    DOM: autorun((ex) => {
-      return div([
-        h1('Examples'),
-        ex(input1.DOM),
-        ex(serializedToggle.DOM),
-        ex(incrementersToggle.DOM),
-        ex(inputToggle.DOM),
-        ex(timerToggle.DOM),
-        ex(requestToggle.DOM),
-        ex(buttonsToggle.DOM),
-      ])
-    }),
-  }
-})
+    return {
+      DOM: autorun((ex) => {
+        return div([
+          h1('Examples'),
+          ex(input1.DOM),
+          ex(serializedToggle.DOM),
+          ex(incrementersToggle.DOM),
+          ex(inputToggle.DOM),
+          ex(timerToggle.DOM),
+          ex(requestToggle.DOM),
+          ex(buttonsToggle.DOM),
+        ])
+      }),
+    }
+  }),
+)
 
 function CodePreview(props: { state: any }) {
   return <code>{JSON.stringify(props.state, null, '  ')}</code>
