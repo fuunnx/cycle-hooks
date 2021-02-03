@@ -22,15 +22,17 @@ export const getEffectsNamesSymbol: EffectName<() => EffectsNames> = Symbol(
   'getEffectsNames',
 )
 
-export function collectEffects<T>(exec: () => T): [AnySinks, T]
-export function collectEffects<T>(
+export function collectEffects<Sinks extends AnySinks, T>(
+  exec: () => T,
+): [Sinks, T]
+export function collectEffects<Sinks extends AnySinks, T>(
   gatherableKeys: string[],
   exec: () => T,
-): [AnySinks, T]
-export function collectEffects<T>(
+): [Sinks, T]
+export function collectEffects<Sinks extends AnySinks, T>(
   keys_: string[] | (() => T),
   exec_?: () => T,
-): [AnySinks, T] {
+): [Sinks, T] {
   // type arguments
   let exec: () => T
   let keys: string[]
@@ -72,7 +74,7 @@ export function collectEffects<T>(
     exec,
   )
 
-  return [sinksProxy, returnValue]
+  return [sinksProxy as Sinks, returnValue]
 
   function initSinksProxy(): { [key: string]: Stream<unknown> } {
     return Object.fromEntries(gatherableKeys.map((key) => [key, xs.create()]))
