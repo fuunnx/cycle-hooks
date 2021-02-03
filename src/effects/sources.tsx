@@ -12,7 +12,20 @@ export function withSources<T>(
   func: () => T,
 ) {
   if (typeof sources === 'function') {
-    return withHandler([useSourcesSymbol, () => sources(useSources())], func)
+    const memoized = new WeakMap()
+    return withHandler(
+      [
+        useSourcesSymbol,
+        () => {
+          const src = useSources()
+          if (!memoized.has(src)) {
+            memoized.set(src, sources(useSources()))
+          }
+          return memoized.get(src)
+        },
+      ],
+      func,
+    )
   }
 
   return withHandler([useSourcesSymbol, () => sources], func)
@@ -23,7 +36,20 @@ export function bindSources<T extends AnyFunction>(
   func: T,
 ) {
   if (typeof sources === 'function') {
-    return bindHandler([useSourcesSymbol, () => sources(useSources())], func)
+    const memoized = new WeakMap()
+    return bindHandler(
+      [
+        useSourcesSymbol,
+        () => {
+          const src = useSources()
+          if (!memoized.has(src)) {
+            memoized.set(src, sources(useSources()))
+          }
+          return memoized.get(src)
+        },
+      ],
+      func,
+    )
   }
 
   return bindHandler([useSourcesSymbol, () => sources], func)
