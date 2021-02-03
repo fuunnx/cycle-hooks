@@ -1,6 +1,7 @@
 import { ResponseStream, HTTPSource, RequestInput, Response } from '@cycle/http'
 import xs, { Stream, MemoryStream } from 'xstream'
 import sample from 'xstream-sample'
+import { useID } from '../../src/effects/id'
 import { performEffects } from '../../src/effects/sinks'
 import { bindSources, useSources } from '../../src/effects/sources'
 import { replay } from '../libs/xstream-replay'
@@ -16,7 +17,7 @@ export function withHTTPCache<T>(func: () => T) {
       .fold((cache, res$) => {
         return {
           ...cache,
-          [res$.request.url]: xs.merge(xs.never(), res$.compose(replay)),
+          [res$.request.url]: res$.compose(replay),
         }
       }, {})
       .compose(replay)
@@ -30,7 +31,7 @@ export function useRequest(request: RequestInput): Stream<Response> {
   const { cache$, HTTP } = useSources<{ cache$?: Cache$; HTTP: HTTPSource }>()
 
   if (!cache$) {
-    const category = (Symbol('category') as unknown) as string
+    const category = useID()
     performEffects<{ HTTP: Stream<RequestInput> }>({
       HTTP: xs.of({ ...normalized, category }),
     })
