@@ -45,7 +45,7 @@ export function performAppEffects<State = AppState>(
 
 run(
   withState(
-    withEffects<Sources<AppState>, Sinks<AppState>>(withIDgenerator(App)),
+    withEffects<Sources<AppState>, Sinks<AppState>>(withIDGenerator(App)),
   ),
   drivers,
 )
