@@ -1,7 +1,7 @@
 import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/dom'
 import { makeHTTPDriver } from '@cycle/http'
-import { withEffects } from '../src'
+import { withEffects } from '../../src'
 import { withState, Reducer } from '@cycle/state'
 import { App } from './App'
 import { Stream } from 'xstream'

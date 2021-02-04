@@ -1,9 +1,9 @@
 import { button, div } from '@cycle/dom'
 import xs from 'xstream'
-import { useSel } from '../src/effects/sel'
+import { createSelector } from '../src/effects/sel'
 
 export const Timer = () => {
-  const [resetSel, reset] = useSel()
+  const [resetSel, reset] = createSelector()
   const reset$ = reset.events('click').mapTo(null)
   const count$ = reset$
     .startWith(null)

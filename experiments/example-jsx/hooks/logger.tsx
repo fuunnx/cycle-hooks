@@ -1,5 +1,5 @@
-import { performEffects } from '../../src/effects/sinks'
-import { useSubject } from '../../src/hooks/subject'
+import { performEffects } from '../../../src/effects/sinks'
+import { useSubject } from '../hooks/subject'
 
 // TODO needs proper typings
 export function useLogger() {

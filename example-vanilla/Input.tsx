@@ -1,5 +1,4 @@
 import { input } from '@cycle/dom'
-import { useSel } from '../src/effects/sel'
 import { Atom } from './libs/Atom'
 import { Stream } from 'xstream'
 import { Reducer } from '@cycle/state'

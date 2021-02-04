@@ -9,8 +9,8 @@ import {
 import { h, VNode } from '@cycle/dom'
 import { ComponentDescription } from './types'
 import { indexVTree, assocVTree } from './libs/VTree'
-import { useSourcesSymbol } from '../effects/sources'
-import { performEffectsSymbol } from '../effects/sinks'
+import { useSourcesSymbol } from '../../src/effects/sources'
+import { performEffectsSymbol } from '../../src/effects/sinks'
 import { withFrame, withHandler } from 'performative-ts'
 
 type ComponentTypes = 'stateless' | 'stateful'

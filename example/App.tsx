@@ -7,7 +7,7 @@ import { Request } from './Request'
 import { withHTTPCache } from './hooks/useRequest'
 import { div, h, h1, h2, header, section } from '@cycle/dom'
 import { AppState, useAppSources } from '.'
-import { useSel } from '../src/effects/sel'
+import { createSelector } from '../src/effects/sel'
 import { autorun } from './libs/autorun'
 import { Atom } from './libs/Atom'
 import { ButtonTest } from './ButtonTest'
@@ -130,7 +130,7 @@ type TogglableProps = {
   children?: JSX.Element[]
 }
 const Togglable = function Togglable(props$: Stream<TogglableProps>) {
-  const [headerSel, headerDom] = useSel()
+  const [headerSel, headerDom] = createSelector()
   const open$ = headerDom.events('click').fold((isOpen) => !isOpen, false)
 
   return {

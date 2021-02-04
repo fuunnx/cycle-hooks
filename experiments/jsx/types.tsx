@@ -1,8 +1,8 @@
-import { AnySinks } from '../types'
+import { AnySinks } from '../../src/types'
 import { Stream } from 'xstream'
 import { VNode, VNodeData } from 'snabbdom/build/package/vnode'
 import { Frame } from 'performative-ts'
-import { Ref } from '../effects/sel'
+import { Ref } from '../../src/effects/sel'
 
 declare global {
   namespace JSX {

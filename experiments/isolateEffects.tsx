@@ -1,6 +1,6 @@
 import { mergeSinks } from 'cyclejs-utils'
-import { collectEffects, performEffects } from '../effects/sinks'
-import { useSources, withSources } from '../effects/sources'
+import { collectEffects, performEffects } from '../src/effects/sinks'
+import { useSources, withSources } from '../src/effects/sources'
 import {
   checkIsolateArgs,
   newScope,
@@ -9,7 +9,7 @@ import {
   isolateAllSinks,
   OuterSi,
   OuterSo,
-} from '../patches/isolate'
+} from './isolate'
 
 // There is any issue with isolate :
 

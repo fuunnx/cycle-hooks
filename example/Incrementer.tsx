@@ -1,6 +1,6 @@
 import { button, div } from '@cycle/dom'
 import xs, { Stream } from 'xstream'
-import { useSel } from '../src/effects/sel'
+import { createSelector } from '../src/effects/sel'
 import { stateReducer } from './hooks/state'
 
 type Props = {
@@ -8,7 +8,7 @@ type Props = {
 }
 
 export const Incrementer = function Incrementer(props$: Stream<Props>) {
-  const [incSel, incrementer] = useSel()
+  const [incSel, incrementer] = createSelector()
   const isDown$ = xs
     .merge(
       incrementer.events('mousedown').mapTo(true),
@@ -22,7 +22,7 @@ export const Incrementer = function Incrementer(props$: Stream<Props>) {
     .flatten()
     .mapTo((x: number) => x + 1)
 
-  const [resetSel, resetter] = useSel()
+  const [resetSel, resetter] = createSelector()
   const reset$ = resetter.events('click').mapTo(() => 0)
 
   const count$ = stateReducer(

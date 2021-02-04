@@ -1,6 +1,6 @@
 import { useSubject } from '../../src/hooks/subject'
-import { performEffects } from '../../src/effects/sinks'
-import { useSources } from '../../src/effects/sources'
+import { performEffects } from '../../../src/effects/sinks'
+import { useSources } from '../../../src/effects/sources'
 import xs from 'xstream'
 
 export type Reducer<T> = (x: T) => T

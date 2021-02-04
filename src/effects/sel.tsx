@@ -1,5 +1,5 @@
 import { MainDOMSource } from '@cycle/dom'
-import { useID } from './id'
+import { createID } from './id'
 import { useSources } from './sources'
 
 
@@ -11,8 +11,8 @@ export type Ref = [
   MainDOMSource,
 ]
 
-export function useSel(sel?: string): Ref {
-  const selector = `#data-cycle-sel-${sel || useID()}` as const
+export function createSelector(sel?: string): Ref {
+  const selector = `#data-cycle-sel-${sel || createID()}` as const
 
   return [
     selector,

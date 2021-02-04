@@ -8,25 +8,25 @@ import {
   withFrame,
 } from 'performative-ts'
 import { streamify } from './libs/isObservable'
-import { mapObj } from '../libs/mapObj'
+import { mapObj } from '../../src/libs/mapObj'
 import {
   onUnmount,
   RegisterUnmountCallback,
   withUnmount,
-} from '../withEffects/unmount'
+} from '../../src/withEffects/unmount'
 import { mountInstances } from './mountInstances'
-import { useSources } from '../effects/sources'
+import { useSources } from '../../src/effects/sources'
 import { Key, ComponentDescription } from './types'
 import { shallowEquals } from './libs/shallowEquals'
 import { makeUsageTrackerIndexed } from './libs/trackers/trackUsageIndexed'
 import { makeUsageTrackerKeyed } from './libs/trackers/trackUsageKeyed'
 import { mountEventListeners } from './mountEventListeners'
-import { AnySinks } from '../types'
-import { withEffects } from '../withEffects'
+import { AnySinks } from '../../src/types'
+import { withEffects } from '../../src/withEffects'
 import isolate from '@cycle/isolate'
 import { TrackingLifecycle } from './libs/trackers/trackUsage'
 import { VNode } from 'snabbdom/build/package/vnode'
-import { useID } from '../effects/id'
+import { createID } from '../../src/effects/id'
 
 const registerComponentUnmountSymbol: EffectName<RegisterUnmountCallback> = Symbol(
   'registerComponentUnmount',
@@ -113,7 +113,7 @@ export function Instance(
                 ),
               }
             }),
-            { DOM: useID(), '*': null },
+            { DOM: createID(), '*': null },
           )(useSources()) as AnySinks
         }, registerComponentUnmountSymbol)
 

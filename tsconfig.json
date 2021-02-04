@@ -10,5 +10,10 @@
     "esModuleInterop": true,
     "declaration": true
   },
-  "exclude": ["node_modules", "**/node_modules/*", "./example-jsx", "./docs"]
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*",
+    "experiments/example-jsx",
+    "./docs"
+  ]
 }

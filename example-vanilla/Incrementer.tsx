@@ -1,7 +1,6 @@
 import { button, div } from '@cycle/dom'
 import xs, { Stream } from 'xstream'
 import { AppSources } from '.'
-import { useSel } from '../src/effects/sel'
 import { stateReducer } from './hooks/state'
 import { createSelector } from './libs/createSelector'
 

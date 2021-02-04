@@ -1,6 +1,6 @@
 import xs from 'xstream'
-import { useSubject } from '../src/hooks/subject'
-import { createElement } from '../src'
+import { useSubject } from './hooks/subject'
+import { createElement } from '../jsx'
 
 export const Timer = () => {
   const [reset$, reset] = useSubject()

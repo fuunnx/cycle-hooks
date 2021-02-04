@@ -1,8 +1,8 @@
 import { ResponseStream, HTTPSource, RequestInput, Response } from '@cycle/http'
 import xs, { Stream, MemoryStream } from 'xstream'
 import sample from 'xstream-sample'
-import { performEffects } from '../../src/effects/sinks'
-import { useSources, withSources } from '../../src/effects/sources'
+import { performEffects } from '../../../src/effects/sinks'
+import { useSources, withSources } from '../../../src/effects/sources'
 import { replay } from '../libs/xstream-replay'
 
 type Cache$ = Stream<{

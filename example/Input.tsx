@@ -1,11 +1,11 @@
 import { input } from '@cycle/dom'
-import { useSel } from '../src/effects/sel'
+import { createSelector } from '../src/effects/sel'
 import { Atom } from './libs/Atom'
 import xs, { Stream } from 'xstream'
 
 // it's painful to wrap/unwrap the atomSource in an observable
 export function Input(props$: Stream<{ state: Atom<string> }>) {
-  const [inputSel, inputDOM] = useSel()
+  const [inputSel, inputDOM] = createSelector()
 
   const state$ = props$
     .map((x) =>

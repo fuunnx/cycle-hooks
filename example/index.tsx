@@ -7,7 +7,7 @@ import { App } from './App'
 import { Stream } from 'xstream'
 import { useSources } from '../src/effects/sources'
 import { performEffects } from '../src/effects/sinks'
-import { withID } from '../src/effects/id'
+import { withIDGenerator } from '../src/effects/id'
 
 const drivers = {
   DOM: makeDOMDriver('#app'),
@@ -44,6 +44,8 @@ export function performAppEffects<State = AppState>(
 }
 
 run(
-  withState(withEffects<Sources<AppState>, Sinks<AppState>>(withID(App))),
+  withState(
+    withEffects<Sources<AppState>, Sinks<AppState>>(withIDgenerator(App)),
+  ),
   drivers,
 )

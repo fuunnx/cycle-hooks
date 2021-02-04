@@ -1,7 +1,7 @@
 import { ResponseStream, HTTPSource, RequestInput, Response } from '@cycle/http'
 import xs, { Stream, MemoryStream } from 'xstream'
 import sample from 'xstream-sample'
-import { useID } from '../../src/effects/id'
+import { createID } from '../../src/effects/id'
 import { performEffects } from '../../src/effects/sinks'
 import { bindSources, useSources } from '../../src/effects/sources'
 import { replay } from '../libs/xstream-replay'
@@ -31,7 +31,7 @@ export function useRequest(request: RequestInput): Stream<Response> {
   const { cache$, HTTP } = useSources<{ cache$?: Cache$; HTTP: HTTPSource }>()
 
   if (!cache$) {
-    const category = useID()
+    const category = createID()
     performEffects<{ HTTP: Stream<RequestInput> }>({
       HTTP: xs.of({ ...normalized, category }),
     })

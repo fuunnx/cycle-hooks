@@ -1,6 +1,6 @@
 import { button, div } from '@cycle/dom'
 import xs, { Stream } from 'xstream'
-import { useSel } from '../src/effects/sel'
+import { createSelector } from '../src/effects/sel'
 import { autorun } from './libs/autorun'
 
 export function ButtonTest() {
@@ -28,7 +28,7 @@ export function ButtonTest() {
 }
 
 function makeButton() {
-  const [ref, DOM] = useSel()
+  const [ref, DOM] = createSelector()
   const click$ = DOM.events('click')
 
   return [
@@ -44,7 +44,7 @@ type Button2Props = {
 }
 
 function Button2(props$: Stream<Button2Props>) {
-  const [ref, DOM] = useSel()
+  const [ref, DOM] = createSelector()
   const click$ = DOM.events('click')
 
   return {

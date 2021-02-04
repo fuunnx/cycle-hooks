@@ -1,8 +1,8 @@
 import { Stream, Subscription } from 'xstream'
-import { useSources } from '../effects/sources'
+import { useSources } from '../../src/effects/sources'
 import { walkVTree, isVNode } from './libs/VTree'
 import { vnode, VNode } from 'snabbdom/build/package/vnode'
-import { onUnmount } from '../withEffects/unmount'
+import { onUnmount } from '../../src/withEffects/unmount'
 import { makeUsageTrackerKeyed } from './libs/trackers/trackUsageKeyed'
 import { isComponentDescription } from './mountInstances'
 

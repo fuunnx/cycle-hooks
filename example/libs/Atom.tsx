@@ -1,7 +1,7 @@
 import { StateSource, Lens, Reducer, Scope } from '@cycle/state'
 import { Stream } from 'xstream'
 import dropRepeats from 'xstream/extra/dropRepeats'
-import { useID } from '../../src/effects/id'
+import { createID } from '../../src/effects/id'
 import { performEffects } from '../../src/effects/sinks'
 import { useSources } from '../../src/effects/sources'
 
@@ -14,7 +14,7 @@ export function Atom<T>(
   source?: StateSource<T>,
   performWrite?: (reducer$: Stream<Reducer<T>>) => void,
 ): Atom<T> {
-  const id = `atom_${useID()}`
+  const id = `atom_${createID()}`
   if (!source) {
     const src = useSources<{ state: StateSource<T> }>().state
     source = src.select(id)

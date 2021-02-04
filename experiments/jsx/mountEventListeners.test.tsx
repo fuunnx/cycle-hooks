@@ -3,9 +3,9 @@ import { mountEventListeners } from './mountEventListeners'
 import { mockTimeSource, MockTimeSource } from '@cycle/time'
 import sample from 'xstream-sample'
 import { mockDOMSource, h } from '@cycle/dom'
-import { createElement, AnySources } from '../index'
+import { createElement, AnySources } from '../../src/index'
 import xs from 'xstream'
-import { withEffects } from '../withEffects'
+import { withEffects } from '../../src/withEffects'
 
 function useSubject<T>() {
   const subject$ = xs.create<T>()
