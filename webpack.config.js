@@ -1,11 +1,13 @@
 var path = require('path')
 
+var dir = path.resolve('./example')
+
 module.exports = {
   mode: 'development',
   devtool: 'inline-source-map',
-  entry: './example/index.tsx',
+  entry: dir + '/index.tsx',
   output: {
-    path: path.resolve('./example'),
+    path: dir,
     filename: './index.js',
   },
   resolve: {
@@ -19,7 +21,7 @@ module.exports = {
     ],
   },
   devServer: {
-    contentBase: path.join(__dirname, 'example'),
+    contentBase: dir,
     compress: true,
     port: 3000,
   },
