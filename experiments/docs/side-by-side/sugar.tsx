@@ -1,11 +1,11 @@
 import { run } from '@cycle/run'
-import { useSources } from '../../src/effects/sources'
-import { createElement, withEffects } from '../../src'
-import { performEffects } from '../../src/effects/sinks'
+import { useSources } from '../../../src/effects/sources'
+import { createElement, withEffects } from '../../../src'
+import { performEffects } from '../../../src/effects/sinks'
 import xs, { Stream } from 'xstream'
 import { makeDOMDriver, MainDOMSource } from '@cycle/dom'
-import { useRef } from '../../src/jsx/effects/ref'
-import { streamify } from '../../src/jsx/libs/isObservable'
+import { useRef } from '../../jsx/effects/ref'
+import { streamify } from '../../jsx/libs/isObservable'
 
 type Ref<T extends Cycle.EC<{}>> = {
   DOM: MainDOMSource
