@@ -89,7 +89,7 @@ function Component(sources: ComponentSources) {
 
   return {
     otherSink: xs.of('thing'),
-    click$: DOM.select('[data-has-onClick]').events('click').map(e => e.target['props-map-onClick'](e)),
+    click$: DOM.select('[data-map-onClick]').events('click').map(e => e.target['props-map-onClick'](e)),
     DOM: props$.map(props => {
       const { name } = props
 
