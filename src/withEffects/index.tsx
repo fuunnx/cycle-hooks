@@ -1,18 +1,18 @@
-import { withSources } from '../effects/sources'
-import { AnySinks, AnySources, MainFn } from '../types'
+import { bindSources } from '../effects/sources'
+import { AnySinks, AnySources, Main } from '../types'
 import { collectEffects } from '../effects/sinks'
-import { mergeSinks } from '../libs/mergeSinks'
+import { mergeSinks } from 'cyclejs-utils'
 
 export function withEffects<So extends AnySources, Si extends AnySinks>(
   App: () => Partial<Si>,
-): MainFn<So, Si>
+): Main<So, Si>
 export function withEffects<So extends AnySources, Si extends AnySinks>(
   effectsNames: string[],
   App: () => Partial<Si>,
-): MainFn<So, Si>
+): Main<So, Si>
 export function withEffects<So extends AnySources, Si extends AnySinks>(
   ...args: [any] | [any, any]
-): MainFn<So, Si> {
+): Main<So, Si> {
   let App: () => Si
   let effectsNames: string[] = []
 
@@ -26,11 +26,7 @@ export function withEffects<So extends AnySources, Si extends AnySinks>(
   return function AppWithEffects(sources: AnySources): Si {
     const [appEffects, appSinks] = collectEffects(
       [...effectsNames, ...Object.keys(sources)],
-      () => {
-        return withSources(sources, () => {
-          return App()
-        })
-      },
+      bindSources(sources, App),
     )
 
     return mergeSinks([appEffects, appSinks], {

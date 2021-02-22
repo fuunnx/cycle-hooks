@@ -1,18 +1,13 @@
-import xs, { MemoryStream, Stream, Subscription } from 'xstream'
-import sample from 'xstream-sample'
-import { createElement } from '../../src'
-import { performEffects } from '../../src/effects/sinks'
-import { HTTPSource, RequestInput, ResponseStream, Response } from '@cycle/http'
-import { useSources, withSources } from '../../src/effects/sources'
-import { useProps$ } from '../src/hooks/props'
+import { Stream } from 'xstream'
+import { createElement } from '../jsx'
 import { useRequest, withHTTPCache } from './hooks/useRequest'
 
 type Props = {
   userId?: string
 }
 
-export const Request = (_: Props) => {
-  return useProps$<Props>()
+export const Request = (props$: Props | Stream<Props>) => {
+  return streamify(props$)
     .map((props) => {
       const { userId } = props
       return useRequest({

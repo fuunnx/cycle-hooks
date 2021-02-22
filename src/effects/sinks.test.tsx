@@ -2,11 +2,6 @@ import xs from 'xstream'
 import { collectEffects, performEffects } from './sinks'
 import { mockTimeSource } from '@cycle/time'
 import { mergeSinks } from 'cyclejs-utils'
-import { createElement } from '../../experiments/jsx'
-import { withSources } from './sources'
-import { mountInstances } from '../../experiments/jsx/mountInstances'
-
-console.log({ createElement })
 
 function assertSinksEqual(Time, actual, expected) {
   expect(Object.keys(expected).sort()).toEqual(Object.keys(actual).sort())
@@ -171,35 +166,6 @@ test('gather sinks inside streams, multiple times', (done) => {
   assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
     d: xs.merge(sinksA(), sinksB()),
     c: c$().mapTo('y'),
-  })
-
-  Time.run(done)
-})
-
-test('gather components sinks', (done) => {
-  const Time = mockTimeSource()
-
-  function wrap(func) {
-    return collectEffects(['test'], () => {
-      return withSources({}, () => mountInstances(func()))
-    })
-  }
-
-  function App() {
-    return Time.diagram('x').map(() => <Child />)
-  }
-
-  function Child() {
-    performEffects({
-      test: Time.diagram('--x'),
-    })
-    return Time.diagram('--x').map(() => <p>Child</p>)
-  }
-
-  const [gathered, appSinks] = wrap(() => App())
-  assertSinksEqual(Time, mergeSinks([{ DOM: appSinks }, gathered]), {
-    DOM: Time.diagram('--x').map(() => <p>Child</p>),
-    test: Time.diagram('--x'),
   })
 
   Time.run(done)

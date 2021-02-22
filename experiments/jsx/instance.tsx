@@ -13,7 +13,7 @@ import {
   onUnmount,
   RegisterUnmountCallback,
   withUnmount,
-} from '../../src/withEffects/unmount'
+} from '../../src/effects/unmount'
 import { mountInstances } from './mountInstances'
 import { useSources } from '../../src/effects/sources'
 import { Key, ComponentDescription } from './types'

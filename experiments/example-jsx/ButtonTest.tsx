@@ -1,7 +1,6 @@
 import { button } from '@cycle/dom'
 import xs, { Stream } from 'xstream'
 import { createElement } from '../../src'
-import { useProps$ } from '../src/hooks/props'
 import { useRef } from '../src/jsx/ref'
 import { collectEffects, performEffects } from '../../src/effects/sinks'
 import { useSources, withSources } from '../../src/effects/sources'

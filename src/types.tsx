@@ -8,7 +8,7 @@ export type AnySinks = {
   [key: string]: Stream<unknown>
 }
 
-export type MainFn<So extends AnySources, Si extends AnySinks> = {
+export type Main<So extends AnySources, Si extends AnySinks> = {
   (sources?: So): Si
 }
 

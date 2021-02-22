@@ -1,5 +1,5 @@
 import { Stream } from 'xstream'
-import { onUnmount } from '../../src/withEffects/unmount'
+import { onUnmount } from '../../src/effects/unmount'
 
 export function debug(
   stream$: Stream<any>,

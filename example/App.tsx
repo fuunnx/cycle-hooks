@@ -1,5 +1,6 @@
 import xs, { Stream } from 'xstream'
-import { AnySources, createElement } from '../src'
+import { AnySources } from '../src'
+import { createElement } from '../experiments/jsx'
 import { Input } from './Input'
 import { Incrementer } from './Incrementer'
 import { Timer } from './Timer'

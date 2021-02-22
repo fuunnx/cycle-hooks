@@ -3,7 +3,7 @@ import { createID } from './id'
 import { useSources } from './sources'
 
 
-// TODO use data attributes — this selector is not supported by cycle/dom
+// TODO use data attributes — data selectors are not supported by cycle/dom
 type Selector = `#data-cycle-sel-${string}`
 
 export type Ref = [

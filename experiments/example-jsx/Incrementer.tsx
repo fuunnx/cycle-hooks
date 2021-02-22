@@ -1,7 +1,6 @@
 import xs, { Stream } from 'xstream'
 import { useState } from './hooks/state'
-import { createElement } from '../src/jsx'
-import { useProps$ } from '../src/hooks/props'
+import { createElement } from '../jsx'
 
 type Props = {
   value$: Stream<number>
