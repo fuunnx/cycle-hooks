@@ -9,6 +9,8 @@
     "@markedjs/html-differ": "^3.0.4",
     "@typescript-eslint/parser": "^4.9.1",
     "babel-jest": "^26.6.3",
+    "callbag-basics": "^4.0.0",
+    "callbag-delay": "^0.1.0",
     "html-prettify": "^1.0.3",
     "jest": "^26.6.3",
     "patch-package": "^6.2.2",
@@ -26,6 +28,7 @@
     "postinstall": "patch-package --use-yarn"
   },
   "dependencies": {
+    "@cycle/callbags": "^3.0.2",
     "@cycle/isolate": "^5.2.0",
     "@cycle/time": "^0.20.0",
     "@types/jest": "^26.0.16",
