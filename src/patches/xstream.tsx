@@ -25,35 +25,43 @@ function patch(stream: Stream<any>): void {
     return
   }
 
-  let unmountPrevious = () => {}
+    let unmountPrevious = () => {}
 
-  let _n = stream._n.bind(stream)
-  let _c = stream._c.bind(stream)
-  let _e = stream._e.bind(stream)
+    let _n = stream._n.bind(stream)
+    let _c = stream._c.bind(stream)
+    let _e = stream._e.bind(stream)
 
-  if ((stream._prod as any).f) {
-    const f = (stream._prod as any).f.bind(stream._prod)
-    ;(stream._prod as any).f = bindFrame(frame, f)
-  }
+    if ((stream._prod as any).f) {
+      const f = (stream._prod as any).f.bind(stream._prod)
+      
+      ;(stream._prod as any).f = (val: any) => {
+        unmountPrevious()
+        return withFrame(frame, () => {
+          const [unMount, result] = withUnmount(() => f(val))
+          unmountPrevious = unMount
+          return result
+        })
+      }
+    }
 
-  Object.assign(stream, {
-    _e(e) {
-      unmountPrevious()
-      withFrame(frame, () => {
-        ;[unmountPrevious] = withUnmount(() => _e(e))
-      })
-    },
-    _c() {
-      unmountPrevious()
-      withFrame(frame, () => {
-        ;[unmountPrevious] = withUnmount(() => _c())
-      })
-    },
-    _n(v: any) {
-      unmountPrevious()
-      withFrame(frame, () => {
-        ;[unmountPrevious] = withUnmount(() => _n(v))
-      })
-    },
-  })
+    Object.assign(stream, {
+      _e(e) {
+        unmountPrevious()
+        withFrame(frame, () => {
+          ;[unmountPrevious] = withUnmount(() => _e(e))
+        })
+      },
+      _c() {
+        unmountPrevious()
+        withFrame(frame, () => {
+          ;[unmountPrevious] = withUnmount(() => _c())
+        })
+      },
+      // _n(v: any) {
+      //   unmountPrevious()
+      //   withFrame(frame, () => {
+      //     ;[unmountPrevious] = withUnmount(() => _n(v))
+      //   })
+      // },
+    })
 }
