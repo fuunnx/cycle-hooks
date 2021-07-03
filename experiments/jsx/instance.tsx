@@ -63,8 +63,8 @@ export function Instance(
   const frame = componentDescription?.$frame$
 
   const props$ = xs.create().startWith({
-    ...data.props,
-    children: data.children,
+    ...data?.props,
+    children: data?.children ?? [],
   })
 
   const finalProps$ = props$.compose(dropRepeats(shallowEquals)).remember()

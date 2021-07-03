@@ -45,7 +45,7 @@ test('gather sinks 2 levels deep', (done) => {
 
 test('gather sinks inside streams', (done) => {
   const Time = mockTimeSource()
-  const sinks = () => ({ d: Time.diagram('dddd') })
+  const sinks = () => ({ d: Time.diagram('abcd') })
   const c$ = () => Time.diagram('--x--')
   function App() {
     return {
@@ -58,14 +58,14 @@ test('gather sinks inside streams', (done) => {
 
   const [gathered, appSinks] = collectEffects(['d'], () => App())
   assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
-    ...sinks(),
+    d: Time.diagram('--abc'),
     c: c$().mapTo('y'),
   })
 
   Time.run(done)
 })
 
-test('stop gathered sinks on next', (done) => {
+test('stops gathered sinks on next', (done) => {
   const Time = mockTimeSource()
 
   const events = () => Time.diagram('---a-----b-----c')
@@ -76,7 +76,7 @@ test('stop gathered sinks on next', (done) => {
     return {
       a: events().map((char) => {
         performEffects({
-          b: repeatEvent(char).debug((x) => console.log(char, x)),
+          b: repeatEvent(char),
         })
         return char
       }),
@@ -164,7 +164,9 @@ test('gather sinks inside streams, multiple times', (done) => {
 
   const [gathered, appSinks] = collectEffects(['d'], () => App())
   assertSinksEqual(Time, mergeSinks([appSinks, gathered]), {
-    d: xs.merge(sinksA(), sinksB()),
+    d: c$()
+      .map(() => xs.merge(sinksA(), sinksB()))
+      .flatten(),
     c: c$().mapTo('y'),
   })
 

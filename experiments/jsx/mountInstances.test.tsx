@@ -100,7 +100,7 @@ test('starts receiving DOM updates on insert', (done) => {
 
   Time.assertEqual(
     testCase(() => Time.diagram('x').map(() => <ComponentA />)),
-    Time.diagram('x--123456'),
+    Time.diagram('x-----123456'),
   )
 
   Time.run(done)
@@ -126,8 +126,10 @@ test('call unmount on remove (simple)', (done) => {
   )
 
   Time.run(() => {
-    expect(AmountedTimes).toEqual(1)
-    expect(AunmountedTimes).toEqual(1)
+    expect({ AmountedTimes, AunmountedTimes }).toEqual({
+      AmountedTimes: 1,
+      AunmountedTimes: 1,
+    })
 
     done()
   })
@@ -174,7 +176,7 @@ test('call unmount on remove (complex)', (done) => {
   Time.run(() => {
     expect(AmountedTimes).toEqual(3)
     // TODO results are not coherent
-    // expect(AunmountedTimes).toEqual(3)
+    expect(AunmountedTimes).toEqual(3)
 
     expect(BunmountedTimes).toEqual(BmountedTimes)
 
